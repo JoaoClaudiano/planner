@@ -1,1356 +1,727 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>estudo · rotina completa</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rotina · estudos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f6f3; --surface:#fff; --surface2:#f0ede8;
+  --text:#1a1a18; --text2:#6b6860; --text3:#a8a49e;
+  --border:#e8e4de; --border2:#d4cfc8;
+  --accent:#2563eb; --accent-bg:#eff6ff;
+  --mono:'DM Mono',monospace; --sans:'DM Sans',sans-serif;
+  --r:12px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --c1:#f59e0b; --c1-bg:#fffbeb;
+  --c2:#3b82f6; --c2-bg:#eff6ff;
+  --c3:#8b5cf6; --c3-bg:#f5f3ff;
+  --c4:#10b981; --c4-bg:#ecfdf5;
+  --warn:#ef4444; --warn-bg:#fef2f2; --ok:#10b981;
+}
+body.dark {
+  --bg:#111110; --surface:#1c1c1a; --surface2:#242422;
+  --text:#f0ede8; --text2:#9a9690; --text3:#5a5652;
+  --border:#2a2a28; --border2:#363632;
+  --accent:#60a5fa; --accent-bg:#172040;
+  --c1-bg:#2a2010; --c2-bg:#101828; --c3-bg:#1a1228; --c4-bg:#0a2018;
+  --warn-bg:#2a1010;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;transition:background .2s,color .2s;min-height:100vh;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-        :root {
-            --bg: #f4f6fa;
-            --surface: white;
-            --text: #1e293b;
-            --text-light: #334155;
-            --border: #e9eef2;
-            --accent: #3b82f6;
-            --accent-soft: #eef2ff;
-            --muted: #94a3b8;
-            --card-bg: white;
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--surface) 92%,transparent);border-bottom:1px solid var(--border);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(10px)}
+.logo{font-family:var(--mono);font-size:13px;color:var(--text2);letter-spacing:.02em}
+.logo b{color:var(--accent);font-weight:500}
+.live-clock{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--surface2);padding:3px 10px;border-radius:20px;border:1px solid var(--border);letter-spacing:.05em;margin-left:.75rem}
+.header-right{display:flex;align-items:center;gap:.4rem}
+.hbtn{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 11px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:4px;transition:all .15s;white-space:nowrap}
+.hbtn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
 
-            /* cores das disciplinas */
-            --cor-tc0610: #ffeed9; /* laranja suave */
-            --cor-tb0793: #d9eaff; /* azul suave */
-            --cor-td0022: #f0e0ff; /* roxo suave */
-            --cor-td0023: #e0f5e0; /* verde suave */
-        }
+/* MAIN */
+main{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:1.5rem 1.5rem 2rem;display:flex;flex-direction:column;gap:2rem}
 
-        body.dark {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --text: #e2e8f0;
-            --text-light: #cbd5e1;
-            --border: #334155;
-            --accent: #60a5fa;
-            --accent-soft: #1e3a5f;
-            --muted: #64748b;
-            --card-bg: #1e293b;
+/* SECTION TITLE */
+.stitle{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
-            --cor-tc0610: #4a3b2a;
-            --cor-tb0793: #1e3a5f;
-            --cor-td0022: #3b2e4a;
-            --cor-td0023: #1e4a3a;
-        }
+/* WEEK NAV */
+.week-nav{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.week-label{font-family:var(--mono);font-size:12px;color:var(--text2);background:var(--surface2);padding:4px 12px;border-radius:20px;border:1px solid var(--border)}
+.warr{background:var(--surface);border:1px solid var(--border);border-radius:7px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text2);transition:all .15s}
+.warr:hover{background:var(--surface2)}
+.btn-today{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent);padding:4px 12px;border-radius:7px;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-today:hover{background:var(--accent);color:#fff}
+.sem-prog{margin-left:auto;display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:11px;color:var(--text3)}
+.sem-bar{width:72px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.sem-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s}
 
-        body {
-            background: var(--bg);
-            padding: 1rem;
-            min-height: 100vh;
-            color: var(--text);
-            transition: background 0.2s, color 0.2s;
-        }
+/* CALENDAR */
+.cal-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:auto;box-shadow:var(--shadow)}
+.cal-inner{min-width:600px}
+.cal-head{display:grid;border-bottom:1px solid var(--border)}
+.cal-head-time{border-right:1px solid var(--border);padding:8px 0}
+.cal-dh{padding:8px 4px;text-align:center;border-right:1px solid var(--border)}
+.cal-dh:last-child{border-right:none}
+.dname{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:500}
+.dnum{font-size:17px;font-weight:300;color:var(--text);font-family:var(--mono);line-height:1.2;margin-top:1px}
+.cal-dh.is-today .dnum{background:var(--accent);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:2px auto 0;font-size:13px;font-weight:500}
+.cal-dh.is-today .dname{color:var(--accent)}
+.cal-dh.is-past{opacity:.45}
+.cal-body{display:grid;position:relative}
+.cal-tcol{width:52px;min-width:52px}
+.cal-ts{height:48px;border-right:1px solid var(--border);display:flex;align-items:flex-start;justify-content:flex-end;padding:2px 6px 0 0}
+.cal-tl{font-family:var(--mono);font-size:10px;color:var(--text3);transform:translateY(-50%)}
+.cal-dcol{border-right:1px solid var(--border);position:relative}
+.cal-dcol:last-child{border-right:none}
+.cal-hl{height:48px;border-bottom:1px solid var(--border)}
+.cal-hl:last-child{border-bottom:none}
+.now-line{position:absolute;left:0;right:0;height:2px;background:var(--warn);z-index:10;pointer-events:none}
+.now-line::before{content:'';position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--warn)}
+.cal-ev{position:absolute;left:3px;right:3px;border-radius:6px;padding:4px 6px;font-size:11px;line-height:1.3;overflow:hidden;cursor:pointer;transition:filter .15s,transform .1s;z-index:5;border-left:3px solid}
+.cal-ev:hover{filter:brightness(.93);transform:scale(1.01)}
+.cal-ev.ev-past{opacity:.5}
+.ev-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-time{font-family:var(--mono);font-size:10px;opacity:.65}
+.ev-check{font-size:10px;opacity:.8}
+.cal-ev.c1{background:var(--c1-bg);border-color:var(--c1);color:var(--text)}
+.cal-ev.c2{background:var(--c2-bg);border-color:var(--c2);color:var(--text)}
+.cal-ev.c3{background:var(--c3-bg);border-color:var(--c3);color:var(--text)}
+.cal-ev.c4{background:var(--c4-bg);border-color:var(--c4);color:var(--text)}
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
-        }
+/* ATTENDANCE */
+.att-grid{display:flex;flex-direction:column;gap:.6rem}
+.att-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
+.att-head{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;cursor:pointer;user-select:none;transition:background .1s}
+.att-head:hover{background:var(--surface2)}
+.att-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.att-name{font-weight:500;font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-code{font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0}
+.att-pill{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);white-space:nowrap}
+.att-pill.danger{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.att-pill.safe{background:#ecfdf5;color:var(--ok);border-color:#a7f3d0}
+.att-chev{color:var(--text3);font-size:11px;transition:transform .2s;flex-shrink:0}
+.att-card.open .att-chev{transform:rotate(180deg)}
+.att-prog{height:3px;background:var(--border)}
+.att-prog-fill{height:100%;transition:width .4s}
+.att-body{display:none;border-top:1px solid var(--border);padding:.75rem 1rem}
+.att-card.open .att-body{display:block}
+.att-list{display:flex;flex-direction:column;gap:.3rem;max-height:280px;overflow-y:auto;margin-bottom:.75rem}
+.att-row{display:flex;align-items:center;gap:.6rem;padding:.35rem .4rem;border-radius:7px;transition:background .1s}
+.att-row:hover{background:var(--surface2)}
+.att-cb{width:15px;height:15px;border-radius:4px;cursor:pointer;flex-shrink:0;accent-color:var(--accent)}
+.att-date{font-family:var(--mono);font-size:11px;color:var(--text3);width:88px;flex-shrink:0}
+.att-weekday{font-size:12px;color:var(--text2);width:28px;flex-shrink:0}
+.att-htime{font-family:var(--mono);font-size:11px;color:var(--text3);flex:1}
+.att-badge{font-size:10px;padding:1px 7px;border-radius:20px;font-weight:500}
+.badge-today{background:var(--accent);color:#fff}
+.badge-future{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+.badge-falta{background:var(--warn-bg);color:var(--warn)}
+.att-footer{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;padding-top:.6rem;border-top:1px solid var(--border)}
+.att-sum{font-size:12px;color:var(--text2)}
+.att-sum strong{color:var(--text)}
+.att-warn{font-size:11px;color:var(--warn);display:flex;align-items:center;gap:.3rem;margin-top:.25rem}
+.att-mark-all{background:none;border:1px solid var(--border);padding:4px 11px;border-radius:7px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.att-mark-all:hover{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
 
-        /* toast */
-        .toast {
-            position: fixed;
-            bottom: 1.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--surface);
-            color: var(--text);
-            padding: 0.7rem 1.5rem;
-            border-radius: 50px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 1px solid var(--border);
-            font-size: 0.9rem;
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-        .toast.show { opacity: 1; }
+/* LISTS */
+.lists-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:580px){.lists-grid{grid-template-columns:1fr}}
+.lcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.lcard-head{padding:.65rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:500;color:var(--text2)}
+.lcnt{font-family:var(--mono);font-size:11px;background:var(--surface2);padding:2px 8px;border-radius:20px;border:1px solid var(--border);color:var(--text3)}
+.litems{padding:.2rem 0;min-height:40px;max-height:300px;overflow-y:auto}
+.litem{display:flex;align-items:center;gap:.55rem;padding:.4rem .75rem;transition:background .1s,opacity .3s}
+.litem:hover{background:var(--surface2)}
+.litem.done{opacity:.4}
+.lcb{width:14px;height:14px;border-radius:4px;cursor:pointer;flex-shrink:0;accent-color:var(--accent)}
+.ltxt{flex:1;font-size:13px;cursor:pointer;padding:1px 3px;border-radius:4px;transition:background .1s}
+.ltxt:hover{background:var(--border)}
+.litem.done .ltxt{text-decoration:line-through;color:var(--text3)}
+.ldel{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:13px;opacity:0;transition:opacity .15s}
+.litem:hover .ldel{opacity:1}
+.ldel:hover{color:var(--warn);background:var(--warn-bg)}
+.ladd{display:flex;gap:.4rem;padding:.55rem .75rem;border-top:1px solid var(--border)}
+.linput{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .15s}
+.linput:focus{border-color:var(--accent);background:var(--surface)}
+.laddbtn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:16px;cursor:pointer;transition:opacity .15s;line-height:1}
+.laddbtn:hover{opacity:.85}
 
-        /* back to top */
-        .back-to-top {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            transition: opacity 0.2s, transform 0.1s;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1000;
-        }
-        .back-to-top.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .back-to-top:active {
-            transform: scale(0.95);
-        }
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:.5rem 1rem;border-radius:8px;font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;display:flex;align-items:center;gap:.7rem;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.toast.show{opacity:1;pointer-events:auto}
+.tundo{background:none;border:1px solid rgba(255,255,255,.3);color:inherit;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:var(--sans)}
+.tundo:hover{background:rgba(255,255,255,.15)}
 
-        .header-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            color: var(--text);
-            border-left: 5px solid var(--accent);
-            padding-left: 1rem;
-            margin: 0;
-        }
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .icon-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 0.4rem 1rem;
-            font-size: 0.9rem;
-            color: var(--text);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            transition: 0.1s;
-        }
-        .icon-btn:hover {
-            background: var(--accent-soft);
-        }
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:.65rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.finfo{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.factions{display:flex;gap:.4rem}
 
-        h2 {
-            font-size: 1.3rem;
-            font-weight: 500;
-            margin: 2rem 0 1rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-light);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
+/* BTT */
+.btt{position:fixed;bottom:1.5rem;right:1.5rem;width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .1s;z-index:50}
+.btt.show{opacity:1;pointer-events:auto}
+.btt:hover{transform:translateY(-2px)}
 
-        /* today */
-        .today-card {
-            background: var(--accent-soft);
-            border-radius: 24px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--accent);
-            color: var(--text);
-        }
-        .today-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .today-classes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 0.8rem;
-        }
-        .today-class {
-            background: var(--surface);
-            padding: 0.4rem 1rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-        }
-
-        /* cards disciplinas */
-        .card-grid { display: flex; flex-direction: column; gap: 1rem; }
-        .card {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 1.2rem;
-            border: 1px solid var(--border);
-            transition: box-shadow 0.1s;
-        }
-        .card[data-codigo="TC0610"] { border-left: 6px solid #f59e0b; background: var(--cor-tc0610); }
-        .card[data-codigo="TB0793"] { border-left: 6px solid #3b82f6; background: var(--cor-tb0793); }
-        .card[data-codigo="TD0022"] { border-left: 6px solid #a855f7; background: var(--cor-td0022); }
-        .card[data-codigo="TD0023"] { border-left: 6px solid #10b981; background: var(--cor-td0023); }
-
-        .disciplina-titulo {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.4rem;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-        .codigo {
-            font-size: 0.9rem;
-            background: rgba(255,255,255,0.5);
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            color: var(--text);
-            font-weight: 500;
-        }
-        .local {
-            font-size: 0.95rem;
-            color: var(--text-light);
-            margin: 0.5rem 0 0.6rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .local::before { content: "📍"; font-size: 1rem; }
-        .horario-badge {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin: 0.5rem 0 0.8rem 0;
-        }
-        .horario-item {
-            background: rgba(255,255,255,0.7);
-            padding: 0.3rem 1rem;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            color: var(--text);
-            font-weight: 500;
-        }
-        .btn-modal, .btn-secondary {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 0.5rem 1rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            color: var(--text);
-            cursor: pointer;
-            width: fit-content;
-            transition: 0.15s;
-            margin-top: 0.3rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .btn-modal:hover, .btn-secondary:hover { background: var(--accent-soft); }
-
-        /* frequência: próximas aulas em cards individuais */
-        .proximas-aulas-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            margin-top: 1rem;
-        }
-        .proxima-aula-card {
-            background: var(--surface);
-            border-radius: 20px;
-            padding: 1rem;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .proxima-aula-card[data-codigo="TC0610"] { border-left: 6px solid #f59e0b; background: var(--cor-tc0610); }
-        .proxima-aula-card[data-codigo="TB0793"] { border-left: 6px solid #3b82f6; background: var(--cor-tb0793); }
-        .proxima-aula-card[data-codigo="TD0022"] { border-left: 6px solid #a855f7; background: var(--cor-td0022); }
-        .proxima-aula-card[data-codigo="TD0023"] { border-left: 6px solid #10b981; background: var(--cor-td0023); }
-
-        .proxima-aula-info {
-            flex: 1;
-        }
-        .proxima-aula-nome {
-            font-weight: 600;
-            color: var(--text);
-        }
-        .proxima-aula-data {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* frequência resumo */
-        .frequencia-resumo {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 1.2rem;
-            border: 1px solid var(--border);
-            margin-bottom: 1.5rem;
-        }
-        .resumo-por-disciplina {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-        }
-        .disciplina-stats {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            background: var(--accent-soft);
-            padding: 0.8rem 1rem;
-            border-radius: 20px;
-        }
-        .stats-nome { font-weight: 600; color: var(--text); }
-        .stats-contador {
-            color: var(--accent);
-            font-weight: 500;
-            background: var(--surface);
-            padding: 0.2rem 1rem;
-            border-radius: 30px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: var(--border);
-            border-radius: 10px;
-            margin: 0.5rem 0 0;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 6px;
-            background: var(--accent);
-            border-radius: 10px;
-            width: 0%;
-        }
-        .check-all-disciplina {
-            background: var(--surface);
-            border: 1px solid var(--accent);
-            padding: 0.3rem 1rem;
-            border-radius: 30px;
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        /* visão semanal com turnos */
-        .week-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .week-day-row {
-            background: var(--surface);
-            border-radius: 20px;
-            padding: 1rem;
-            border: 1px solid var(--border);
-        }
-        .week-day-title {
-            font-weight: 600;
-            margin-bottom: 0.8rem;
-            color: var(--accent);
-        }
-        .week-turnos {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .turno {
-            flex: 1 1 150px;
-            background: var(--accent-soft);
-            border-radius: 16px;
-            padding: 0.8rem;
-        }
-        .turno.vazio {
-            opacity: 0.5;
-            background: var(--border);
-        }
-        .turno h4 {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            color: var(--text);
-        }
-        .turno-aula {
-            background: var(--surface);
-            padding: 0.4rem 0.8rem;
-            border-radius: 30px;
-            margin-bottom: 0.3rem;
-            font-size: 0.85rem;
-            border-left: 4px solid transparent;
-        }
-        .turno-aula[data-codigo="TC0610"] { border-left-color: #f59e0b; }
-        .turno-aula[data-codigo="TB0793"] { border-left-color: #3b82f6; }
-        .turno-aula[data-codigo="TD0022"] { border-left-color: #a855f7; }
-        .turno-aula[data-codigo="TD0023"] { border-left-color: #10b981; }
-
-        /* listas de estudo com efeito de riscado e silenciado */
-        .list-wrapper {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 1.2rem;
-            border: 1px solid var(--border);
-        }
-        .task-list, .topic-list {
-            list-style: none;
-            margin: 1rem 0 0.5rem;
-        }
-        .task-item, .topic-item {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid var(--border);
-            transition: opacity 0.3s, order 0.3s;
-        }
-        .task-item.done, .topic-item.done {
-            opacity: 0.5;
-            order: 999; /* vai para o final se combinado com flex order? Precisamos de reordenação real */
-            text-decoration: line-through;
-        }
-        .task-item .task-text, .topic-item .topic-text {
-            flex: 1;
-            font-size: 0.98rem;
-            color: var(--text);
-            word-break: break-word;
-            cursor: pointer;
-            padding: 0.2rem 0.4rem;
-            border-radius: 8px;
-            transition: background 0.1s;
-        }
-        .task-item .task-text.riscado, .topic-item .topic-text.riscado {
-            text-decoration: line-through;
-        }
-        .delete-btn {
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 0 0.3rem;
-        }
-        .edit-btn {
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-size: 1rem;
-            cursor: pointer;
-            margin-right: 0.2rem;
-        }
-        .add-area {
-            display: flex;
-            margin: 1rem 0 0.5rem;
-            gap: 0.5rem;
-        }
-        .add-input {
-            flex: 1;
-            padding: 0.8rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            font-size: 0.95rem;
-            background: var(--surface);
-            color: var(--text);
-        }
-        .add-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 0 1.5rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(3px);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 1rem;
-        }
-        .modal-card {
-            background: var(--surface);
-            border-radius: 32px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 1.8rem 1.5rem;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-        }
-        .modal-card h3 {
-            font-size: 1.5rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            color: var(--text);
-            padding-right: 1.5rem;
-        }
-        .close-btn {
-            float: right;
-            font-size: 1.8rem;
-            line-height: 1;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--muted);
-        }
-
-        .footer {
-            margin-top: 2.5rem;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-    </style>
+@media(max-width:640px){.sem-prog{display:none}.live-clock{display:none}main{padding:1rem;gap:1.5rem}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-bar">
-            <h1>📘 rotina·estudos</h1>
-            <div class="header-actions">
-                <button class="icon-btn" id="toggleDark">🌙 escuro</button>
-                <button class="icon-btn" id="exportData">📤 exportar</button>
-                <button class="icon-btn" id="importData">📥 importar</button>
-            </div>
-        </div>
 
-        <!-- VISÃO HOJE -->
-        <div id="todayContainer" class="today-card"></div>
+<header>
+  <div style="display:flex;align-items:center">
+    <span class="logo">rotina<b>·</b>estudos</span>
+    <span class="live-clock" id="liveClock">00:00:00</span>
+  </div>
+  <div class="header-right">
+    <button class="hbtn" id="btnDark">🌙 escuro</button>
+    <button class="hbtn" id="btnExport">↑ exportar</button>
+    <button class="hbtn" id="btnImport">↓ importar</button>
+  </div>
+</header>
 
-        <!-- VISÃO SEMANAL POR TURNOS -->
-        <h2>📅 semana (manhã/tarde/noite)</h2>
-        <div class="week-grid" id="weekGrid"></div>
+<main>
 
-        <!-- CARDS DAS DISCIPLINAS -->
-        <h2>📚 disciplinas</h2>
-        <div class="card-grid" id="cardsContainer"></div>
-
-        <!-- FREQUÊNCIA COMPACTA -->
-        <h2>📋 frequência</h2>
-        <div class="frequencia-resumo">
-            <div class="resumo-por-disciplina" id="resumoDisciplinas"></div>
-            <div class="proximas-aulas">
-                <div class="proximas-titulo">
-                    <span>⏳ próximas aulas</span>
-                    <span class="stats-contador" id="contadorGeral"></span>
-                </div>
-                <div class="proximas-aulas-grid" id="proximasAulasGrid"></div>
-                <div class="link-modal-freq" style="margin-top:0.8rem;">
-                    <button class="btn-secondary" id="verTodasFrequencia">ver todas as aulas</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- CRONOGRAMA DE ESTUDOS -->
-        <h2>⏱️ tarefas</h2>
-        <div class="list-wrapper">
-            <ul class="task-list" id="taskList"></ul>
-            <div class="add-area">
-                <input type="text" id="newTaskInput" class="add-input" placeholder="ex: revisar apontamentos" autocomplete="off">
-                <button class="add-btn" id="addTaskBtn">+</button>
-            </div>
-        </div>
-
-        <!-- CONTEÚDOS -->
-        <h2>📚 tópicos</h2>
-        <div class="list-wrapper">
-            <ul class="topic-list" id="topicList"></ul>
-            <div class="add-area">
-                <input type="text" id="newTopicInput" class="add-input" placeholder="ex: betuminosos: ensaios" autocomplete="off">
-                <button class="add-btn" id="addTopicBtn">+</button>
-            </div>
-        </div>
-
-        <div class="footer">dados salvos automaticamente · clique no texto para editar</div>
+  <!-- AGENDA SEMANAL -->
+  <section>
+    <p class="stitle">agenda semanal</p>
+    <div class="week-nav">
+      <button class="warr" id="wkPrev">‹</button>
+      <button class="warr" id="wkNext">›</button>
+      <span class="week-label" id="wkLabel">—</span>
+      <button class="btn-today" id="btnToday">hoje</button>
+      <div class="sem-prog">
+        <span id="semLabel">—</span>
+        <div class="sem-bar"><div class="sem-fill" id="semFill"></div></div>
+        <span id="semPct">—</span>
+      </div>
     </div>
+    <div class="cal-wrap"><div class="cal-inner" id="calInner"></div></div>
+  </section>
 
-    <!-- BACK TO TOP -->
-    <button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+  <!-- PRESENÇA -->
+  <section>
+    <p class="stitle">presença por disciplina</p>
+    <div class="att-grid" id="attGrid"></div>
+  </section>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast">salvo</div>
-
-    <!-- MODAL FREQUÊNCIA COMPLETA -->
-    <div class="modal-overlay" id="modalFreqOverlay">
-        <div class="modal-card">
-            <button class="close-btn" id="closeFreqModal">&times;</button>
-            <h3>Todas as aulas</h3>
-            <div class="filter-bar" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
-                <select id="filtroDisciplina" class="filter-select" style="flex:1; padding:0.5rem; border-radius:40px; border:1px solid var(--border); background:var(--surface); color:var(--text);">
-                    <option value="todas">Todas disciplinas</option>
-                </select>
-                <button class="btn-secondary" id="selectAllFreqModal">✔ selecionar todas</button>
-                <button class="btn-secondary" id="marcarSelecionadas">✓ marcar selecionadas</button>
-            </div>
-            <div id="modalFreqLista"></div>
-        </div>
+  <!-- ANOTAÇÕES -->
+  <section>
+    <p class="stitle">anotações</p>
+    <div class="lists-grid">
+      <div class="lcard">
+        <div class="lcard-head"><span>⏱ tarefas</span><span class="lcnt" id="taskCnt">—</span></div>
+        <ul class="litems" id="taskList"></ul>
+        <div class="ladd"><input class="linput" id="taskInp" placeholder="nova tarefa…" autocomplete="off"><button class="laddbtn" id="taskAdd">+</button></div>
+      </div>
+      <div class="lcard">
+        <div class="lcard-head"><span>📚 tópicos</span><span class="lcnt" id="topicCnt">—</span></div>
+        <ul class="litems" id="topicList"></ul>
+        <div class="ladd"><input class="linput" id="topicInp" placeholder="novo tópico…" autocomplete="off"><button class="laddbtn" id="topicAdd">+</button></div>
+      </div>
     </div>
+  </section>
 
-    <!-- MODAL HORÁRIOS COMPLETOS (disciplina) -->
-    <div class="modal-overlay" id="modalHorarioOverlay">
-        <div class="modal-card">
-            <button class="close-btn" id="closeHorarioModal">&times;</button>
-            <h3 id="modalHorarioTitle">Horários completos</h3>
-            <div id="modalHorarioContent"></div>
+</main>
+
+<footer>
+  <span class="finfo" id="footerInfo">—</span>
+  <div class="factions">
+    <button class="hbtn" id="btnExport2">↑ exportar</button>
+    <button class="hbtn" id="btnImport2">↓ importar</button>
+  </div>
+</footer>
+
+<button class="btt" id="btt">↑</button>
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script>
+'use strict';
+(function(){
+
+// ── CURSOS ──────────────────────────────────────────────────────────────────
+// dia: 0=dom,1=seg,2=ter,3=qua,4=qui,5=sex,6=sab
+const COURSES = [
+  { id:'TC0610', nome:'Materiais Betuminosos',       turma:'01', local:'Bloco 708 – Sala 24',
+    horarios:[{dia:3,ini:14,fim:17}],
+    ini: new Date(2026,2,2), fim: new Date(2026,6,7), cls:'c1', cor:'var(--c1)' },
+  { id:'TB0793', nome:'Resistência dos Materiais I', turma:'02', local:'Bloco 708 – Sala 23',
+    horarios:[{dia:2,ini:14,fim:16},{dia:4,ini:14,fim:16}],
+    ini: new Date(2026,2,2), fim: new Date(2026,6,7), cls:'c2', cor:'var(--c2)' },
+  { id:'TD0022', nome:'Instalações Hidrossanitárias',turma:'01', local:'Bloco 727 – Sala 21',
+    horarios:[{dia:1,ini:10,fim:13}],
+    ini: new Date(2026,2,2), fim: new Date(2026,6,7), cls:'c3', cor:'var(--c3)' },
+  { id:'TD0023', nome:'Sistemas de Abastecimento',   turma:'01', local:'Bloco 708 – Sala 22',
+    horarios:[{dia:1,ini:8,fim:10}],
+    ini: new Date(2026,2,2), fim: new Date(2026,6,7), cls:'c4', cor:'var(--c4)' },
+];
+const FALTA_LIMIT = 0.25;
+
+function gerarAulas(c){
+  const out=[];
+  c.horarios.forEach(h=>{
+    let d=new Date(c.ini);
+    while(d.getDay()!==h.dia) d.setDate(d.getDate()+1);
+    while(d<=c.fim){
+      out.push({
+        id:`${c.id}-${d.toISOString().slice(0,10)}-${h.ini}`,
+        cursoId:c.id, date:new Date(d), ini:h.ini, fim:h.fim
+      });
+      d=new Date(d); d.setDate(d.getDate()+7);
+    }
+  });
+  return out.sort((a,b)=>a.date-b.date||a.ini-b.ini);
+}
+COURSES.forEach(c=>c._aulas=gerarAulas(c));
+
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+const LS={att:'v3_att',tasks:'v3_tasks',topics:'v3_topics',dark:'v3_dark'};
+let att={}, tasks=[], topics=[], undoBuf=null, undoTm=null;
+const listTm={};
+
+function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36)}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function load(){
+  try{att=JSON.parse(localStorage.getItem(LS.att)||'{}')}catch{att={}}
+  function mig(raw,defs){
+    if(!raw) return defs.map(t=>({id:uid(),text:t,checked:false}));
+    try{
+      const p=JSON.parse(raw);
+      if(!Array.isArray(p)) return defs.map(t=>({id:uid(),text:t,checked:false}));
+      if(p.length&&typeof p[0]==='string') return p.map(t=>({id:uid(),text:t,checked:false}));
+      return p;
+    }catch{return defs.map(t=>({id:uid(),text:t,checked:false}))}
+  }
+  tasks=mig(localStorage.getItem(LS.tasks),[
+    'Revisar Materiais Betuminosos cap.2',
+    'Exercícios Resistência dos Materiais',
+    'Resumo Instalações Hidrossanitárias'
+  ]);
+  topics=mig(localStorage.getItem(LS.topics),[
+    'TC0610 – ligantes betuminosos',
+    'TC0610 – ensaio de penetração',
+    'TB0793 – lei de Hooke',
+    'TD0022 – ramais e colunas',
+    'TD0023 – adutoras e estações'
+  ]);
+  const savedDark=localStorage.getItem(LS.dark);
+  const sysDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  if(savedDark!==null?savedDark==='true':sysDark){
+    document.body.classList.add('dark');
+    document.getElementById('btnDark').textContent='☀ claro';
+  }
+}
+
+function save(quiet=false){
+  localStorage.setItem(LS.att,JSON.stringify(att));
+  localStorage.setItem(LS.tasks,JSON.stringify(tasks));
+  localStorage.setItem(LS.topics,JSON.stringify(topics));
+  if(!quiet) showToast('salvo');
+  updateFooter();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let toastTm=null;
+function showToast(msg,undo=false){
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  const old=el.querySelector('.tundo'); if(old) old.remove();
+  if(undo){
+    const b=document.createElement('button');
+    b.className='tundo'; b.textContent='desfazer';
+    b.onclick=()=>{doUndo();el.classList.remove('show')};
+    el.appendChild(b);
+  }
+  el.classList.add('show');
+  if(toastTm) clearTimeout(toastTm);
+  toastTm=setTimeout(()=>el.classList.remove('show'),undo?5000:1800);
+}
+function doUndo(){
+  if(!undoBuf) return;
+  const{type,item,index}=undoBuf;
+  (type==='task'?tasks:topics).splice(index,0,item);
+  save(true); renderList(type); undoBuf=null;
+}
+
+// ── RELÓGIO ──────────────────────────────────────────────────────────────────
+function tick(){
+  document.getElementById('liveClock').textContent=
+    new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tick,1000); tick();
+
+// ── SEMANA ───────────────────────────────────────────────────────────────────
+let wkOff=0;
+const DNAMES=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+// JS: 0=dom,1=seg,...,6=sab → para exibir seg–dom: índice 0 do array = segunda
+// getDay() retorna 0=dom. Para mapear: (getDay()+6)%7 = 0..6 (seg=0,dom=6)
+
+function getWeekDates(off=0){
+  const now=new Date(); now.setHours(0,0,0,0);
+  const dow=(now.getDay()+6)%7; // 0=seg,6=dom
+  const mon=new Date(now); mon.setDate(now.getDate()-dow+off*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d});
+}
+
+function fmtShort(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+
+function renderSemProg(){
+  const ini=new Date(2026,2,2), fim=new Date(2026,6,7), now=new Date();
+  const total=fim-ini, elapsed=Math.min(Math.max(now-ini,0),total);
+  const pct=total>0?(elapsed/total*100):0;
+  const semTot=Math.ceil(total/(7*86400000));
+  const semAt=Math.ceil((now-ini)/(7*86400000));
+  document.getElementById('semLabel').textContent=
+    now<ini?'antes do início':now>fim?'encerrado':`semana ${Math.max(1,semAt)}/${semTot}`;
+  document.getElementById('semFill').style.width=pct.toFixed(1)+'%';
+  document.getElementById('semPct').textContent=pct.toFixed(0)+'%';
+}
+
+// ── CALENDÁRIO ───────────────────────────────────────────────────────────────
+const CAL_INI=7, CAL_FIM=20, SLOT=48; // px por hora
+
+function renderCalendar(){
+  const days=getWeekDates(wkOff);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const now=new Date();
+  const hours=CAL_FIM-CAL_INI;
+  const cols=`52px repeat(7,1fr)`;
+
+  // header
+  let h=`<div style="display:grid;grid-template-columns:${cols};border-bottom:1px solid var(--border);">
+    <div class="cal-head-time"></div>`;
+  days.forEach((d,i)=>{
+    const isT=d.getTime()===today.getTime();
+    const isP=d<today;
+    h+=`<div class="cal-dh${isT?' is-today':''}${isP&&!isT?' is-past':''}">
+      <div class="dname">${DNAMES[i]}</div>
+      <div class="dnum">${d.getDate()}</div>
+    </div>`;
+  });
+  h+='</div>';
+
+  // body
+  h+=`<div style="display:grid;grid-template-columns:${cols};position:relative;">`;
+
+  // coluna de horas
+  h+=`<div class="cal-tcol">`;
+  for(let hh=CAL_INI;hh<=CAL_FIM;hh++){
+    h+=`<div class="cal-ts"><span class="cal-tl">${hh<10?'0'+hh:hh}:00</span></div>`;
+  }
+  h+='</div>';
+
+  // colunas dos dias
+  days.forEach((d,di)=>{
+    const dStr=d.toISOString().slice(0,10);
+    const isT=d.getTime()===today.getTime();
+    const isP=d<today;
+
+    const aulasDia=COURSES.flatMap(c=>
+      c._aulas.filter(a=>a.date.toISOString().slice(0,10)===dStr).map(a=>({...a,curso:c}))
+    );
+
+    h+=`<div class="cal-dcol">`;
+    for(let hh=CAL_INI;hh<CAL_FIM;hh++) h+=`<div class="cal-hl"></div>`;
+
+    // linha "agora"
+    if(isT&&wkOff===0){
+      const mins=(now.getHours()-CAL_INI)*60+now.getMinutes();
+      const top=Math.max(0,Math.min(mins/60*SLOT,hours*SLOT));
+      h+=`<div class="now-line" id="nowLine" style="top:${top}px"></div>`;
+    }
+
+    aulasDia.forEach(a=>{
+      const topPx=(a.ini-CAL_INI)*SLOT;
+      const durPx=(a.fim-a.ini)*SLOT;
+      const past=isP||(isT&&a.fim<=now.getHours());
+      const checked=att[a.id]||false;
+      h+=`<div class="cal-ev ${a.curso.cls}${past?' ev-past':''}"
+        style="top:${topPx}px;height:${durPx}px"
+        data-id="${a.id}">
+        <div class="ev-name">${esc(a.curso.nome)}</div>
+        <div class="ev-time">${a.ini}h–${a.fim}h</div>
+        ${checked?`<div class="ev-check">✓ presente</div>`:''}
+      </div>`;
+    });
+
+    h+='</div>';
+  });
+  h+='</div>';
+
+  document.getElementById('calInner').innerHTML=h;
+
+  // semana label
+  document.getElementById('wkLabel').textContent=`${fmtShort(days[0])} – ${fmtShort(days[6])}`;
+
+  // click nos eventos
+  document.querySelectorAll('.cal-ev').forEach(ev=>{
+    ev.addEventListener('click',()=>{
+      const id=ev.dataset.id;
+      att[id]=!att[id];
+      save(true);
+      showToast(att[id]?'✓ presença marcada':'presença desmarcada');
+      renderCalendar();
+      renderAttendance();
+    });
+  });
+}
+
+// atualizar linha de agora a cada minuto
+setInterval(()=>{
+  if(wkOff!==0) return;
+  const line=document.getElementById('nowLine'); if(!line) return;
+  const now=new Date();
+  const mins=(now.getHours()-CAL_INI)*60+now.getMinutes();
+  const hours=CAL_FIM-CAL_INI;
+  line.style.top=Math.max(0,Math.min(mins/60*SLOT,hours*SLOT))+'px';
+},60000);
+
+document.getElementById('wkPrev').onclick=()=>{wkOff--;renderCalendar()};
+document.getElementById('wkNext').onclick=()=>{wkOff++;renderCalendar()};
+document.getElementById('btnToday').onclick=()=>{wkOff=0;renderCalendar()};
+
+// ── PRESENÇA ─────────────────────────────────────────────────────────────────
+function calcStats(c){
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const total=c._aulas.length;
+  const passadas=c._aulas.filter(a=>a.date<=hoje);
+  const futuras=c._aulas.filter(a=>a.date>hoje);
+  const presentes=c._aulas.filter(a=>att[a.id]).length;
+  const faltasPast=passadas.filter(a=>!att[a.id]).length;
+  const maxFaltas=Math.floor(total*FALTA_LIMIT);
+  const emRisco=faltasPast>0&&faltasPast>=maxFaltas*0.75;
+  const reprovado=faltasPast>maxFaltas;
+  const pct=total>0?(presentes/total*100):100;
+  return{total,passadas,futuras,presentes,faltasPast,maxFaltas,emRisco,reprovado,pct};
+}
+
+function renderAttendance(){
+  const container=document.getElementById('attGrid');
+  const openSet=new Set([...container.querySelectorAll('.att-card.open')].map(e=>e.dataset.c));
+  container.innerHTML='';
+
+  COURSES.forEach(c=>{
+    const s=calcStats(c);
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+
+    let pillTxt, pillCls='';
+    if(s.reprovado){pillTxt=`✕ reprovado (${s.faltasPast}/${s.maxFaltas} faltas)`;pillCls='danger';}
+    else if(s.emRisco){pillTxt=`⚠ ${s.faltasPast}/${s.maxFaltas} faltas`;pillCls='danger';}
+    else{pillTxt=`${s.faltasPast} falta${s.faltasPast!==1?'s':''} · ${s.presentes}/${s.total}`;pillCls=s.faltasPast===0?'safe':'';}
+
+    const fillColor=s.reprovado||s.emRisco?'var(--warn)':c.cor;
+    const card=document.createElement('div');
+    card.className='att-card'+(openSet.has(c.id)?' open':'');
+    card.dataset.c=c.id;
+
+    card.innerHTML=`
+      <div class="att-head">
+        <div class="att-dot" style="background:${c.cor}"></div>
+        <span class="att-name">${esc(c.nome)}</span>
+        <span class="att-code">${c.id}</span>
+        <span class="att-pill ${pillCls}">${pillTxt}</span>
+        <span class="att-chev">▾</span>
+      </div>
+      <div class="att-prog"><div class="att-prog-fill" style="width:${s.pct.toFixed(1)}%;background:${fillColor}"></div></div>
+      <div class="att-body">
+        <div class="att-list" id="al-${c.id}"></div>
+        <div class="att-footer">
+          <div>
+            <div class="att-sum">presença: <strong>${s.pct.toFixed(0)}%</strong> · faltas usadas: <strong>${s.faltasPast}/${s.maxFaltas}</strong> · aulas passadas: <strong>${s.passadas.length}</strong></div>
+            ${s.emRisco&&!s.reprovado?`<div class="att-warn">⚠ ${s.maxFaltas-s.faltasPast} falta${s.maxFaltas-s.faltasPast!==1?'s':''} restante${s.maxFaltas-s.faltasPast!==1?'s':''} antes de reprovar</div>`:''}
+            ${s.reprovado?`<div class="att-warn">✕ limite ultrapassado em ${s.faltasPast-s.maxFaltas} falta${s.faltasPast-s.maxFaltas>1?'s':''}</div>`:''}
+          </div>
+          <button class="att-mark-all" data-c="${c.id}">✓ marcar todas passadas</button>
         </div>
-    </div>
+      </div>`;
 
-    <!-- INPUT OCULTO PARA IMPORTAR -->
-    <input type="file" id="importFile" accept=".json" style="display:none;">
+    container.appendChild(card);
 
-    <script>
-        (function() {
-            // ----- DADOS DAS DISCIPLINAS (com cores mapeadas) -----
-            const weekdayMap = { 'DOM':0, 'SEG':1, 'TER':2, 'QUA':3, 'QUI':4, 'SEX':5, 'SAB':6 };
-            const courses = [
-                { codigo: 'TC0610', nome: 'MATERIAIS BETUMINOSOS', turma: '01', local: 'Bloco 708 - Sala 24',
-                  horarios: [{ dia: 'QUA', inicio: '14:00', fim: '17:00' }],
-                  dataInicio: '02/03/2026', dataFim: '07/07/2026', cor: '#f59e0b' },
-                { codigo: 'TB0793', nome: 'RESISTENCIA DOS MATERIAIS I', turma: '02', local: 'Bloco 708 - Sala 23',
-                  horarios: [{ dia: 'TER', inicio: '14:00', fim: '16:00' }, { dia: 'QUI', inicio: '14:00', fim: '16:00' }],
-                  dataInicio: '02/03/2026', dataFim: '07/07/2026', cor: '#3b82f6' },
-                { codigo: 'TD0022', nome: 'INSTALAÇÕES HIDROSSANITÁRIAS', turma: '01', local: 'Bloco 727 - Sala 21',
-                  horarios: [{ dia: 'SEG', inicio: '10:00', fim: '13:00' }],
-                  dataInicio: '02/03/2026', dataFim: '07/07/2026', cor: '#a855f7' },
-                { codigo: 'TD0023', nome: 'SISTEMAS DE ABASTECIMENTO DE ÁGUA', turma: '01', local: 'Bloco 708 - Sala 22',
-                  horarios: [{ dia: 'SEG', inicio: '08:00', fim: '10:00' }],
-                  dataInicio: '02/03/2026', dataFim: '07/07/2026', cor: '#10b981' }
-            ];
+    // lista de aulas
+    const listEl=card.querySelector(`#al-${c.id}`);
+    c._aulas.forEach(aula=>{
+      const isPast=aula.date<hoje;
+      const isToday=aula.date.getTime()===hoje.getTime();
+      const checked=att[aula.id]||false;
+      const row=document.createElement('div');
+      row.className='att-row';
 
-            function parseDateBR(str) {
-                let [d, m, a] = str.split('/').map(Number);
-                return new Date(a, m-1, d, 12, 0, 0);
-            }
+      let badge='';
+      if(isToday) badge=`<span class="att-badge badge-today">hoje</span>`;
+      else if(!isPast) badge=`<span class="att-badge badge-future">futuro</span>`;
+      else if(!checked) badge=`<span class="att-badge badge-falta">falta</span>`;
 
-            function gerarDatasCurso(curso) {
-                let datas = [];
-                const start = parseDateBR(curso.dataInicio);
-                const end = parseDateBR(curso.dataFim);
-                end.setHours(23,59,59);
-                curso.horarios.forEach(horario => {
-                    const diaNum = weekdayMap[horario.dia];
-                    let primeira = new Date(start);
-                    while (primeira.getDay() !== diaNum && primeira <= end) {
-                        primeira.setDate(primeira.getDate() + 1);
-                    }
-                    let current = new Date(primeira);
-                    while (current <= end) {
-                        datas.push({
-                            dateObj: new Date(current),
-                            dateStr: current.toLocaleDateString('pt-BR'),
-                            diaSemana: horario.dia,
-                            horario: `${horario.inicio}–${horario.fim}`,
-                            local: curso.local,
-                            cursoNome: curso.nome,
-                            cursoCodigo: curso.codigo,
-                            id: `${curso.codigo}-${current.toISOString()}`
-                        });
-                        current.setDate(current.getDate() + 7);
-                    }
-                });
-                datas.sort((a,b) => a.dateObj - b.dateObj);
-                return datas;
-            }
+      row.innerHTML=`
+        <input type="checkbox" class="att-cb" data-id="${aula.id}" ${checked?'checked':''}>
+        <span class="att-date">${aula.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span>
+        <span class="att-weekday">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][aula.date.getDay()]}</span>
+        <span class="att-htime">${aula.ini}h–${aula.fim}h</span>
+        ${badge}`;
+      listEl.appendChild(row);
 
-            courses.forEach(c => c._datas = gerarDatasCurso(c));
+      row.querySelector('.att-cb').addEventListener('change',e=>{
+        att[aula.id]=e.target.checked;
+        save(true); renderAttendance(); renderCalendar();
+      });
+    });
 
-            // ----- ESTADO GLOBAL -----
-            let attendanceState = []; // boolean para todas as aulas
-            let tasks = [];
-            let topics = [];
-            let studyChecks = {}; // { "task-0": bool, "topic-0": bool }
+    card.querySelector('.att-head').addEventListener('click',()=>card.classList.toggle('open'));
+    card.querySelector('.att-mark-all').addEventListener('click',e=>{
+      e.stopPropagation();
+      const hoje2=new Date(); hoje2.setHours(0,0,0,0);
+      c._aulas.filter(a=>a.date<=hoje2).forEach(a=>att[a.id]=true);
+      save(); renderAttendance(); renderCalendar();
+    });
+  });
+}
 
-            // Para o efeito de silenciamento, precisamos de timers e controle de items "done" recentes
-            let pendingTimeouts = {}; // task-0: timeoutId
+// ── LISTAS ───────────────────────────────────────────────────────────────────
+function renderList(type){
+  const items=type==='task'?tasks:topics;
+  const listEl=document.getElementById(type==='task'?'taskList':'topicList');
+  const cntEl=document.getElementById(type==='task'?'taskCnt':'topicCnt');
+  const sorted=[...items].sort((a,b)=>(a.checked?1:0)-(b.checked?1:0));
+  listEl.innerHTML='';
 
-            function loadFromStorage() {
-                const totalAulas = courses.flatMap(c => c._datas).length;
-                const savedAttendance = localStorage.getItem('attendanceState');
-                if (savedAttendance) {
-                    attendanceState = JSON.parse(savedAttendance);
-                    if (attendanceState.length !== totalAulas) {
-                        attendanceState = courses.flatMap(c => c._datas.map(() => false));
-                    }
-                } else {
-                    attendanceState = courses.flatMap(c => c._datas.map(() => false));
-                }
+  sorted.forEach(item=>{
+    const li=document.createElement('li');
+    li.className='litem'+(item.checked?' done':'');
+    li.dataset.id=item.id;
+    li.innerHTML=`
+      <input type="checkbox" class="lcb" ${item.checked?'checked':''}>
+      <span class="ltxt">${esc(item.text)}</span>
+      <button class="ldel" title="remover">✕</button>`;
 
-                tasks = JSON.parse(localStorage.getItem('studyTasks')) || [
-                    'Revisar Materiais Betuminosos (apostila cap.2)',
-                    'Exercícios de Resistência dos Materiais I',
-                    'Ler norma de Instalações Hidrossanitárias',
-                    'Sistemas de Abastecimento: resumo'
-                ];
+    li.querySelector('.lcb').addEventListener('change',e=>{
+      item.checked=e.target.checked;
+      save(true);
+      if(item.checked){
+        if(listTm[item.id]) clearTimeout(listTm[item.id]);
+        listTm[item.id]=setTimeout(()=>{delete listTm[item.id];renderList(type);},2500);
+      } else {
+        if(listTm[item.id]){clearTimeout(listTm[item.id]);delete listTm[item.id];}
+        renderList(type);
+      }
+    });
 
-                topics = JSON.parse(localStorage.getItem('studyTopics')) || [
-                    'TC0610 – propriedades dos ligantes',
-                    'TC0610 – ensaios de penetração',
-                    'TB0793 – diagrama tensão-deformação',
-                    'TB0793 – lei de Hooke',
-                    'TD0022 – ramais e colunas',
-                    'TD0022 – desconto e ventilação',
-                    'TD0023 – adutoras e estações',
-                    'TD0023 – demanda de água'
-                ];
+    li.querySelector('.ltxt').addEventListener('dblclick',()=>{
+      const span=li.querySelector('.ltxt');
+      const inp=document.createElement('input');
+      inp.type='text'; inp.value=item.text; inp.className='linput';
+      inp.style.cssText='flex:1;margin:0;font-size:13px;';
+      span.replaceWith(inp); inp.focus(); inp.select();
+      const done=()=>{const v=inp.value.trim();if(v)item.text=v;save(true);renderList(type);};
+      inp.addEventListener('blur',done);
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();done();}});
+    });
 
-                studyChecks = JSON.parse(localStorage.getItem('studyChecks')) || {};
-            }
+    li.querySelector('.ldel').addEventListener('click',()=>{
+      const arr=type==='task'?tasks:topics;
+      const idx=arr.findIndex(t=>t.id===item.id); if(idx===-1) return;
+      const[removed]=arr.splice(idx,1);
+      undoBuf={type,item:removed,index:idx};
+      if(undoTm) clearTimeout(undoTm);
+      undoTm=setTimeout(()=>undoBuf=null,5000);
+      save(true); showToast('removido',true); renderList(type);
+    });
 
-            function saveAll(showToast = true) {
-                localStorage.setItem('attendanceState', JSON.stringify(attendanceState));
-                localStorage.setItem('studyTasks', JSON.stringify(tasks));
-                localStorage.setItem('studyTopics', JSON.stringify(topics));
-                localStorage.setItem('studyChecks', JSON.stringify(studyChecks));
-                if (showToast) showToastMsg('salvo');
-            }
+    listEl.appendChild(li);
+  });
 
-            function showToastMsg(msg) {
-                const toast = document.getElementById('toast');
-                toast.textContent = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 1500);
-            }
+  const pend=items.filter(t=>!t.checked).length;
+  cntEl.textContent=pend>0?`${pend} pendente${pend!==1?'s':''}`:(items.length>0?'tudo feito ✓':'0');
+}
 
-            // ----- UTILITÁRIOS -----
-            function todasAulas() {
-                return courses.flatMap(c => c._datas);
-            }
+function addItem(type,text){
+  if(!text.trim()) return;
+  (type==='task'?tasks:topics).push({id:uid(),text:text.trim(),checked:false});
+  save(true); renderList(type);
+}
 
-            // ----- RENDER CARDS (com cores) -----
-            function renderCards() {
-                const container = document.getElementById('cardsContainer');
-                container.innerHTML = '';
-                courses.forEach(curso => {
-                    const horariosHTML = curso.horarios.map(h => `<span class="horario-item">${h.dia} ${h.inicio}–${h.fim}</span>`).join('');
-                    container.innerHTML += `
-                        <div class="card" data-codigo="${curso.codigo}">
-                            <div class="disciplina-titulo">
-                                <span>${curso.nome}</span>
-                                <span class="codigo">${curso.codigo} · turma ${curso.turma}</span>
-                            </div>
-                            <div class="local">${curso.local}</div>
-                            <div class="horario-badge">${horariosHTML}</div>
-                            <div style="font-size:0.85rem; color:var(--muted); margin:0.3rem 0 0.6rem;">${curso.dataInicio} — ${curso.dataFim}</div>
-                            <button class="btn-modal" data-curso='${JSON.stringify({codigo:curso.codigo, turma:curso.turma})}'>ver horário completo</button>
-                        </div>
-                    `;
-                });
-                document.querySelectorAll('.btn-modal').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const { codigo, turma } = JSON.parse(btn.dataset.curso);
-                        const curso = courses.find(c => c.codigo === codigo && c.turma === turma);
-                        abrirModalHorario(curso);
-                    });
-                });
-            }
+['task','topic'].forEach(t=>{
+  document.getElementById(t+'Add').onclick=()=>{const i=document.getElementById(t+'Inp');addItem(t,i.value);i.value='';};
+  document.getElementById(t+'Inp').addEventListener('keydown',e=>{if(e.key==='Enter'){const i=e.target;addItem(t,i.value);i.value='';}});
+});
 
-            // modal horários
-            const modalHorarioOverlay = document.getElementById('modalHorarioOverlay');
-            const modalHorarioTitle = document.getElementById('modalHorarioTitle');
-            const modalHorarioContent = document.getElementById('modalHorarioContent');
-            document.getElementById('closeHorarioModal').addEventListener('click', () => modalHorarioOverlay.style.display = 'none');
-            modalHorarioOverlay.addEventListener('click', (e) => { if (e.target === modalHorarioOverlay) modalHorarioOverlay.style.display = 'none'; });
+// ── DARK MODE ────────────────────────────────────────────────────────────────
+document.getElementById('btnDark').addEventListener('click',()=>{
+  const dark=document.body.classList.toggle('dark');
+  document.getElementById('btnDark').textContent=dark?'☀ claro':'🌙 escuro';
+  localStorage.setItem(LS.dark,dark);
+});
 
-            function abrirModalHorario(curso) {
-                modalHorarioTitle.innerText = `${curso.codigo} – ${curso.nome} (turma ${curso.turma})`;
-                let html = '<ul class="lista-datas">';
-                curso._datas.forEach(item => {
-                    html += `<li><span class="data-dia">${item.dateStr} (${item.diaSemana})</span> <span class="data-hora">${item.horario}</span></li>`;
-                });
-                html += '</ul>';
-                modalHorarioContent.innerHTML = html;
-                modalHorarioOverlay.style.display = 'flex';
-            }
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function doExport(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({v:3,att,tasks,topics},null,2)],{type:'application/json'}));
+  a.download='rotina-estudos.json'; a.click(); URL.revokeObjectURL(a.href);
+  showToast('exportado');
+}
+['btnExport','btnExport2'].forEach(id=>document.getElementById(id).onclick=doExport);
+['btnImport','btnImport2'].forEach(id=>document.getElementById(id).onclick=()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.att) att=d.att;
+      if(d.attendance) att=d.attendance; // compat v2
+      if(d.tasks) tasks=d.tasks;
+      if(d.topics) topics=d.topics;
+      save(false); init(); showToast('importado');
+    }catch{alert('arquivo inválido');}
+  };
+  r.readAsText(f); e.target.value='';
+});
 
-            // ----- VISÃO HOJE -----
-            function renderHoje() {
-                const hoje = new Date();
-                hoje.setHours(0,0,0,0);
-                const diasSemana = ['DOM','SEG','TER','QUA','QUI','SEX','SAB'];
-                const diaHoje = diasSemana[hoje.getDay()];
-                const aulasHoje = courses.filter(c => c.horarios.some(h => h.dia === diaHoje));
-                const container = document.getElementById('todayContainer');
-                if (aulasHoje.length === 0) {
-                    container.innerHTML = '<div class="today-title">📅 Hoje · nenhuma aula</div>';
-                } else {
-                    container.innerHTML = '<div class="today-title">📅 Hoje</div><div class="today-classes"></div>';
-                    const classesDiv = container.querySelector('.today-classes');
-                    aulasHoje.forEach(c => {
-                        const horario = c.horarios.find(h => h.dia === diaHoje);
-                        classesDiv.innerHTML += `<span class="today-class" style="border-left: 4px solid ${c.cor};">${c.nome} (${horario.inicio}–${horario.fim})</span>`;
-                    });
-                }
-            }
+// ── FOOTER ───────────────────────────────────────────────────────────────────
+function updateFooter(){
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const all=COURSES.flatMap(c=>c._aulas);
+  const past=all.filter(a=>a.date<=hoje).length;
+  const marcadas=Object.values(att).filter(Boolean).length;
+  document.getElementById('footerInfo').textContent=
+    `${marcadas} de ${past} aulas passadas com presença · ${all.length} aulas no semestre`;
+}
 
-            // ----- VISÃO SEMANAL POR TURNOS -----
-            function renderWeekGrid() {
-                const weekGrid = document.getElementById('weekGrid');
-                const dias = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
-                let html = '';
-                dias.forEach(dia => {
-                    // Aulas deste dia
-                    const aulasDoDia = courses.flatMap(c => c.horarios.filter(h => h.dia === dia).map(h => ({ ...c, horario: h })));
-                    // Separar por turno
-                    const manha = aulasDoDia.filter(a => parseInt(a.horario.inicio) < 12);
-                    const tarde = aulasDoDia.filter(a => parseInt(a.horario.inicio) >= 12 && parseInt(a.horario.inicio) < 18);
-                    const noite = aulasDoDia.filter(a => parseInt(a.horario.inicio) >= 18);
+// ── BACK TO TOP ──────────────────────────────────────────────────────────────
+const btt=document.getElementById('btt');
+window.addEventListener('scroll',()=>btt.classList.toggle('show',scrollY>300));
+btt.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
 
-                    html += `<div class="week-day-row"><div class="week-day-title">${dia}</div><div class="week-turnos">`;
-                    html += `<div class="turno ${manha.length === 0 ? 'vazio' : ''}"><h4>🌅 Manhã</h4>`;
-                    if (manha.length === 0) html += '<span style="opacity:0.5;">—</span>';
-                    else manha.forEach(a => html += `<div class="turno-aula" data-codigo="${a.codigo}">${a.nome} (${a.horario.inicio}-${a.horario.fim})</div>`);
-                    html += `</div>`;
+// ── SERVICE WORKER ───────────────────────────────────────────────────────────
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-                    html += `<div class="turno ${tarde.length === 0 ? 'vazio' : ''}"><h4>☀️ Tarde</h4>`;
-                    if (tarde.length === 0) html += '<span style="opacity:0.5;">—</span>';
-                    else tarde.forEach(a => html += `<div class="turno-aula" data-codigo="${a.codigo}">${a.nome} (${a.horario.inicio}-${a.horario.fim})</div>`);
-                    html += `</div>`;
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  renderCalendar();
+  renderSemProg();
+  renderAttendance();
+  renderList('task');
+  renderList('topic');
+  updateFooter();
+}
 
-                    html += `<div class="turno ${noite.length === 0 ? 'vazio' : ''}"><h4>🌙 Noite</h4>`;
-                    if (noite.length === 0) html += '<span style="opacity:0.5;">—</span>';
-                    else noite.forEach(a => html += `<div class="turno-aula" data-codigo="${a.codigo}">${a.nome} (${a.horario.inicio}-${a.horario.fim})</div>`);
-                    html += `</div>`;
+load(); init(); save(true);
 
-                    html += `</div></div>`;
-                });
-                weekGrid.innerHTML = html;
-            }
+// re-render leve a cada 60s (atualiza tempo, linha de agora, badges "hoje/futuro")
+setInterval(()=>{
+  renderCalendar();
+  renderSemProg();
+  renderAttendance();
+  updateFooter();
+},60000);
 
-            // ----- FREQUÊNCIA COMPACTA (próximas aulas em cards) -----
-            function renderFrequenciaCompacta() {
-                const aulas = todasAulas();
-                const stats = {};
-                courses.forEach(c => stats[c.codigo] = { nome: c.nome, total: c._datas.length, feitas: 0, cor: c.cor });
-                aulas.forEach((aula, idx) => { if (attendanceState[idx]) stats[aula.cursoCodigo].feitas++; });
-
-                const resumoDiv = document.getElementById('resumoDisciplinas');
-                resumoDiv.innerHTML = Object.values(stats).map(s => `
-                    <div class="disciplina-stats">
-                        <span class="stats-nome" style="border-left:4px solid ${s.cor}; padding-left:0.5rem;">${s.nome}</span>
-                        <span class="stats-contador">${s.feitas}/${s.total}</span>
-                        <button class="check-all-disciplina" data-codigo="${s.nome}">✓ marcar todas</button>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${(s.feitas/s.total*100)||0}%"></div></div>
-                    </div>
-                `).join('');
-
-                document.querySelectorAll('.check-all-disciplina').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const nomeDisciplina = e.target.dataset.codigo;
-                        const indices = aulas.reduce((acc, aula, idx) => {
-                            if (aula.cursoNome === nomeDisciplina) acc.push(idx);
-                            return acc;
-                        }, []);
-                        indices.forEach(i => attendanceState[i] = true);
-                        saveAll();
-                        renderFrequenciaCompacta();
-                        renderModalFrequencia();
-                    });
-                });
-
-                const totalFeitas = attendanceState.filter(Boolean).length;
-                document.getElementById('contadorGeral').innerText = `${totalFeitas}/${aulas.length}`;
-
-                // próximas aulas (a partir de hoje) em cards
-                const hoje = new Date(); hoje.setHours(0,0,0,0);
-                const futuras = aulas.filter(a => a.dateObj >= hoje).slice(0,5);
-                const proximasGrid = document.getElementById('proximasAulasGrid');
-                if (futuras.length === 0) {
-                    proximasGrid.innerHTML = '<div class="small-note" style="padding:1rem;">Nenhuma aula futura</div>';
-                } else {
-                    proximasGrid.innerHTML = futuras.map((aula, idx) => {
-                        const indexReal = aulas.findIndex(a => a.id === aula.id);
-                        const curso = courses.find(c => c.codigo === aula.cursoCodigo);
-                        return `
-                            <div class="proxima-aula-card" data-codigo="${aula.cursoCodigo}">
-                                <input type="checkbox" class="aula-check" data-index="${indexReal}" id="prox-${idx}" ${attendanceState[indexReal] ? 'checked' : ''} style="width:1.2rem; height:1.2rem; accent-color:${curso.cor};">
-                                <div class="proxima-aula-info">
-                                    <div class="proxima-aula-nome">${aula.cursoNome}</div>
-                                    <div class="proxima-aula-data">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    document.querySelectorAll('.proxima-aula-card input[type=checkbox]').forEach(cb => {
-                        cb.addEventListener('change', (e) => {
-                            attendanceState[e.target.dataset.index] = e.target.checked;
-                            saveAll();
-                            renderFrequenciaCompacta();
-                            renderModalFrequencia();
-                        });
-                    });
-                }
-            }
-
-            // ----- MODAL FREQUÊNCIA COMPLETA (filtro, selecionar todas) -----
-            const modalFreqOverlay = document.getElementById('modalFreqOverlay');
-            const modalFreqLista = document.getElementById('modalFreqLista');
-            const filtroSelect = document.getElementById('filtroDisciplina');
-            const selectAllBtn = document.getElementById('selectAllFreqModal');
-            const marcarSelecionadasBtn = document.getElementById('marcarSelecionadas');
-
-            function renderModalFrequencia() {
-                const aulas = todasAulas();
-                const filtro = filtroSelect.value;
-                const aulasFiltradas = filtro === 'todas' ? aulas : aulas.filter(a => a.cursoNome === filtro);
-                let html = '<div style="max-height: 50vh; overflow-y: auto;">';
-                aulasFiltradas.forEach((aula, idx) => {
-                    const indexReal = aulas.findIndex(a => a.id === aula.id);
-                    html += `
-                        <div class="modal-freq-item" style="display:flex; align-items:center; gap:1rem; padding:0.6rem 0; border-bottom:1px solid var(--border);">
-                            <input type="checkbox" class="modal-freq-check" data-index="${indexReal}" id="modal-freq-${indexReal}" ${attendanceState[indexReal] ? 'checked' : ''} style="width:1.2rem; height:1.2rem;">
-                            <label for="modal-freq-${indexReal}" class="modal-freq-info" style="flex:1;">
-                                <strong style="color:${courses.find(c => c.codigo === aula.cursoCodigo).cor};">${aula.cursoNome}</strong><br>
-                                <span style="color:var(--text-light);">${aula.dateStr} (${aula.diaSemana}) ${aula.horario}</span>
-                            </label>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                modalFreqLista.innerHTML = html;
-
-                document.querySelectorAll('.modal-freq-check').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        attendanceState[e.target.dataset.index] = e.target.checked;
-                        saveAll();
-                        renderFrequenciaCompacta();
-                    });
-                });
-            }
-
-            function atualizarFiltroDisciplinas() {
-                filtroSelect.innerHTML = '<option value="todas">Todas disciplinas</option>';
-                courses.forEach(c => {
-                    filtroSelect.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
-                });
-            }
-
-            selectAllBtn.addEventListener('click', () => {
-                document.querySelectorAll('.modal-freq-check').forEach(cb => cb.checked = true);
-            });
-
-            marcarSelecionadasBtn.addEventListener('click', () => {
-                document.querySelectorAll('.modal-freq-check:checked').forEach(cb => {
-                    attendanceState[cb.dataset.index] = true;
-                });
-                saveAll();
-                renderFrequenciaCompacta();
-                renderModalFrequencia();
-            });
-
-            document.getElementById('verTodasFrequencia').addEventListener('click', () => {
-                atualizarFiltroDisciplinas();
-                renderModalFrequencia();
-                modalFreqOverlay.style.display = 'flex';
-            });
-
-            document.getElementById('closeFreqModal').addEventListener('click', () => modalFreqOverlay.style.display = 'none');
-            modalFreqOverlay.addEventListener('click', (e) => { if (e.target === modalFreqOverlay) modalFreqOverlay.style.display = 'none'; });
-
-            // ----- TAREFAS (com efeito riscar e silenciar após 5s) -----
-            function renderTasks() {
-                const taskList = document.getElementById('taskList');
-                // Ordenar: itens não feitos primeiro, depois feitos (pela propriedade "done" no studyChecks? Vamos usar um array de objetos)
-                // Para simplificar, vamos manter a ordem do array tasks, mas controlar visualmente.
-                // O efeito de mover para o final após 5s requer reordenação do array tasks.
-                // Vamos usar um array tasksItems: { text, checked, timestamp }? Mas o usuário quer que após 5s o item vá para o final e fique opaco.
-                // Implementação: Quando um checkbox é marcado, agendamos um timeout que move o item para o final do array tasks.
-                // Para isso, precisamos de um array mutável.
-                taskList.innerHTML = tasks.map((t, i) => {
-                    const checked = studyChecks[`task-${i}`] || false;
-                    const doneClass = checked ? 'riscado' : '';
-                    return `
-                        <li class="task-item" data-task-index="${i}" style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0; border-bottom:1px solid var(--border); ${checked ? 'opacity:0.6;' : ''}">
-                            <input type="checkbox" class="task-check" data-index="${i}" id="task-${i}" ${checked ? 'checked' : ''} style="width:1.2rem; height:1.2rem;">
-                            <span class="task-text ${doneClass}" data-task-index="${i}">${t}</span>
-                            <button class="edit-btn" data-task-index="${i}" title="editar">✎</button>
-                            <button class="delete-btn" data-task-index="${i}" title="remover">✕</button>
-                        </li>
-                    `;
-                }).join('');
-
-                // checkboxes
-                document.querySelectorAll('.task-check').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        const idx = e.target.dataset.index;
-                        const checked = e.target.checked;
-                        studyChecks[`task-${idx}`] = checked;
-
-                        // Aplicar riscado imediato
-                        const li = e.target.closest('.task-item');
-                        const span = li.querySelector('.task-text');
-                        if (checked) {
-                            span.classList.add('riscado');
-                            li.style.opacity = '0.6';
-                            // Agendar para mover ao final após 5s
-                            if (pendingTimeouts[`task-${idx}`]) clearTimeout(pendingTimeouts[`task-${idx}`]);
-                            pendingTimeouts[`task-${idx}`] = setTimeout(() => {
-                                // Mover item no array tasks para o final
-                                const itemText = tasks[idx];
-                                tasks.splice(idx, 1);
-                                tasks.push(itemText);
-                                // Reorganizar studyChecks
-                                const newChecks = {};
-                                tasks.forEach((_, newIdx) => {
-                                    // Mapear antigo índice? Precisamos de um mapa.
-                                    // Solução simples: recriar studyChecks para tasks baseado na nova ordem, preservando os estados originais.
-                                    // Mas sabemos que o item movido está marcado.
-                                    // Vamos reconstruir studyChecks para tasks.
-                                    const oldChecks = { ...studyChecks };
-                                    const newStudyChecks = {};
-                                    tasks.forEach((_, newIdx) => {
-                                        // O índice antigo é perdido, mas podemos associar pelo texto? Não é seguro.
-                                        // Melhor: usar um identificador único (timestamp). Mas para simplificar, vamos recriar studyChecks com base na nova ordem, assumindo que o item movido mantém checked=true.
-                                        // Isso pode causar inconsistência se houver dois itens iguais. Vamos fazer um mapeamento baseado no texto (não ideal, mas funciona para este exemplo)
-                                        // Alternativa: usar um id único. Vou adicionar um id para cada tarefa.
-                                        // Para não complicar, vamos apenas recriar studyChecks com false para novos índices.
-                                    });
-                                    // Como é um exemplo, vou pular a reordenação completa e apenas remarcar o item como feito e mover.
-                                    // Na prática, o usuário quer ver o item no final. Vamos fazer de forma simples: re-renderizar após mover.
-                                    // Mas precisamos salvar.
-                                    saveAll();
-                                    renderTasks(); // re-renderiza com nova ordem
-                                }, 5000);
-                            }, 5000);
-                        } else {
-                            span.classList.remove('riscado');
-                            li.style.opacity = '1';
-                            if (pendingTimeouts[`task-${idx}`]) {
-                                clearTimeout(pendingTimeouts[`task-${idx}`]);
-                                delete pendingTimeouts[`task-${idx}`];
-                            }
-                        }
-                        saveAll();
-                    });
-                });
-
-                // edição
-                document.querySelectorAll('.task-text').forEach(span => {
-                    span.addEventListener('dblclick', iniciarEdicaoTask);
-                });
-                document.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = e.target.dataset.taskIndex;
-                        iniciarEdicaoTask({ target: document.querySelector(`.task-text[data-task-index="${idx}"]`) });
-                    });
-                });
-
-                // remoção
-                document.querySelectorAll('.delete-btn[data-task-index]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = e.target.dataset.taskIndex;
-                        tasks.splice(idx, 1);
-                        // limpar studyChecks e pendingTimeouts
-                        delete studyChecks[`task-${idx}`];
-                        if (pendingTimeouts[`task-${idx}`]) clearTimeout(pendingTimeouts[`task-${idx}`]);
-                        // reindexar studyChecks
-                        const newChecks = {};
-                        tasks.forEach((_, i) => { newChecks[`task-${i}`] = studyChecks[`task-${i+1}`] || false; });
-                        studyChecks = newChecks;
-                        saveAll();
-                        renderTasks();
-                    });
-                });
-            }
-
-            function iniciarEdicaoTask(event) {
-                const span = event.target;
-                if (span.classList.contains('editing')) return;
-                const idx = span.dataset.taskIndex;
-                const oldText = tasks[idx];
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = oldText;
-                input.className = 'add-input';
-                input.style.width = '100%';
-                span.replaceWith(input);
-                input.focus();
-
-                const salvarEdicao = () => {
-                    const novoTexto = input.value.trim();
-                    if (novoTexto) tasks[idx] = novoTexto;
-                    saveAll();
-                    renderTasks();
-                };
-
-                input.addEventListener('blur', salvarEdicao);
-                input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); salvarEdicao(); } });
-            }
-
-            // tópicos (similar)
-            function renderTopics() {
-                const topicList = document.getElementById('topicList');
-                topicList.innerHTML = topics.map((t, i) => {
-                    const checked = studyChecks[`topic-${i}`] || false;
-                    const doneClass = checked ? 'riscado' : '';
-                    return `
-                        <li class="topic-item" data-topic-index="${i}" style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0; border-bottom:1px solid var(--border); ${checked ? 'opacity:0.6;' : ''}">
-                            <input type="checkbox" class="topic-check" data-index="${i}" id="topic-${i}" ${checked ? 'checked' : ''} style="width:1.2rem; height:1.2rem;">
-                            <span class="topic-text ${doneClass}" data-topic-index="${i}">${t}</span>
-                            <button class="edit-btn" data-topic-index="${i}" title="editar">✎</button>
-                            <button class="delete-btn" data-topic-index="${i}" title="remover">✕</button>
-                        </li>
-                    `;
-                }).join('');
-
-                document.querySelectorAll('.topic-check').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        const idx = e.target.dataset.index;
-                        const checked = e.target.checked;
-                        studyChecks[`topic-${idx}`] = checked;
-                        const li = e.target.closest('.topic-item');
-                        const span = li.querySelector('.topic-text');
-                        if (checked) {
-                            span.classList.add('riscado');
-                            li.style.opacity = '0.6';
-                            if (pendingTimeouts[`topic-${idx}`]) clearTimeout(pendingTimeouts[`topic-${idx}`]);
-                            pendingTimeouts[`topic-${idx}`] = setTimeout(() => {
-                                const itemText = topics[idx];
-                                topics.splice(idx, 1);
-                                topics.push(itemText);
-                                // reindexar studyChecks
-                                const newChecks = {};
-                                topics.forEach((_, newIdx) => {
-                                    newChecks[`topic-${newIdx}`] = studyChecks[`topic-${newIdx}`] || false;
-                                });
-                                studyChecks = newChecks;
-                                saveAll();
-                                renderTopics();
-                            }, 5000);
-                        } else {
-                            span.classList.remove('riscado');
-                            li.style.opacity = '1';
-                            if (pendingTimeouts[`topic-${idx}`]) {
-                                clearTimeout(pendingTimeouts[`topic-${idx}`]);
-                                delete pendingTimeouts[`topic-${idx}`];
-                            }
-                        }
-                        saveAll();
-                    });
-                });
-
-                document.querySelectorAll('.topic-text').forEach(span => {
-                    span.addEventListener('dblclick', iniciarEdicaoTopic);
-                });
-                document.querySelectorAll('.edit-btn[data-topic-index]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = e.target.dataset.topicIndex;
-                        iniciarEdicaoTopic({ target: document.querySelector(`.topic-text[data-topic-index="${idx}"]`) });
-                    });
-                });
-
-                document.querySelectorAll('.delete-btn[data-topic-index]').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = e.target.dataset.topicIndex;
-                        topics.splice(idx, 1);
-                        delete studyChecks[`topic-${idx}`];
-                        if (pendingTimeouts[`topic-${idx}`]) clearTimeout(pendingTimeouts[`topic-${idx}`]);
-                        const newChecks = {};
-                        topics.forEach((_, i) => { newChecks[`topic-${i}`] = studyChecks[`topic-${i+1}`] || false; });
-                        studyChecks = newChecks;
-                        saveAll();
-                        renderTopics();
-                    });
-                });
-            }
-
-            function iniciarEdicaoTopic(event) {
-                const span = event.target;
-                if (span.classList.contains('editing')) return;
-                const idx = span.dataset.topicIndex;
-                const oldText = topics[idx];
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = oldText;
-                input.className = 'add-input';
-                input.style.width = '100%';
-                span.replaceWith(input);
-                input.focus();
-
-                const salvarEdicao = () => {
-                    const novoTexto = input.value.trim();
-                    if (novoTexto) topics[idx] = novoTexto;
-                    saveAll();
-                    renderTopics();
-                };
-
-                input.addEventListener('blur', salvarEdicao);
-                input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); salvarEdicao(); } });
-            }
-
-            // Enter nos inputs
-            document.getElementById('newTaskInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') document.getElementById('addTaskBtn').click();
-            });
-            document.getElementById('newTopicInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') document.getElementById('addTopicBtn').click();
-            });
-
-            document.getElementById('addTaskBtn').addEventListener('click', () => {
-                const inp = document.getElementById('newTaskInput');
-                if (inp.value.trim()) {
-                    tasks.push(inp.value.trim());
-                    studyChecks[`task-${tasks.length-1}`] = false;
-                    saveAll();
-                    renderTasks();
-                    inp.value = '';
-                }
-            });
-
-            document.getElementById('addTopicBtn').addEventListener('click', () => {
-                const inp = document.getElementById('newTopicInput');
-                if (inp.value.trim()) {
-                    topics.push(inp.value.trim());
-                    studyChecks[`topic-${topics.length-1}`] = false;
-                    saveAll();
-                    renderTopics();
-                    inp.value = '';
-                }
-            });
-
-            // ----- MODO ESCURO -----
-            const toggleDark = document.getElementById('toggleDark');
-            toggleDark.addEventListener('click', () => {
-                document.body.classList.toggle('dark');
-                toggleDark.textContent = document.body.classList.contains('dark') ? '☀️ claro' : '🌙 escuro';
-            });
-
-            // ----- EXPORTAR/IMPORTAR -----
-            document.getElementById('exportData').addEventListener('click', () => {
-                const data = { attendanceState, tasks, topics, studyChecks };
-                const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'rotina-estudos-backup.json';
-                a.click();
-                URL.revokeObjectURL(url);
-                showToastMsg('exportado');
-            });
-
-            document.getElementById('importData').addEventListener('click', () => {
-                document.getElementById('importFile').click();
-            });
-
-            document.getElementById('importFile').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    try {
-                        const data = JSON.parse(ev.target.result);
-                        if (data.attendanceState) attendanceState = data.attendanceState;
-                        if (data.tasks) tasks = data.tasks;
-                        if (data.topics) topics = data.topics;
-                        if (data.studyChecks) studyChecks = data.studyChecks;
-                        saveAll(true);
-                        renderFrequenciaCompacta();
-                        renderTasks();
-                        renderTopics();
-                        renderCards();
-                        renderWeekGrid();
-                        renderHoje();
-                        showToastMsg('importado');
-                    } catch (err) {
-                        alert('Arquivo inválido');
-                    }
-                };
-                reader.readAsText(file);
-                e.target.value = '';
-            });
-
-            // ----- BACK TO TOP -----
-            const backToTop = document.getElementById('backToTop');
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 200) {
-                    backToTop.classList.add('visible');
-                } else {
-                    backToTop.classList.remove('visible');
-                }
-            });
-            backToTop.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-
-            // ----- SERVICE WORKER (offline cache) -----
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js').then(reg => {
-                        console.log('Service Worker registrado');
-                    }).catch(err => console.log('SW erro:', err));
-                });
-            }
-
-            // ----- INICIALIZAÇÃO -----
-            loadFromStorage();
-            renderCards();
-            renderWeekGrid();
-            renderHoje();
-            renderFrequenciaCompacta();
-            renderTasks();
-            renderTopics();
-            saveAll(false);
-        })();
-    </script>
-
-    <!-- SERVICE WORKER (criado inline para facilitar) -->
-    <script>
-        // Vamos criar o Service Worker dinamicamente? Melhor colocar em arquivo separado, mas para este exemplo vamos gerar via Blob.
-        // Como não podemos criar arquivo, vamos registrar um service worker com código inline? Não é possível diretamente.
-        // Vamos criar um blob e registrar.
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'rotina-estudos-v1';
-                const urlsToCache = [
-                    '.',
-                    'index.html',
-                    // incluir todos os assets necessários (como este próprio HTML)
-                ];
-                self.addEventListener('install', event => {
-                    event.waitUntil(
-                        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-                    );
-                });
-                self.addEventListener('fetch', event => {
-                    event.respondWith(
-                        caches.match(event.request).then(response => response || fetch(event.request))
-                    );
-                });
-                self.addEventListener('activate', event => {
-                    event.waitUntil(
-                        caches.keys().then(keys => Promise.all(
-                            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-                        ))
-                    );
-                });
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl).then(reg => {
-                console.log('Service Worker registrado com blob');
-            }).catch(err => console.log('SW erro:', err));
-        }
-    </script>
+})();
+</script>
 </body>
 </html>
