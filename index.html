@@ -137,7 +137,7 @@ main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1.25rem
 
 /* ─ CALENDAR ─ */
 .cal-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: var(--sh); }
-.cal-scroll { overflow-x: auto; }
+.cal-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; }
 .cal-inner { min-width: 700px; }
 
 /* Grid: col 0 = time gutter (52px), cols 1-7 = days */
@@ -358,7 +358,8 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
     <span class="clock" id="clock">00:00:00</span>
   </div>
   <div class="hright">
-    <button class="hbtn" id="btnDark">🌙 escuro</button>
+    <span id="hdrBadge" style="display:none;font-family:var(--mono);font-size:10px;padding:2px 9px;border-radius:20px;border:1px solid color-mix(in srgb,var(--warn) 50%,transparent);background:var(--warnb);color:var(--warn);"></span>
+    <button class="hbtn" id="btnDark">☀ claro</button>
     <button class="hbtn" id="btnExport">↑ exportar</button>
     <button class="hbtn" id="btnImport">↓ importar</button>
   </div>
@@ -373,7 +374,8 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
       <button class="warr" id="wkPrev">‹</button>
       <button class="warr" id="wkNext">›</button>
       <span class="wklabel" id="wkLabel">—</span>
-      <button class="btn-today" id="btnToday">hoje</button>
+      <button class="btn-today" id="btnToday" title="voltar para hoje (tecla T)">hoje</button>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 6px;" title="use ← → para navegar semanas">← →</span>
       <div class="semprog">
         <span id="semLabel">—</span>
         <div class="sembar"><div class="semfill" id="semFill" style="width:0%"></div></div>
@@ -631,8 +633,6 @@ const DNAMES = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 // code2py: JS getDay() → índice col (0=Seg…6=Dom)
 // getDay(): 0=dom,1=seg,2=ter,3=qua,4=qui,5=sex,6=sab
 // col index: 0=seg,1=ter,2=qua,3=qui,4=sex,5=sab,6=dom
-const GETDAY_TO_COL = {1:0, 2:1, 3:2, 4:3, 5:4, 6:5, 0:6};
-
 function getWeekDates(off=0) {
   const now = new Date(); now.setHours(0,0,0,0);
   const dow = (now.getDay() + 6) % 7; // 0=seg
@@ -667,16 +667,18 @@ document.addEventListener('mousedown', e => {
 });
 
 function openAulaPopup(aulaId, rect) {
-  const allAulas = COURSES.flatMap(c => c._aulas.map(a => ({...a, curso:c})));
-  const aula = allAulas.find(a => a.id === aulaId);
-  if (!aula) return;
+  const entry = AULA_MAP[aulaId]; if (!entry) return;
+  const aula = entry.aula, curso = entry.curso;
+  // patch aula with curso ref for inline use
+  const aulaFull = {...aula, curso};
+  if (!aulaFull) return;
 
-  document.getElementById('evPopupTitle').textContent = aula.curso.nome;
+  document.getElementById('evPopupTitle').textContent = curso.nome;
   document.getElementById('evPopupMeta').innerHTML = `
     <span>📅 ${aula.date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
     <span>🕐 ${aula.ini}h – ${aula.fim}h (${aula.horas}h)</span>
-    <span>📍 ${esc(aula.curso.local)}</span>
-    <span>🔖 ${aula.curso.id} · turma ${aula.curso.turma}</span>
+    <span>📍 ${esc(curso.local)}</span>
+    <span>🔖 ${curso.id} · turma ${curso.turma}</span>
   `;
 
   const attDiv = document.getElementById('evPopupAtt');
@@ -811,12 +813,24 @@ document.getElementById('newEvSave').addEventListener('click', () => {
 
   if (!nome || !date || !ini || !fim) { showToast('preencha título, data e horário'); return; }
 
+  const evDate = parseDateLocal(date);
   if (editingEvId) {
     const ev = customEvents.find(e => e.id === editingEvId);
-    if (ev) { ev.nome=nome; ev.date=new Date(date); ev.ini=ini; ev.fim=fim; ev.type=type; ev.note=note; ev.cor=cor; }
+    if (ev) { ev.nome=nome; ev.date=evDate; ev.ini=ini; ev.fim=fim; ev.type=type; ev.note=note; ev.cor=cor; }
   } else {
-    customEvents.push({ id:uid(), nome, date:new Date(date), ini, fim, type, note, cor });
+    customEvents.push({ id:uid(), nome, date:evDate, ini, fim, type, note, cor });
   }
+
+  // Navegar para a semana do evento criado/editado
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.floor((evDate - today) / 86400000);
+  const diffWeeks = Math.floor(diffDays / 7 + (diffDays >= 0 ? 0 : -1));
+  // Calcular offset da semana do evento
+  const evDow = (evDate.getDay() + 6) % 7;
+  const evMon = new Date(evDate); evMon.setDate(evDate.getDate() - evDow);
+  const todDow = (today.getDay() + 6) % 7;
+  const todMon = new Date(today); todMon.setDate(today.getDate() - todDow);
+  wkOff = Math.round((evMon - todMon) / (7 * 86400000));
 
   save(true); renderCalendar(); closeNewEvModal();
   showToast(editingEvId ? 'evento atualizado' : 'evento criado');
@@ -826,8 +840,16 @@ document.getElementById('newEvSave').addEventListener('click', () => {
 // CALENDÁRIO VERTICAL
 // ═══════════════════════════════════════════════
 const CAL_INI = 7, CAL_FIM = 21, SLOT = 48; // px/hora
-// mostrar meia hora como linha tracejada
-const SHOW_HALF = true;
+
+// Lookup rápido: aulaId → { aula, curso }
+const AULA_MAP = {};
+COURSES.forEach(c => c._aulas.forEach(a => { AULA_MAP[a.id] = { aula:a, curso:c }; }));
+
+// Fix fuso horário: 'YYYY-MM-DD' → Date local (não UTC)
+function parseDateLocal(str) {
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
 
 function renderCalendar() {
   const days    = getWeekDates(wkOff);
@@ -978,7 +1000,31 @@ setInterval(() => {
 
 document.getElementById('wkPrev').onclick  = () => { wkOff--; renderCalendar(); };
 document.getElementById('wkNext').onclick  = () => { wkOff++; renderCalendar(); };
-document.getElementById('btnToday').onclick = () => { wkOff = 0; renderCalendar(); };
+document.getElementById('btnToday').onclick = () => { wkOff = 0; renderCalendar(); scrollToNow(); };
+
+// Scroll automático para hora atual (ou primeira aula do dia)
+function scrollToNow() {
+  const calScroll = document.querySelector('.cal-scroll');
+  if (!calScroll) return;
+  const now = new Date();
+  // Alvo: hora atual menos 1h de margem visual, ou 7h como mínimo
+  const targetHour = wkOff === 0
+    ? Math.max(CAL_INI, now.getHours() - 1)
+    : CAL_INI;
+  const scrollTop = (targetHour - CAL_INI) * SLOT;
+  calScroll.scrollTo({ top: scrollTop, behavior: 'smooth' });
+}
+
+// Teclado: ← → para navegar semanas
+document.addEventListener('keydown', e => {
+  // Só quando não está dentro de um input/textarea/modal
+  if (e.target.matches('input,textarea,select')) return;
+  if (document.querySelector('.modal-bg.open')) return;
+  if (e.key === 'ArrowLeft')  { wkOff--; renderCalendar(); }
+  if (e.key === 'ArrowRight') { wkOff++; renderCalendar(); }
+  if (e.key === 'Home' || e.key === 't') { wkOff = 0; renderCalendar(); scrollToNow(); }
+  if (e.key === 'Escape') { closePopup(); closeNewEvModal(); }
+});
 
 // ═══════════════════════════════════════════════
 // PRESENÇA — BASEADA EM HORAS
@@ -1248,11 +1294,32 @@ function updateFooter() {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const all  = COURSES.flatMap(c => c._aulas);
   const past = all.filter(a => a.date <= hoje);
-  const marcadas = past.filter(a => att[a.id]).length;
+  const marcadas = past.filter(a =>  att[a.id]).length;
+  const faltas   = past.filter(a => !att[a.id]).length;
   const totalH   = past.reduce((s,a) => s + a.horas, 0);
   const presH    = past.filter(a => att[a.id]).reduce((s,a) => s + a.horas, 0);
   document.getElementById('footerInfo').textContent =
     `${marcadas}/${past.length} aulas passadas marcadas · ${presH}/${totalH}h de presença · ${customEvents.length} evento${customEvents.length!==1?'s':''}`;
+
+  // Badge de faltas no header
+  const badge = document.getElementById('hdrBadge');
+  const totalFaltasH = COURSES.reduce((s,c) => {
+    const p = c._aulas.filter(a => a.date <= hoje && !att[a.id]);
+    return s + p.reduce((sh,a) => sh + a.horas, 0);
+  }, 0);
+  const emRisco = COURSES.some(c => {
+    const fH = c._aulas.filter(a => a.date <= hoje && !att[a.id]).reduce((s,a)=>s+a.horas,0);
+    return fH >= c._maxFaltasH * 0.75;
+  });
+  if (totalFaltasH > 0) {
+    badge.textContent = `${totalFaltasH}h falta${totalFaltasH!==1?'s':''}`;
+    badge.style.display = 'inline-block';
+    badge.style.background = emRisco ? 'var(--warnb)' : 'var(--surface2)';
+    badge.style.color = emRisco ? 'var(--warn)' : 'var(--text3)';
+    badge.style.borderColor = emRisco ? 'color-mix(in srgb,var(--warn) 50%,transparent)' : 'var(--border)';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1276,6 +1343,8 @@ function init() {
   renderList('topic');
   updateFooter();
   initColorRow();
+  // Scroll para hora atual após render
+  setTimeout(scrollToNow, 100);
 }
 
 load(); init(); save(true);
