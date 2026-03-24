@@ -129,7 +129,9 @@ function showToast(msg, undo=false) {
 function doUndo() {
   if (!undoBuf) return;
   const {type, item, index} = undoBuf;
-  (type === 'task' ? tasks : topics).splice(index, 0, item);
+  const arr = type === 'task' ? tasks : topics;
+  arr.splice(index, 0, item);
+  sbSaveItem(type, item, index); // re-persiste no Supabase
   save(true); renderList(type); undoBuf = null;
 }
 
@@ -149,7 +151,7 @@ async function checkSession() {
 }
 
 async function signIn(email, pass) {
-  if (!sb) { showToast('Supabase não configurado'); return false; }
+  if (!sb) { return 'Supabase não configurado. Substitua SUPABASE_URL e SUPABASE_KEY em app.js.'; }
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) { return error.message; } // retorna mensagem de erro
   supaUser = data.user;
@@ -161,6 +163,7 @@ async function doSignOut() {
   supaUser = null;
   att = {}; customEvents = []; tasks = []; topics = [];
   document.getElementById('btnLogout').style.display = 'none';
+  init(); // re-render com estado vazio antes de exibir o login
   showLoginOverlay();
   showToast('saiu');
 }
