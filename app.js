@@ -2,6 +2,17 @@
 (function () {
 
 // ═══════════════════════════════════════════════
+// SUPABASE — CONFIGURAÇÃO
+// Substitua pelos valores do seu projeto em https://app.supabase.com
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';
+const SUPABASE_KEY = 'SUA_CHAVE_ANONIMA';
+// Cliente Supabase (disponível via CDN incluído no index.html)
+const sb = (typeof supabase !== 'undefined')
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+// ═══════════════════════════════════════════════
 // DADOS
 // ═══════════════════════════════════════════════
 // dia: 0=dom,1=seg,2=ter,3=qua,4=qui,5=sex,6=sab (igual JS getDay())
@@ -55,6 +66,7 @@ let tasks  = [];        // [{id,text,checked}]
 let topics = [];        // [{id,text,checked}]
 let undoBuf = null, undoTm = null;
 const listTm = {};
+let supaUser = null; // usuário autenticado no Supabase
 
 function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -119,6 +131,162 @@ function doUndo() {
   const {type, item, index} = undoBuf;
   (type === 'task' ? tasks : topics).splice(index, 0, item);
   save(true); renderList(type); undoBuf = null;
+}
+
+// ═══════════════════════════════════════════════
+// AUTENTICAÇÃO E SUPABASE
+// ═══════════════════════════════════════════════
+function showLoginOverlay()  { document.getElementById('loginOverlay').classList.add('show'); }
+function hideLoginOverlay()  { document.getElementById('loginOverlay').classList.remove('show'); }
+function showLoadOverlay()   { document.getElementById('loadOverlay').classList.add('show'); }
+function hideLoadOverlay()   { document.getElementById('loadOverlay').classList.remove('show'); }
+
+async function checkSession() {
+  if (!sb) return false;
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { supaUser = session.user; return true; }
+  return false;
+}
+
+async function signIn(email, pass) {
+  if (!sb) { showToast('Supabase não configurado'); return false; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { return error.message; } // retorna mensagem de erro
+  supaUser = data.user;
+  return null; // sem erro
+}
+
+async function doSignOut() {
+  if (sb) await sb.auth.signOut();
+  supaUser = null;
+  att = {}; customEvents = []; tasks = []; topics = [];
+  document.getElementById('btnLogout').style.display = 'none';
+  showLoginOverlay();
+  showToast('saiu');
+}
+
+// ── Leitura completa do Supabase ──
+async function sbLoad() {
+  if (!sb || !supaUser) return false;
+  try {
+    const uid = supaUser.id;
+    const [pRes, eRes, tRes, toRes] = await Promise.all([
+      sb.from('presencas').select('*').eq('user_id', uid),
+      sb.from('eventos').select('*').eq('user_id', uid),
+      sb.from('tarefas').select('*').eq('user_id', uid).order('sort_order'),
+      sb.from('topicos').select('*').eq('user_id', uid).order('sort_order'),
+    ]);
+
+    if (pRes.data) {
+      att = {};
+      pRes.data.forEach(p => { att[p.aula_id] = p.presente; });
+    }
+
+    if (eRes.data) {
+      customEvents = eRes.data.map(e => ({
+        id: e.id, nome: e.nome,
+        date: parseDateLocal(e.date),
+        ini: e.ini, fim: e.fim,
+        type: e.type, cor: e.cor, note: e.note || ''
+      }));
+    }
+
+    if (tRes.data && tRes.data.length > 0) {
+      tasks = tRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked }));
+    }
+
+    if (toRes.data && toRes.data.length > 0) {
+      topics = toRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked }));
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Erro ao carregar do Supabase:', err);
+    return false;
+  }
+}
+
+// ── Escrita granular (fire-and-forget) ──
+function sbSaveAtt(aulaId, presente) {
+  if (!sb || !supaUser) return;
+  sb.from('presencas')
+    .upsert({ user_id: supaUser.id, aula_id: aulaId, presente },
+            { onConflict: 'user_id,aula_id' })
+    .catch(e => console.error('sbSaveAtt:', e));
+}
+
+function sbSaveEvent(ev) {
+  if (!sb || !supaUser) return;
+  const dateStr = ev.date instanceof Date ? ev.date.toISOString().slice(0, 10) : ev.date;
+  sb.from('eventos')
+    .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
+              date: dateStr, ini: ev.ini, fim: ev.fim,
+              type: ev.type, cor: ev.cor, note: ev.note || '' })
+    .catch(e => console.error('sbSaveEvent:', e));
+}
+
+function sbDeleteEvent(id) {
+  if (!sb || !supaUser) return;
+  sb.from('eventos').delete()
+    .eq('id', id).eq('user_id', supaUser.id)
+    .catch(e => console.error('sbDeleteEvent:', e));
+}
+
+function sbSaveItem(type, item, order) {
+  if (!sb || !supaUser) return;
+  const table = type === 'task' ? 'tarefas' : 'topicos';
+  sb.from(table)
+    .upsert({ id: item.id, user_id: supaUser.id,
+              text: item.text, checked: item.checked,
+              sort_order: order || 0 })
+    .catch(e => console.error('sbSaveItem:', e));
+}
+
+function sbDeleteItem(type, id) {
+  if (!sb || !supaUser) return;
+  const table = type === 'task' ? 'tarefas' : 'topicos';
+  sb.from(table).delete()
+    .eq('id', id).eq('user_id', supaUser.id)
+    .catch(e => console.error('sbDeleteItem:', e));
+}
+
+// Sincronização completa (usado após importação)
+async function sbFullSync() {
+  if (!sb || !supaUser) return;
+  const uid = supaUser.id;
+  try {
+    // Eventos: apagar todos e reinserir
+    await sb.from('eventos').delete().eq('user_id', uid);
+    if (customEvents.length) {
+      await sb.from('eventos').insert(customEvents.map(e => ({
+        id: e.id, user_id: uid, nome: e.nome,
+        date: e.date instanceof Date ? e.date.toISOString().slice(0, 10) : e.date,
+        ini: e.ini, fim: e.fim, type: e.type, cor: e.cor, note: e.note || ''
+      })));
+    }
+    // Tarefas
+    await sb.from('tarefas').delete().eq('user_id', uid);
+    if (tasks.length) {
+      await sb.from('tarefas').insert(
+        tasks.map((t, i) => ({ id: t.id, user_id: uid, text: t.text, checked: t.checked, sort_order: i }))
+      );
+    }
+    // Tópicos
+    await sb.from('topicos').delete().eq('user_id', uid);
+    if (topics.length) {
+      await sb.from('topicos').insert(
+        topics.map((t, i) => ({ id: t.id, user_id: uid, text: t.text, checked: t.checked, sort_order: i }))
+      );
+    }
+    // Presenças
+    const attEntries = Object.entries(att);
+    if (attEntries.length) {
+      await sb.from('presencas').delete().eq('user_id', uid);
+      await sb.from('presencas').insert(
+        attEntries.map(([aula_id, presente]) => ({ user_id: uid, aula_id, presente }))
+      );
+    }
+  } catch (e) { console.error('sbFullSync:', e); }
 }
 
 // ═══════════════════════════════════════════════
@@ -193,6 +361,7 @@ function openAulaPopup(aulaId, rect) {
   cb.checked = att[aulaId] || false;
   cb.onchange = () => {
     att[aulaId] = cb.checked;
+    sbSaveAtt(aulaId, cb.checked);
     save(true); renderCalendar(); renderAttendance();
     showToast(cb.checked ? '✓ presença marcada' : 'presença desmarcada');
   };
@@ -223,6 +392,7 @@ function openCustomPopup(evId, rect) {
   delBtn.className = 'ep-btn danger'; delBtn.textContent = '✕ remover';
   delBtn.onclick = () => {
     customEvents = customEvents.filter(e => e.id !== evId);
+    sbDeleteEvent(evId);
     save(true); renderCalendar(); closePopup(); showToast('removido');
   };
 
@@ -322,9 +492,11 @@ document.getElementById('newEvSave').addEventListener('click', () => {
   const evDate = parseDateLocal(date);
   if (editingEvId) {
     const ev = customEvents.find(e => e.id === editingEvId);
-    if (ev) { ev.nome=nome; ev.date=evDate; ev.ini=ini; ev.fim=fim; ev.type=type; ev.note=note; ev.cor=cor; }
+    if (ev) { ev.nome=nome; ev.date=evDate; ev.ini=ini; ev.fim=fim; ev.type=type; ev.note=note; ev.cor=cor; sbSaveEvent(ev); }
   } else {
-    customEvents.push({ id:uid(), nome, date:evDate, ini, fim, type, note, cor });
+    const newEv = { id:uid(), nome, date:evDate, ini, fim, type, note, cor };
+    customEvents.push(newEv);
+    sbSaveEvent(newEv);
   }
 
   // Navegar para a semana do evento criado/editado
@@ -578,7 +750,7 @@ function renderAttendance() {
       pillCls = 'warn';
     } else {
       pillTxt = `${s.horasFalta}h falta · ${s.aulasFaltou} aula${s.aulasFaltou !== 1 ? 's' : ''}`;
-      pillCls = s.horasFalta === 0 ? 'safe' : '';
+      pillCls = s.pctPresenca >= 75 ? 'safe' : '';
     }
 
     const fillColor = s.reprovado || s.emRisco ? 'var(--warn)' : c.cor;
@@ -630,9 +802,10 @@ function renderAttendance() {
 
         <div class="att-footer">
           <div>
-            ${s.emRisco && !s.reprovado ? `<div class="att-warn-txt">⚠ Você pode faltar mais ${Math.max(0,s.hRestantes)}h sem reprovar</div>` : ''}
+            ${s.hRestantes <= 1 && !s.reprovado ? `<div class="att-warn-1h">🚨 Alerta: apenas ${Math.max(0,s.hRestantes)}h restante para reprovação!</div>` :
+              s.emRisco && !s.reprovado ? `<div class="att-warn-txt">⚠ Você pode faltar mais ${Math.max(0,s.hRestantes)}h sem reprovar</div>` : ''}
             ${s.reprovado ? `<div class="att-warn-txt">✕ Limite de ${s.maxFaltasH}h ultrapassado em ${(s.horasFalta-s.maxFaltasH)}h</div>` : ''}
-            ${!s.emRisco && !s.reprovado && s.horasFalta === 0 ? `<div style="font-size:11px;color:var(--ok)">✓ Presença perfeita até agora</div>` : ''}
+            ${!s.emRisco && !s.reprovado && s.pctPresenca >= 75 ? `<div style="font-size:11px;color:var(--ok)">✓ Presença em dia (${s.pctPresenca.toFixed(0)}%)</div>` : ''}
           </div>
           <button class="att-mark-btn" data-c="${c.id}">✓ marcar todas passadas</button>
         </div>
@@ -667,6 +840,7 @@ function renderAttendance() {
 
       row.querySelector('.att-cb').addEventListener('change', e => {
         att[aula.id] = e.target.checked;
+        sbSaveAtt(aula.id, e.target.checked);
         save(true); renderAttendance(); renderCalendar();
       });
     });
@@ -674,7 +848,10 @@ function renderAttendance() {
     card.querySelector('.att-head').addEventListener('click', () => card.classList.toggle('open'));
     card.querySelector('.att-mark-btn').addEventListener('click', e => {
       e.stopPropagation();
-      c._aulas.filter(a => a.date <= hoje).forEach(a => att[a.id] = true);
+      c._aulas.filter(a => a.date <= hoje).forEach(a => {
+        att[a.id] = true;
+        sbSaveAtt(a.id, true);
+      });
       save(); renderAttendance(); renderCalendar();
     });
   });
@@ -701,6 +878,7 @@ function renderList(type) {
 
     li.querySelector('.lcb').addEventListener('change', e => {
       item.checked = e.target.checked;
+      sbSaveItem(type, item);
       save(true);
       if (item.checked) {
         if (listTm[item.id]) clearTimeout(listTm[item.id]);
@@ -717,7 +895,7 @@ function renderList(type) {
       inp.type = 'text'; inp.value = item.text; inp.className = 'linput';
       inp.style.cssText = 'flex:1;margin:0;font-size:13px;';
       span.replaceWith(inp); inp.focus(); inp.select();
-      const done = () => { const v = inp.value.trim(); if (v) item.text = v; save(true); renderList(type); };
+      const done = () => { const v = inp.value.trim(); if (v) { item.text = v; sbSaveItem(type, item); } save(true); renderList(type); };
       inp.addEventListener('blur', done);
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(); } });
     });
@@ -726,6 +904,7 @@ function renderList(type) {
       const arr = type === 'task' ? tasks : topics;
       const idx = arr.findIndex(t => t.id === item.id); if (idx === -1) return;
       const [removed] = arr.splice(idx, 1);
+      sbDeleteItem(type, removed.id);
       undoBuf = {type, item: removed, index: idx};
       if (undoTm) clearTimeout(undoTm);
       undoTm = setTimeout(() => undoBuf = null, 5000);
@@ -741,7 +920,10 @@ function renderList(type) {
 
 function addItem(type, text) {
   if (!text.trim()) return;
-  (type === 'task' ? tasks : topics).push({id: uid(), text: text.trim(), checked: false});
+  const arr = type === 'task' ? tasks : topics;
+  const item = {id: uid(), text: text.trim(), checked: false};
+  arr.push(item);
+  sbSaveItem(type, item, arr.length - 1);
   save(true); renderList(type);
 }
 
@@ -787,7 +969,8 @@ document.getElementById('importFile').addEventListener('change', e => {
       if (d.ev) { customEvents = d.ev; customEvents.forEach(e => e.date = new Date(e.date)); }
       if (d.tasks)  tasks  = d.tasks;
       if (d.topics) topics = d.topics;
-      save(false); init(); showToast('importado');
+      save(false); init();
+      sbFullSync().then(() => showToast('importado e sincronizado')).catch(() => showToast('importado'));
     } catch { alert('arquivo inválido'); }
   };
   r.readAsText(f); e.target.value = '';
@@ -853,7 +1036,79 @@ function init() {
   setTimeout(scrollToNow, 100);
 }
 
-load(); init(); save(true);
+// ═══════════════════════════════════════════════
+// STARTUP ASSÍNCRONO (com Supabase)
+// ═══════════════════════════════════════════════
+async function startApp() {
+  // Carrega preferências (dark mode) do localStorage imediatamente
+  load();
+
+  showLoadOverlay();
+  const hasSession = await checkSession();
+
+  if (hasSession) {
+    // Tenta carregar dados do Supabase
+    const loaded = await sbLoad();
+    if (!loaded) {
+      // Fallback para dados do localStorage se Supabase falhar
+      console.warn('Falha ao carregar Supabase, usando localStorage');
+    }
+    hideLoginOverlay();
+    document.getElementById('btnLogout').style.display = '';
+    init();
+    hideLoadOverlay();
+    // Alerta de disciplina crítica (1h do limite)
+    COURSES.forEach(c => {
+      const s = calcStats(c);
+      if (s.hRestantes <= 1 && !s.reprovado) {
+        setTimeout(() => showToast(`🚨 ${c.nome}: apenas ${Math.max(0,s.hRestantes)}h restante!`), 1500);
+      }
+    });
+  } else {
+    // Sem sessão: exibe login (app já renderizado em background)
+    init();
+    hideLoadOverlay();
+    showLoginOverlay();
+  }
+}
+
+// ── Handler do formulário de login ──
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const btn   = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginErr');
+
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+
+  const errMsg = await signIn(email, pass);
+  if (!errMsg) {
+    showLoadOverlay();
+    await sbLoad();
+    hideLoginOverlay();
+    document.getElementById('btnLogout').style.display = '';
+    init();
+    hideLoadOverlay();
+    showToast('bem-vindo!');
+    // Alerta de disciplina crítica
+    COURSES.forEach(c => {
+      const s = calcStats(c);
+      if (s.hRestantes <= 1 && !s.reprovado) {
+        setTimeout(() => showToast(`🚨 ${c.nome}: apenas ${Math.max(0,s.hRestantes)}h restante!`), 1500);
+      }
+    });
+  } else {
+    errEl.textContent = errMsg;
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+});
+
+// ── Handler do botão de logout ──
+document.getElementById('btnLogout').addEventListener('click', () => doSignOut());
 
 // Re-render a cada minuto (linha de agora, badges "hoje/futuro")
 setInterval(() => {
@@ -863,4 +1118,6 @@ setInterval(() => {
   updateFooter();
 }, 60000);
 
-})();
+startApp();
+
+})()
