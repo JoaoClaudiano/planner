@@ -352,3 +352,66 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   color: var(--text3);
   transition: background .2s, color .2s, border-color .2s;
 }
+
+/* ─ LOGIN OVERLAY ─ */
+.login-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--bg);
+  align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.login-overlay.show { display: flex; }
+.login-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 2rem 2.25rem;
+  width: 100%; max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.login-logo {
+  font-family: var(--mono); font-size: 18px;
+  color: var(--text2); letter-spacing: .02em; margin-bottom: .1rem;
+}
+.login-logo b { color: var(--accent); font-weight: 500; }
+.login-sub {
+  font-size: 12px; color: var(--text3); margin-bottom: .5rem;
+}
+.login-err {
+  font-size: 12px; color: var(--warn); min-height: 1.2em;
+  background: var(--warnb); border-radius: 6px; padding: 0;
+  transition: padding .15s;
+}
+.login-err:not(:empty) { padding: 6px 10px; }
+.login-submit {
+  width: 100%; margin-top: .4rem; padding: 9px;
+  font-size: 14px; border-radius: 8px; letter-spacing: .02em;
+}
+.login-submit:disabled { opacity: .6; cursor: not-allowed; }
+.login-hint {
+  font-size: 11px; color: var(--text3); text-align: center; margin-top: .25rem;
+}
+
+/* ─ LOADING OVERLAY ─ */
+.load-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 8500;
+  background: rgba(0,0,0,.25); backdrop-filter: blur(3px);
+  align-items: center; justify-content: center;
+}
+.load-overlay.show { display: flex; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-spin {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  animation: spin .7s linear infinite;
+}
+
+/* ─ ALERT 1H ─ */
+.att-warn-1h {
+  font-size: 11px; color: var(--warn); font-weight: 600;
+  background: var(--warnb);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  border-radius: 6px; padding: 4px 10px;
+}
