@@ -447,3 +447,42 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
   border-radius: 6px; padding: 4px 10px;
 }
+
+/* ─ OFFLINE & PENDING BADGES ─ */
+.offline-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--warn);
+  background: var(--warnb);
+  color: var(--warn);
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+.pending-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, #f59e0b 50%, transparent);
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  color: #f59e0b;
+}
+
+/* ─ GEO BUTTON ACTIVE STATE ─ */
+.hbtn.geo-active {
+  border-color: var(--ok);
+  color: var(--ok);
+  background: var(--okb);
+}
+.hbtn.geo-active:hover {
+  background: color-mix(in srgb, var(--ok) 20%, transparent);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+body.dark .hbtn.geo-active {
+  border-color: var(--ok);
+  color: var(--ok);
+  background: var(--okb);
+}

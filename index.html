@@ -21,7 +21,10 @@
     <button class="hbtn" id="btnDark">☀ claro</button>
     <button class="hbtn" id="btnExport">↑ exportar</button>
     <button class="hbtn" id="btnImport">↓ importar</button>
+    <span id="offlineBadge" class="offline-badge" style="display:none">● offline</span>
+    <span id="pendingBadge" class="pending-badge" style="display:none"></span>
     <span id="syncBadge" class="sync-badge" style="display:none"></span>
+    <button class="hbtn" id="btnGeoAtt" title="Ativar presença automática por geolocalização">📍 presença auto</button>
     <button class="hbtn" id="btnLogout" style="display:none">↩ sair</button>
   </div>
 </header>
@@ -179,6 +182,7 @@
   <div class="load-spin"></div>
 </div>
 
+<script src="db.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
