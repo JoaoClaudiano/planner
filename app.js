@@ -1092,8 +1092,16 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
   btn.disabled = true;
   btn.textContent = 'Entrando…';
 
-  // Sem credenciais: entrada anônima (apenas localStorage)
+  // Sem credenciais: entrada anônima — cria sessão Supabase anônima para sincronizar dados
   if (!email && !pass) {
+    if (sb) {
+      const { data, error } = await sb.auth.signInAnonymously();
+      if (!error && data.user) {
+        supaUser = data.user;
+      } else if (error) {
+        console.warn('signInAnonymously falhou, modo local apenas:', error.message);
+      }
+    }
     hideLoginOverlay();
     document.getElementById('btnLogout').style.display = '';
     init();
@@ -1101,6 +1109,8 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     btn.textContent = 'Entrar';
     showToast('bem-vindo, convidado!');
     showCriticalAttendanceAlerts();
+    // Sincroniza dados locais com Supabase em background (prioridade Supabase)
+    if (supaUser) sbFullSync().catch(e => console.error('sbFullSync (anônimo):', e));
     return;
   }
 
