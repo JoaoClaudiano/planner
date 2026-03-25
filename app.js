@@ -5,8 +5,8 @@
 // SUPABASE — CONFIGURAÇÃO
 // Substitua pelos valores do seu projeto em https://app.supabase.com
 // ═══════════════════════════════════════════════
-const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';
-const SUPABASE_KEY = 'SUA_CHAVE_ANONIMA';
+const SUPABASE_URL = 'https://wpxfhdlrygvucbmyfqaa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hk9OZq-sfye_BWxtHESWag_5XxSZbMl';
 // Cliente Supabase (disponível via CDN incluído no index.html)
 const sb = (typeof supabase !== 'undefined')
   ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
