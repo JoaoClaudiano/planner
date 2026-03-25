@@ -67,7 +67,9 @@ let topics = [];        // [{id,text,checked}]
 let undoBuf = null, undoTm = null;
 const listTm = {};
 let supaUser = null; // usuário autenticado no Supabase
-let _pendingSaves = 0; // contador de gravações Supabase em andamento
+let _pendingSaves = 0;  // contador de gravações Supabase em andamento
+let geoAttActive  = false; // true quando a presença automática por geo está ativa
+let geoIntervalId = null;  // ID do setInterval de verificação periódica
 
 function _onSaveStart() {
   _pendingSaves++;
@@ -292,6 +294,13 @@ function _sbExec(label, promise) {
 
 function sbSaveAtt(aulaId, presente) {
   if (!sb || !supaUser) return;
+  // Se offline, enfileira a operação para sincronizar depois
+  if (!navigator.onLine) {
+    offlineAddOp({ type: 'sbSaveAtt', aulaId, presente })
+      .then(() => updateOfflineBadge())
+      .catch(e => console.error('Erro ao enfileirar sbSaveAtt:', e));
+    return;
+  }
   _sbExec('sbSaveAtt', sb.from('presencas')
     .upsert({ user_id: supaUser.id, aula_id: aulaId, presente },
             { onConflict: 'user_id,aula_id' }));
@@ -1100,14 +1109,214 @@ function updateFooter() {
 }
 
 // ═══════════════════════════════════════════════
+// OFFLINE — status, fila e sincronização
+// ═══════════════════════════════════════════════
+
+// Atualiza o badge de "pendentes" contando as ops no IndexedDB
+async function updateOfflineBadge() {
+  const pendingEl = document.getElementById('pendingBadge');
+  if (!pendingEl) return;
+  try {
+    const count = await offlineCountOps();
+    if (count > 0) {
+      pendingEl.textContent = `⏳ ${count} pendente${count !== 1 ? 's' : ''}`;
+      pendingEl.style.display = '';
+    } else {
+      pendingEl.style.display = 'none';
+    }
+  } catch { pendingEl.style.display = 'none'; }
+}
+
+// Mostra/oculta o badge de offline e tenta sincronizar ao voltar online
+function updateOnlineStatus() {
+  const offlineEl = document.getElementById('offlineBadge');
+  if (offlineEl) offlineEl.style.display = navigator.onLine ? 'none' : '';
+  if (navigator.onLine) processOfflineQueue();
+}
+
+// Processa a fila de operações pendentes (chamado ao voltar online ou pelo SW)
+async function processOfflineQueue() {
+  if (!sb || !supaUser || !navigator.onLine) return;
+  let ops;
+  try { ops = await offlineGetOps(); } catch { return; }
+  if (!ops.length) return;
+
+  for (const op of ops) {
+    try {
+      if (op.type === 'sbSaveAtt') {
+        const { error } = await sb.from('presencas')
+          .upsert(
+            { user_id: supaUser.id, aula_id: op.aulaId, presente: op.presente },
+            { onConflict: 'user_id,aula_id' }
+          );
+        if (!error) await offlineDeleteOp(op.id);
+        else console.error('processOfflineQueue sbSaveAtt:', error);
+      }
+    } catch (e) { console.error('processOfflineQueue:', op, e); }
+  }
+
+  await updateOfflineBadge();
+  renderCalendar(); renderAttendance();
+}
+
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ═══════════════════════════════════════════════
+// GEOLOCALIZAÇÃO — presença automática
+// ═══════════════════════════════════════════════
+
+// Coordenadas do Campus do Pici (UFC, Fortaleza)
+const CAMPUS_LAT        = -3.7423;
+const CAMPUS_LNG        = -38.5777;
+const CAMPUS_RADIUS_M   = 1000;        // raio de geofencing em metros
+const GEO_LEAD_H        = 5 / 60;     // janela de 5 min (em horas) antes do início da aula
+const GEO_TIMEOUT_MS    = 10000;       // timeout da requisição de geolocalização
+const GEO_MAX_AGE_MS    = 60000;       // máxima idade de uma posição em cache
+const GEO_CHECK_INTERVAL_MS = 2 * 60 * 1000; // intervalo de verificação (2 min)
+
+// Distância Haversine entre dois pontos geográficos (em metros)
+function haversineDistM(lat1, lng1, lat2, lng2) {
+  const R  = 6371000;
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lng2 - lng1) * Math.PI / 180;
+  const a  = Math.sin(Δφ/2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Retorna a aula em andamento agora (ou até 5 min antes do início), ou null
+function getAulaAtual() {
+  const now  = new Date();
+  const hoje = new Date(now); hoje.setHours(0, 0, 0, 0);
+  const nowH = now.getHours() + now.getMinutes() / 60;
+  for (const c of COURSES) {
+    for (const aula of c._aulas) {
+      if (aula.date.getTime() !== hoje.getTime()) continue;
+      if (nowH >= (aula.ini - GEO_LEAD_H) && nowH < aula.fim)
+        return { aula, curso: c };
+    }
+  }
+  return null;
+}
+
+// Marca presença automaticamente se o usuário estiver dentro do campus
+async function tryAutoMarkPresenca(lat, lng) {
+  const dist = haversineDistM(lat, lng, CAMPUS_LAT, CAMPUS_LNG);
+  if (dist > CAMPUS_RADIUS_M) return;
+
+  const resultado = getAulaAtual();
+  if (!resultado) return;
+
+  const { aula, curso } = resultado;
+  if (att[aula.id]) return; // já marcada, nada a fazer
+
+  att[aula.id] = true;
+  sbSaveAtt(aula.id, true); // offline-aware
+  save(true);
+  renderCalendar(); renderAttendance();
+  showToast(`📍 presença automática: ${curso.nome}`);
+}
+
+// Dispara uma verificação de localização (apenas se houver aula no momento)
+function geoCheckOnce() {
+  if (!getAulaAtual()) return; // fora de período de aula — economiza bateria
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos => tryAutoMarkPresenca(pos.coords.latitude, pos.coords.longitude),
+    err => console.warn('Geolocalização:', err.message),
+    { enableHighAccuracy: true, timeout: GEO_TIMEOUT_MS, maximumAge: GEO_MAX_AGE_MS }
+  );
+}
+
+// Atualiza visual do botão de acordo com o estado ativo/inativo
+function updateGeoBtn() {
+  const btn = document.getElementById('btnGeoAtt');
+  if (!btn) return;
+  if (geoAttActive) {
+    btn.textContent = '🟢 presença auto';
+    btn.title       = 'Presença automática ATIVA – clique para desativar';
+    btn.classList.add('geo-active');
+  } else {
+    btn.textContent = '📍 presença auto';
+    btn.title       = 'Ativar presença automática por geolocalização';
+    btn.classList.remove('geo-active');
+  }
+}
+
+// Inicia o monitoramento periódico de localização
+function startGeoAtt() {
+  if (geoIntervalId) return; // já rodando
+  geoAttActive = true;
+  localStorage.setItem('geoAttActive', 'true');
+  updateGeoBtn();
+  geoCheckOnce(); // verificação imediata
+
+  // Verifica a cada GEO_CHECK_INTERVAL_MS; pausa automaticamente quando a aba está oculta
+  geoIntervalId = setInterval(() => {
+    if (document.hidden) return;
+    geoCheckOnce();
+  }, GEO_CHECK_INTERVAL_MS);
+}
+
+// Para o monitoramento
+function stopGeoAtt() {
+  geoAttActive = false;
+  localStorage.removeItem('geoAttActive');
+  if (geoIntervalId) { clearInterval(geoIntervalId); geoIntervalId = null; }
+  updateGeoBtn();
+}
+
+// Alterna entre ativo/inativo ao clicar no botão
+function toggleGeoAtt() {
+  if (geoAttActive) {
+    stopGeoAtt();
+    showToast('presença automática desativada');
+    return;
+  }
+  if (!('geolocation' in navigator)) {
+    showToast('geolocalização não disponível neste dispositivo');
+    return;
+  }
+  // Verifica estado da permissão antes de pedir ao usuário
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(perm => {
+      if (perm.state === 'denied') {
+        showToast('⚠ permissão de localização negada – verifique as configurações');
+      } else {
+        startGeoAtt();
+        showToast('📍 presença automática ativada');
+      }
+    }).catch(() => { startGeoAtt(); showToast('📍 presença automática ativada'); });
+  } else {
+    startGeoAtt();
+    showToast('📍 presença automática ativada');
+  }
+}
+
+// Page Visibility API: retoma verificação ao voltar para a aba
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && geoAttActive) geoCheckOnce();
+});
+
+// ═══════════════════════════════════════════════
 // BTT
 // ═══════════════════════════════════════════════
 const btt = document.getElementById('btt');
 window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
 btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 
-// SW
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+// Service Worker — registro e escuta de mensagens de Background Sync
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => {
+      // Quando o SW notifica que a fila deve ser processada (Background Sync)
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data && e.data.type === 'SYNC_QUEUE') processOfflineQueue();
+      });
+    })
+    .catch(() => {});
+}
 
 // ═══════════════════════════════════════════════
 // INIT
@@ -1158,11 +1367,17 @@ async function startApp() {
     init();
     hideLoadOverlay();
     showCriticalAttendanceAlerts();
+    // Inicializa status offline e restaura geo se estava ativo
+    updateOnlineStatus();
+    updateOfflineBadge();
+    if (localStorage.getItem('geoAttActive') === 'true') startGeoAtt();
   } else {
     // Sem sessão: exibe login (app já renderizado em background)
     init();
     hideLoadOverlay();
     showLoginOverlay();
+    updateOnlineStatus();
+    updateOfflineBadge();
   }
 }
 
@@ -1197,6 +1412,8 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     btn.textContent = 'Entrar';
     showToast('bem-vindo, convidado!');
     showCriticalAttendanceAlerts();
+    updateOnlineStatus();
+    updateOfflineBadge();
     return;
   }
 
@@ -1210,6 +1427,9 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     hideLoadOverlay();
     showToast('bem-vindo!');
     showCriticalAttendanceAlerts();
+    updateOnlineStatus();
+    updateOfflineBadge();
+    if (localStorage.getItem('geoAttActive') === 'true') startGeoAtt();
   } else {
     errEl.textContent = errMsg;
     btn.disabled = false;
@@ -1219,6 +1439,9 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
 
 // ── Handler do botão de logout ──
 document.getElementById('btnLogout').addEventListener('click', () => doSignOut());
+
+// ── Handler do botão de presença automática ──
+document.getElementById('btnGeoAtt').addEventListener('click', toggleGeoAtt);
 
 // Re-render a cada minuto (linha de agora, badges "hoje/futuro")
 setInterval(() => {
