@@ -1092,6 +1092,18 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
   btn.disabled = true;
   btn.textContent = 'Entrando…';
 
+  // Sem credenciais: entrada anônima (apenas localStorage)
+  if (!email && !pass) {
+    hideLoginOverlay();
+    document.getElementById('btnLogout').style.display = '';
+    init();
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    showToast('bem-vindo, convidado!');
+    showCriticalAttendanceAlerts();
+    return;
+  }
+
   const errMsg = await signIn(email, pass);
   if (!errMsg) {
     showLoadOverlay();
