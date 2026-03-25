@@ -67,6 +67,46 @@ let topics = [];        // [{id,text,checked}]
 let undoBuf = null, undoTm = null;
 const listTm = {};
 let supaUser = null; // usuário autenticado no Supabase
+let _pendingSaves = 0; // contador de gravações Supabase em andamento
+
+function _onSaveStart() {
+  _pendingSaves++;
+  _setSyncBadge('saving');
+}
+
+function _onSaveEnd(err) {
+  _pendingSaves = Math.max(0, _pendingSaves - 1);
+  if (err) {
+    _setSyncBadge('error');
+  } else if (_pendingSaves === 0) {
+    _setSyncBadge('saved');
+  }
+}
+
+function _setSyncBadge(state) {
+  const el = document.getElementById('syncBadge');
+  if (!el || !supaUser) return;
+  clearTimeout(_setSyncBadge._hideTimer);
+  if (state === 'saving') {
+    el.textContent = '⟳ salvando...';
+    el.className = 'sync-badge saving';
+    el.style.display = '';
+  } else if (state === 'saved') {
+    el.textContent = '☁ salvo';
+    el.className = 'sync-badge saved';
+    el.style.display = '';
+    _setSyncBadge._hideTimer = setTimeout(() => {
+      if (_pendingSaves === 0) el.style.display = 'none';
+    }, 3000);
+  } else if (state === 'error') {
+    el.textContent = '⚠ erro ao salvar';
+    el.className = 'sync-badge error';
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
+_setSyncBadge._hideTimer = null;
 
 function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -160,9 +200,21 @@ async function signIn(email, pass) {
 }
 
 async function doSignOut() {
+  if (sb && supaUser) {
+    showLoadOverlay();
+    try {
+      await sbFullSync();
+    } catch (e) {
+      console.error('Erro ao sincronizar antes de sair:', e);
+    } finally {
+      hideLoadOverlay();
+    }
+  }
   if (sb) await sb.auth.signOut();
   supaUser = null;
   att = {}; customEvents = []; tasks = []; topics = [];
+  const syncBadge = document.getElementById('syncBadge');
+  if (syncBadge) syncBadge.style.display = 'none';
   document.getElementById('btnLogout').style.display = 'none';
   init(); // re-render com estado vazio antes de exibir o login
   showLoginOverlay();
@@ -229,48 +281,51 @@ async function sbLoad() {
   }
 }
 
-// ── Escrita granular (fire-and-forget) ──
+// ── Escrita granular (com rastreamento de saves pendentes) ──
+// Helper: rastreia início/fim da operação e exibe badge de sincronização
+function _sbExec(label, promise) {
+  _onSaveStart();
+  promise
+    .then(({ error }) => { if (error) console.error(label, error); _onSaveEnd(error); })
+    .catch(e => { console.error(label, e); _onSaveEnd(e); });
+}
+
 function sbSaveAtt(aulaId, presente) {
   if (!sb || !supaUser) return;
-  sb.from('presencas')
+  _sbExec('sbSaveAtt', sb.from('presencas')
     .upsert({ user_id: supaUser.id, aula_id: aulaId, presente },
-            { onConflict: 'user_id,aula_id' })
-    .catch(e => console.error('sbSaveAtt:', e));
+            { onConflict: 'user_id,aula_id' }));
 }
 
 function sbSaveEvent(ev) {
   if (!sb || !supaUser) return;
   const dateStr = fmtDateLocal(ev.date);
-  sb.from('eventos')
+  _sbExec('sbSaveEvent', sb.from('eventos')
     .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
               date: dateStr, ini: ev.ini, fim: ev.fim,
-              type: ev.type, cor: ev.cor, note: ev.note || '' })
-    .catch(e => console.error('sbSaveEvent:', e));
+              type: ev.type, cor: ev.cor, note: ev.note || '' }));
 }
 
 function sbDeleteEvent(id) {
   if (!sb || !supaUser) return;
-  sb.from('eventos').delete()
-    .eq('id', id).eq('user_id', supaUser.id)
-    .catch(e => console.error('sbDeleteEvent:', e));
+  _sbExec('sbDeleteEvent', sb.from('eventos').delete()
+    .eq('id', id).eq('user_id', supaUser.id));
 }
 
 function sbSaveItem(type, item, order) {
   if (!sb || !supaUser) return;
   const table = type === 'task' ? 'tarefas' : 'topicos';
-  sb.from(table)
+  _sbExec('sbSaveItem', sb.from(table)
     .upsert({ id: item.id, user_id: supaUser.id,
               text: item.text, checked: item.checked,
-              sort_order: order || 0 })
-    .catch(e => console.error('sbSaveItem:', e));
+              sort_order: order || 0 }));
 }
 
 function sbDeleteItem(type, id) {
   if (!sb || !supaUser) return;
   const table = type === 'task' ? 'tarefas' : 'topicos';
-  sb.from(table).delete()
-    .eq('id', id).eq('user_id', supaUser.id)
-    .catch(e => console.error('sbDeleteItem:', e));
+  _sbExec('sbDeleteItem', sb.from(table).delete()
+    .eq('id', id).eq('user_id', supaUser.id));
 }
 
 // Sincronização completa (usado após importação)
@@ -1175,9 +1230,10 @@ setInterval(() => {
 
 // Sincronização automática com Supabase a cada 30 segundos
 // Garante que alterações feitas em outros dispositivos apareçam rapidamente
+// Não sincroniza se houver gravações locais pendentes (evita sobrescrever dados do usuário)
 let _syncing = false;
 setInterval(async () => {
-  if (!sb || !supaUser || _syncing) return;
+  if (!sb || !supaUser || _syncing || _pendingSaves > 0) return;
   _syncing = true;
   try {
     const ok = await sbLoad();

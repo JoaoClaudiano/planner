@@ -353,6 +353,35 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   transition: background .2s, color .2s, border-color .2s;
 }
 
+/* ─ SYNC BADGE ─ */
+.sync-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  transition: background .2s, color .2s, border-color .2s;
+}
+.sync-badge.saving {
+  background: var(--surface2);
+  color: var(--text2);
+  border-color: var(--border2);
+  animation: pulse-opacity .8s ease-in-out infinite alternate;
+}
+.sync-badge.saved {
+  background: var(--surface2);
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.sync-badge.error {
+  background: var(--surface2);
+  color: var(--warn);
+  border-color: var(--warn);
+}
+@keyframes pulse-opacity { from { opacity: .5; } to { opacity: 1; } }
+
 /* ─ LOGIN OVERLAY ─ */
 .login-overlay {
   display: none;
