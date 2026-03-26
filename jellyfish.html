@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Água-viva</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b0f1a; }
+  canvas { display: block; }
+  #info {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    font-family: monospace; font-size: 11px;
+    color: rgba(150,180,255,0.3); pointer-events: none; letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="info">mova o mouse · toque para interagir</div>
+<script>
+// ─── PARÂMETROS AJUSTÁVEIS ────────────────────────────────────────────────────
+const PARAMS = {
+  // Sino
+  BELL_RADIUS:      70,   // raio base
+  BELL_PULSE_AMP:   18,   // amplitude da pulsação
+  BELL_PULSE_FREQ:  0.85, // Hz
+  BELL_PTS:         22,   // pontos da borda (mais = mais suave)
+  BELL_ORGANIC_AMP: 3.5,  // irregularidade orgânica da borda
+
+  // Tentáculos
+  TENTACLE_COUNT:   14,
+  SEG_COUNT:        28,   // segmentos por tentáculo
+  SEG_LEN:          12,   // comprimento em repouso (px)
+  WAVE_AMP:         16,   // amplitude da onda lateral
+  WAVE_K:           0.19, // número de onda
+  WAVE_OMEGA:       2.2,  // velocidade angular da onda
+  DRAG:             0.88, // amortecimento Verlet (0=máx, 1=sem)
+  RAND_FREQ:        0.2,  // variação de frequência entre tentáculos
+
+  // Interação
+  ATTRACT_FORCE:    0.013,
+  ATTRACT_RADIUS:   320,
+
+  // Visuais
+  GLOW_BLUR:        24,
+
+  // Multi
+  JELLYFISH_COUNT:  3,
+};
+
+// ─── UTILITÁRIOS ──────────────────────────────────────────────────────────────
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Ease-in-out cúbico para pulsação orgânica (não senoidal perfeita)
+function easeInOut(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Seno modificado com easing — contração assimétrica
+function pulseSine(t, freq, phase) {
+  const raw  = Math.sin(2 * Math.PI * freq * t + phase);
+  const norm = (raw + 1) / 2;           // [0,1]
+  return easeInOut(norm) * 2 - 1;       // [-1,1]
+}
+
+// Ruído pseudo-aleatório suave para deformação da borda
+function snoise(x, seed) {
+  const v = Math.sin(x * 127.1 + seed * 311.7) * 43758.5453;
+  return v - Math.floor(v); // [0,1)
+}
+
+// ─── Segment ──────────────────────────────────────────────────────────────────
+class Segment {
+  constructor(x, y) {
+    this.x = x;  this.px = x;
+    this.y = y;  this.py = y;
+  }
+  update(dt) {
+    const vx = (this.x - this.px) * PARAMS.DRAG;
+    const vy = (this.y - this.py) * PARAMS.DRAG;
+    this.px = this.x;
+    this.py = this.y;
+    this.x += vx * dt * 60;
+    this.y += vy * dt * 60;
+  }
+}
+
+// ─── Tentacle ─────────────────────────────────────────────────────────────────
+class Tentacle {
+  constructor(attachAngle, segCount, segLen, opts) {
+    this.attachAngle = attachAngle;
+    this.segLen      = segLen;
+    this.phase       = opts.phase;
+    this.freqMul     = opts.freqMul;
+    this.ampMul      = opts.ampMul;
+
+    this.segs = [];
+    for (let i = 0; i <= segCount; i++) {
+      this.segs.push(new Segment(0, i * segLen));
+    }
+  }
+
+  update(bx, by, t, dt, pulseR, baseR) {
+    // Ancora o primeiro segmento na borda da cabeça
+    const s0 = this.segs[0];
+    s0.x = bx; s0.px = bx;
+    s0.y = by; s0.py = by;
+
+    // Amplitude varia com pulsação: maior ao expandir
+    const wAmp  = PARAMS.WAVE_AMP * this.ampMul * (pulseR / baseR);
+    const omega = PARAMS.WAVE_OMEGA * this.freqMul;
+
+    // Integração de Verlet
+    for (let i = 1; i < this.segs.length; i++) {
+      this.segs[i].update(dt);
+    }
+
+    // Perturbação de onda ao longo do tentáculo
+    for (let i = 1; i < this.segs.length; i++) {
+      const wave = wAmp * Math.sin(PARAMS.WAVE_K * i - omega * t + this.phase);
+      this.segs[i].x += wave * dt * 30;
+    }
+
+    // Constraint de distância (3 iterações para estabilidade)
+    for (let iter = 0; iter < 3; iter++) {
+      for (let i = 0; i < this.segs.length - 1; i++) {
+        const a = this.segs[i], b = this.segs[i + 1];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d  = Math.sqrt(dx * dx + dy * dy) || 0.001;
+        const diff = (d - this.segLen) / d;
+        if (i === 0) {
+          b.x -= dx * diff;
+          b.y -= dy * diff;
+        } else {
+          const half = diff * 0.5;
+          a.x += dx * half; a.y += dy * half;
+          b.x -= dx * half; b.y -= dy * half;
+        }
+      }
+    }
+  }
+
+  render(ctx, r, g, b) {
+    const n = this.segs.length;
+    if (n < 2) return;
+    for (let i = 0; i < n - 1; i++) {
+      const a     = this.segs[i];
+      const c     = this.segs[i + 1];
+      const frac  = i / (n - 1);
+      const alpha = (1 - frac) * 0.72; // fade para a ponta
+      const width = Math.max(0.3, 1.6 * (1 - frac));
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(c.x, c.y);
+      ctx.strokeStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+      ctx.lineWidth   = width;
+      ctx.stroke();
+    }
+  }
+}
+
+// ─── Jellyfish ────────────────────────────────────────────────────────────────
+class Jellyfish {
+  constructor(x, y, opts) {
+    this.x  = x; this.y  = y;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.15;
+
+    this.baseR      = opts.baseR;
+    this.hue        = opts.hue;
+    this.pulseFreq  = PARAMS.BELL_PULSE_FREQ * (0.85 + Math.random() * 0.3);
+    this.pulsePhase = Math.random() * Math.PI * 2;
+    this.seed       = Math.random() * 100;
+    this.scaleX     = 1;
+    this.scaleY     = 1;
+
+    // Cor RGB dos tentáculos derivada do matiz
+    this.tr = clamp(Math.round(80  + (this.hue - 200) * 0.7), 0, 255);
+    this.tg = clamp(Math.round(130 + (this.hue - 200) * 0.3), 0, 255);
+
+    // Tentáculos distribuídos na borda inferior (π a 2π)
+    this.tentacles = [];
+    const n = PARAMS.TENTACLE_COUNT;
+    for (let i = 0; i < n; i++) {
+      const angle    = Math.PI + (Math.PI / (n - 1)) * i;
+      const segCount = PARAMS.SEG_COUNT + Math.floor((Math.random() - 0.5) * 6);
+      const segLen   = PARAMS.SEG_LEN   * (0.85 + Math.random() * 0.3);
+      this.tentacles.push(new Tentacle(angle, segCount, segLen, {
+        phase:   Math.random() * Math.PI * 2,
+        freqMul: 1 + (Math.random() - 0.5) * PARAMS.RAND_FREQ * 2,
+        ampMul:  0.7 + Math.random() * 0.6,
+      }));
+    }
+  }
+
+  // Raio atual com pulsação assimétrica
+  radius(t) {
+    return this.baseR + pulseSine(t, this.pulseFreq, this.pulsePhase) * PARAMS.BELL_PULSE_AMP;
+  }
+
+  update(t, dt, mx, my, W, H) {
+    const r   = this.radius(t);
+    const str = (r - this.baseR) / PARAMS.BELL_PULSE_AMP; // [-1, 1]
+
+    // Squash & stretch
+    this.scaleX = 1 - str * 0.12;
+    this.scaleY = 1 + str * 0.10;
+
+    // Atração ao cursor
+    const dx = mx - this.x, dy = my - this.y;
+    const d  = Math.sqrt(dx * dx + dy * dy);
+    if (d < PARAMS.ATTRACT_RADIUS && d > 1) {
+      this.vx += (dx / d) * PARAMS.ATTRACT_FORCE;
+      this.vy += (dy / d) * PARAMS.ATTRACT_FORCE;
+    }
+
+    // Deriva com amortecimento
+    this.vx *= 0.995; this.vy *= 0.995;
+    this.x  += this.vx * dt * 60;
+    this.y  += this.vy * dt * 60;
+
+    // Rebote nas bordas
+    const mg = this.baseR * 1.5;
+    if (this.x < mg)     this.vx += 0.045;
+    if (this.x > W - mg) this.vx -= 0.045;
+    if (this.y < mg)     this.vy += 0.045;
+    if (this.y > H - mg) this.vy -= 0.045;
+
+    // Atualiza tentáculos
+    for (const tent of this.tentacles) {
+      const bx = this.x + Math.cos(tent.attachAngle) * r * this.scaleX;
+      const by = this.y + Math.sin(tent.attachAngle) * r * this.scaleY;
+      tent.update(bx, by, t, dt, r, this.baseR);
+    }
+  }
+
+  // Caminho do sino (com deformação orgânica)
+  _bellPath(ctx, r, t) {
+    const pts = PARAMS.BELL_PTS;
+    ctx.beginPath();
+    for (let i = 0; i <= pts; i++) {
+      const a     = (i / pts) * Math.PI * 2;
+      const noise = (snoise(a * 3 + t * 0.4, this.seed) - 0.5) * PARAMS.BELL_ORGANIC_AMP;
+      const pr    = r + noise;
+      const px    = this.x + Math.cos(a) * pr * this.scaleX;
+      const py    = this.y + Math.sin(a) * pr * this.scaleY;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  render(ctx, t) {
+    const r = this.radius(t);
+    const h = this.hue;
+
+    // ── Tentáculos (desenhados antes do sino para ficarem por baixo) ──
+    ctx.save();
+    ctx.shadowBlur  = 10;
+    ctx.shadowColor = `hsla(${h},80%,70%,0.22)`;
+    for (const tent of this.tentacles) {
+      tent.render(ctx, this.tr, this.tg, 255);
+    }
+    ctx.restore();
+
+    // ── Sino ──
+    ctx.save();
+    ctx.shadowBlur  = PARAMS.GLOW_BLUR;
+    ctx.shadowColor = `hsla(${h},85%,72%,0.42)`;
+
+    // Preenchimento com gradiente
+    const grd = ctx.createRadialGradient(
+      this.x - r * 0.15 * this.scaleX,
+      this.y - r * 0.30 * this.scaleY,
+      r * 0.04,
+      this.x, this.y, r * Math.max(this.scaleX, this.scaleY)
+    );
+    grd.addColorStop(0,    `hsla(${h},72%,82%,0.55)`);
+    grd.addColorStop(0.55, `hsla(${h},62%,62%,0.26)`);
+    grd.addColorStop(1,    `hsla(${h},50%,40%,0.05)`);
+
+    this._bellPath(ctx, r, t);
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // Borda
+    this._bellPath(ctx, r, t);
+    ctx.strokeStyle = `hsla(${h},72%,86%,0.48)`;
+    ctx.lineWidth   = 1.3;
+    ctx.stroke();
+
+    // Reflexo especular interno
+    const sx = this.x - r * 0.18 * this.scaleX;
+    const sy = this.y - r * 0.28 * this.scaleY;
+    const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 0.38);
+    sg.addColorStop(0, `hsla(${h + 20},90%,96%,0.22)`);
+    sg.addColorStop(1, `hsla(${h},60%,70%,0)`);
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, r * 0.28 * this.scaleX, r * 0.16 * this.scaleY, -0.4, 0, Math.PI * 2);
+    ctx.fillStyle = sg;
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+// ─── CANVAS & ESTADO ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W = 0, H = 0;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const mouse = { x: -9999, y: -9999 };
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('touchmove', e => {
+  e.preventDefault();
+  mouse.x = e.touches[0].clientX;
+  mouse.y = e.touches[0].clientY;
+}, { passive: false });
+window.addEventListener('touchstart', e => {
+  mouse.x = e.touches[0].clientX;
+  mouse.y = e.touches[0].clientY;
+});
+
+// ─── CRIAÇÃO ──────────────────────────────────────────────────────────────────
+function makeJellyfishes() {
+  const list = [];
+  const n    = PARAMS.JELLYFISH_COUNT;
+  // Matizes: azul-violeta, ciano, roxo
+  const hues = [215, 255, 185];
+  for (let i = 0; i < n; i++) {
+    const x     = W * (0.18 + 0.64 * (i / (n - 1 || 1)));
+    const y     = H * (0.28 + Math.random() * 0.28);
+    const hue   = hues[i % hues.length] + (Math.random() - 0.5) * 18;
+    const baseR = PARAMS.BELL_RADIUS * (0.72 + Math.random() * 0.52);
+    list.push(new Jellyfish(x, y, { hue, baseR }));
+  }
+  return list;
+}
+
+let jellyfishes = [];
+window.addEventListener('resize', () => { jellyfishes = makeJellyfishes(); });
+
+// ─── LOOP ─────────────────────────────────────────────────────────────────────
+let lastTs = 0, elapsed = 0;
+
+function loop(ts) {
+  const raw = (ts - lastTs) / 1000;
+  lastTs = ts;
+
+  // Salta o primeiro frame e saltos longos (aba em segundo plano, > 250 ms)
+  if (raw <= 0 || raw > 0.25) { requestAnimationFrame(loop); return; }
+
+  // Cap em 50 ms para manter a física estável durante quedas de FPS
+  const dt  = Math.min(raw, 0.05);
+  elapsed  += dt;
+
+  // Inicialização lazy (garante W/H corretos)
+  if (jellyfishes.length === 0) jellyfishes = makeJellyfishes();
+
+  // Fundo escuro
+  ctx.fillStyle = '#0b0f1a';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const jf of jellyfishes) {
+    jf.update(elapsed, dt, mouse.x, mouse.y, W, H);
+    jf.render(ctx, elapsed);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
