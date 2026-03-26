@@ -387,8 +387,58 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   display: none;
   position: fixed; inset: 0; z-index: 9000;
   background: var(--bg);
+  flex-direction: column;
   align-items: center; justify-content: center;
   padding: 1rem;
+}
+
+/* ─ JELLYFISH ─ */
+.jellyfish-wrap {
+  display: flex; justify-content: center;
+  width: 100%; max-width: 380px;
+  margin-bottom: -22px;
+  position: relative; z-index: 2;
+  pointer-events: none;
+}
+.jellyfish-svg {
+  width: 88px; height: auto; overflow: visible;
+  filter: drop-shadow(0 6px 18px rgba(59,130,246,.45));
+  animation: jelly-float 3.2s ease-in-out infinite;
+}
+.jbell {
+  fill: url(#jg-body);
+  stroke: rgba(96,165,250,.4); stroke-width: .5;
+}
+.jbell-glow { fill: url(#jg-glow); }
+.jbell-spot { fill: #fff; opacity: .22; }
+.jbell-group {
+  transform-box: fill-box; transform-origin: center top;
+  animation: jelly-bell 3.2s ease-in-out infinite;
+}
+.jt {
+  fill: none;
+  stroke: rgba(96,165,250,.7); stroke-width: 1.8; stroke-linecap: round;
+  transform-box: fill-box; transform-origin: top center;
+}
+.jt1 { animation: jt-sway 2.8s ease-in-out infinite 0s; }
+.jt2 { animation: jt-sway 2.8s ease-in-out infinite .18s; }
+.jt3 { animation: jt-sway 2.8s ease-in-out infinite .08s; }
+.jt4 { animation: jt-sway 2.8s ease-in-out infinite .28s; }
+.jt5 { animation: jt-sway 2.8s ease-in-out infinite .15s; }
+.jt6 { animation: jt-sway 2.8s ease-in-out infinite .35s; }
+@keyframes jelly-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-11px); }
+}
+@keyframes jelly-bell {
+  0%, 100% { transform: scaleY(1); }
+  30% { transform: scaleY(.78); }
+  55% { transform: scaleY(1.04); }
+}
+@keyframes jt-sway {
+  0%, 100% { transform: rotate(0deg); }
+  35% { transform: rotate(7deg); }
+  70% { transform: rotate(-7deg); }
 }
 .login-canvas {
   position: absolute; inset: 0;

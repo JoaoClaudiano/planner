@@ -158,6 +158,36 @@
 <!-- OVERLAY DE LOGIN -->
 <div class="login-overlay" id="loginOverlay">
   <canvas class="login-canvas" id="loginCanvas"></canvas>
+  <div class="jellyfish-wrap">
+    <svg class="jellyfish-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="jg-body" cx="50%" cy="25%" r="65%">
+          <stop offset="0%" stop-color="#bfdbfe" stop-opacity="0.95"/>
+          <stop offset="55%" stop-color="#60a5fa" stop-opacity="0.80"/>
+          <stop offset="100%" stop-color="#2563eb" stop-opacity="0.55"/>
+        </radialGradient>
+        <radialGradient id="jg-glow" cx="40%" cy="30%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65"/>
+          <stop offset="100%" stop-color="#93c5fd" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Tentacles (rendered behind the bell) -->
+      <g class="jt-group">
+        <path class="jt jt1" d="M 20,53 Q 17,72 21,90 Q 24,108 18,122"/>
+        <path class="jt jt2" d="M 32,57 Q 29,76 33,93 Q 36,110 30,124"/>
+        <path class="jt jt3" d="M 44,60 Q 42,80 46,97 Q 48,114 43,127"/>
+        <path class="jt jt4" d="M 56,60 Q 58,80 54,97 Q 52,114 57,127"/>
+        <path class="jt jt5" d="M 68,57 Q 71,76 67,93 Q 64,110 70,124"/>
+        <path class="jt jt6" d="M 80,53 Q 83,72 79,90 Q 76,108 82,122"/>
+      </g>
+      <!-- Bell (rendered in front of tentacles) -->
+      <g class="jbell-group">
+        <path class="jbell" d="M 10,52 Q 8,4 50,4 Q 92,4 90,52 Q 82,60 74,52 Q 66,60 58,52 Q 54,60 50,52 Q 46,60 42,52 Q 34,60 26,52 Q 18,60 10,52 Z"/>
+        <ellipse class="jbell-glow" cx="50" cy="28" rx="28" ry="20"/>
+        <ellipse class="jbell-spot" cx="38" cy="20" rx="7" ry="5" transform="rotate(-15 38 20)"/>
+      </g>
+    </svg>
+  </div>
   <div class="login-card">
     <div class="login-logo">rotina<b>·</b>estudos</div>
     <p class="login-sub">sistema pessoal de frequência acadêmica</p>
