@@ -732,18 +732,12 @@ function renderCalendar() {
     });
   });
 
-  // ── CLICK em eventos custom ──
-  document.querySelectorAll('.cal-ev[data-custom]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      openCustomPopup(el.dataset.custom, el.getBoundingClientRect());
-    });
-  });
+  // ── CLICK em eventos custom — tratado pelo initCalendarDrag (inclui click) ──
 
   // ── CLICK em espaço vazio → novo evento ──
   document.querySelectorAll('.cal-hl').forEach(hl => {
     hl.addEventListener('click', e => {
-      if (e.target !== hl) return; // clicou num evento filho
+      if (e.target !== hl) return;
       closePopup();
       const hour = parseInt(hl.dataset.hour);
       const dateStr = hl.dataset.date || hl.closest('.cal-dcol').dataset.date;
@@ -755,6 +749,9 @@ function renderCalendar() {
       openNewEvModal();
     });
   });
+
+  // ── DRAG para mover eventos custom ──
+  initCalendarDrag();
 }
 
 // Atualiza linha "agora"
@@ -765,6 +762,148 @@ setInterval(() => {
   const mins = (now.getHours() - CAL_INI) * 60 + now.getMinutes();
   line.style.top = Math.max(0, Math.min(mins / 60 * SLOT, (CAL_FIM-CAL_INI)*SLOT)) + 'px';
 }, 60000);
+
+// ── DRAG & DROP para eventos custom no calendário ──────────────────────────
+function initCalendarDrag() {
+  const calScroll = document.querySelector('.cal-scroll');
+  if (!calScroll) return;
+
+  document.querySelectorAll('.cal-ev[data-custom]').forEach(el => {
+    let ghost     = null;
+    const DRAG_THRESHOLD = 5; // px mínimos para iniciar drag
+
+    el.addEventListener('pointerdown', function (e) {
+      if (e.button && e.button !== 0) return;
+      e.stopPropagation();
+      const startX = e.clientX, startY = e.clientY;
+      let dragging = false;
+
+      const evId   = el.dataset.custom;
+      const ev     = customEvents.find(x => x.id === evId);
+      if (!ev) return;
+
+      const rect   = el.getBoundingClientRect();
+      const offsetY = e.clientY - rect.top; // posição do clique dentro do evento
+
+      function startDrag() {
+        dragging = true;
+        closePopup();
+        el.setPointerCapture(e.pointerId);
+
+        // cria elemento fantasma
+        ghost = document.createElement('div');
+        ghost.className = el.className + ' cal-ev-drag-ghost';
+        ghost.style.cssText = `
+          position:fixed;
+          width:${rect.width}px;
+          height:${rect.height}px;
+          top:${rect.top}px;
+          left:${rect.left}px;
+          opacity:0.75;
+          pointer-events:none;
+          z-index:9999;
+          border-color:${ev.cor};
+          background:${ev.cor}28;
+          border-left:3px solid ${ev.cor};
+          border-radius:6px;
+          padding:3px 6px;
+          font-size:11px;
+          box-shadow:0 4px 16px rgba(0,0,0,.18);
+          transition:none;
+          transform:scale(1.03);
+        `;
+        ghost.innerHTML = el.innerHTML;
+        document.body.appendChild(ghost);
+
+        el.style.opacity = '0.3';
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'grabbing';
+      }
+
+      function onMove(e2) {
+        if (!dragging) {
+          if (Math.abs(e2.clientX - startX) > DRAG_THRESHOLD ||
+              Math.abs(e2.clientY - startY) > DRAG_THRESHOLD) {
+            startDrag();
+          }
+          return;
+        }
+        // move ghost
+        ghost.style.top  = (e2.clientY - offsetY) + 'px';
+        ghost.style.left = (e2.clientX - rect.width / 2) + 'px';
+
+        // highlight column below cursor
+        document.querySelectorAll('.cal-dcol.drag-over').forEach(c => c.classList.remove('drag-over'));
+        const col = document.elementFromPoint(e2.clientX, e2.clientY);
+        const dcol = col && col.closest('.cal-dcol');
+        if (dcol) dcol.classList.add('drag-over');
+      }
+
+      function onUp(e2) {
+        el.removeEventListener('pointermove', onMove);
+        el.removeEventListener('pointerup',   onUp);
+        el.removeEventListener('pointercancel', onUp);
+
+        document.querySelectorAll('.cal-dcol.drag-over').forEach(c => c.classList.remove('drag-over'));
+        document.body.style.userSelect = '';
+        document.body.style.cursor     = '';
+        el.style.opacity = '';
+
+        if (ghost) { ghost.remove(); ghost = null; }
+
+        if (!dragging) {
+          // foi apenas clique — abre popup normalmente
+          openCustomPopup(evId, el.getBoundingClientRect());
+          return;
+        }
+
+        // determina coluna (dia) e hora de destino
+        const dropTarget = document.elementFromPoint(e2.clientX, e2.clientY);
+        const dcol = dropTarget && dropTarget.closest('.cal-dcol[data-date]');
+        if (!dcol) return; // fora do calendário — cancela
+
+        const newDateStr = dcol.dataset.date;
+        const colRect    = dcol.getBoundingClientRect();
+        const scrollEl   = calScroll;
+        const scrollOff  = scrollEl.scrollTop;
+
+        // posição relativa ao topo da coluna
+        const relY    = (e2.clientY - colRect.top) + scrollOff - offsetY;
+        const hours   = relY / SLOT; // horas desde CAL_INI
+        const rawHour = CAL_INI + hours;
+
+        // arredonda para o quarto de hora mais próximo (0, 15, 30, 45)
+        const totalMins = Math.round(rawHour * 4) * 15;
+        const newIniH   = Math.max(CAL_INI, Math.min(CAL_FIM - 1, Math.floor(totalMins / 60)));
+        const newIniM   = totalMins % 60;
+
+        // calcula duração original e aplica
+        const [origIniH, origIniM] = ev.ini.split(':').map(Number);
+        const [origFimH, origFimM] = ev.fim.split(':').map(Number);
+        const durMins = (origFimH * 60 + origFimM) - (origIniH * 60 + origIniM);
+
+        let fimTotalMins = newIniH * 60 + newIniM + durMins;
+        if (fimTotalMins > CAL_FIM * 60) fimTotalMins = CAL_FIM * 60;
+
+        const newFimH = Math.floor(fimTotalMins / 60);
+        const newFimM = fimTotalMins % 60;
+
+        const pad = n => (n < 10 ? '0' : '') + n;
+        ev.date = new Date(newDateStr + 'T00:00:00');
+        ev.ini  = pad(newIniH) + ':' + pad(newIniM);
+        ev.fim  = pad(newFimH) + ':' + pad(newFimM);
+
+        save(true);
+        renderCalendar();
+        showToast('evento movido');
+      }
+
+      el.addEventListener('pointermove',   onMove);
+      el.addEventListener('pointerup',     onUp);
+      el.addEventListener('pointercancel', onUp);
+    });
+  });
+}
 
 document.getElementById('wkPrev').onclick  = () => { wkOff--; renderCalendar(); };
 document.getElementById('wkNext').onclick  = () => { wkOff++; renderCalendar(); };

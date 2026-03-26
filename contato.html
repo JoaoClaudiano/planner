@@ -13,7 +13,7 @@
 <body>
 <header>
   <div style="display:flex;align-items:center">
-    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
   </div>
   <div class="hright">
     <button class="hbtn" id="btnDark">☀ claro</button>
@@ -75,6 +75,8 @@
   </div>
 </main>
 
+<button class="btt" id="btt">↑</button>
+
 <footer>
   <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
   <nav class="fnav">
@@ -100,6 +102,9 @@
     localStorage.setItem(KEY, dark ? '1' : '0');
     applyTheme(dark);
   });
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
+  btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 })();
 
 (function () {
@@ -127,7 +132,7 @@
       + '?subject=' + encodeURIComponent('[flow.planner] ' + subjectText)
       + '&body=' + body;
 
-    window.location.href = mailtoLink;
+    window.open(mailtoLink);
 
     status.style.color = 'var(--ok)';
     status.textContent = '✓ Abrindo seu cliente de e-mail…';
