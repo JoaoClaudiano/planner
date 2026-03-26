@@ -16,7 +16,7 @@ const sb = (typeof supabase !== 'undefined')
 // DADOS
 // ═══════════════════════════════════════════════
 // dia: 0=dom,1=seg,2=ter,3=qua,4=qui,5=sex,6=sab (igual JS getDay())
-const COURSES = [
+const BASE_COURSES = [
   { id:'TC0610', nome:'Materiais Betuminosos',        turma:'01', local:'Bloco 708 – Sala 24',
     horarios:[{dia:3,ini:14,fim:17}],    // Quarta 14–17h (3h/aula)
     ini:new Date(2026,2,2), fim:new Date(2026,6,7), cls:'c1', cor:'#f59e0b' },
@@ -49,21 +49,42 @@ function gerarAulas(c) {
   });
   return out.sort((a,b) => a.date - b.date || a.ini - b.ini);
 }
-COURSES.forEach(c => {
+BASE_COURSES.forEach(c => {
   c._aulas = gerarAulas(c);
   // carga horária total e máximo de faltas em horas
   c._totalH = c._aulas.reduce((s,a) => s + a.horas, 0);
   c._maxFaltasH = Math.floor(c._totalH * 0.25); // 25% da CH
 });
 
+// ── Cursos ativos (BASE + usuário, sem arquivados) ──
+let COURSES = [...BASE_COURSES]; // reconstruído após load()
+let AULA_MAP = {};               // reconstruído por rebuildAulaMap()
+
+function rebuildAulaMap() {
+  AULA_MAP = {};
+  COURSES.forEach(c => c._aulas.forEach(a => { AULA_MAP[a.id] = { aula:a, curso:c }; }));
+}
+
+function rebuildCourses() {
+  const archivedIds = new Set(archivedCourses.map(a => a.courseId));
+  COURSES = [...BASE_COURSES, ...userCourses].filter(c => !archivedIds.has(c.id));
+  rebuildAulaMap();
+}
+
+// Inicializa com apenas os cursos base (sem user courses ainda)
+rebuildAulaMap();
+
 // ═══════════════════════════════════════════════
 // ESTADO
 // ═══════════════════════════════════════════════
-const LS = { att:'v3_att', ev:'v3_ev', tasks:'v3_tasks', topics:'v3_topics', dark:'v3_dark' };
+const LS = { att:'v3_att', ev:'v3_ev', tasks:'v3_tasks', topics:'v3_topics', dark:'v3_dark',
+             userCourses:'v3_userCourses', archived:'v3_archived' };
 let att = {};           // { aulaId: bool }
 let customEvents = [];  // [{id,nome,date,ini,fim,type,cor,note}]
 let tasks  = [];        // [{id,text,checked}]
 let topics = [];        // [{id,text,checked}]
+let userCourses    = []; // cursos adicionados pelo usuário
+let archivedCourses = []; // snapshots de disciplinas arquivadas
 let undoBuf = null, undoTm = null;
 const listTm = {};
 let supaUser = null; // usuário autenticado no Supabase
@@ -117,6 +138,26 @@ function load() {
   // Restaurar datas como Date objects
   customEvents.forEach(e => { e.date = new Date(e.date); });
 
+  // Carregar disciplinas do usuário
+  try {
+    userCourses = JSON.parse(localStorage.getItem(LS.userCourses) || '[]');
+    userCourses.forEach(c => {
+      c.ini = new Date(c.ini);
+      c.fim = new Date(c.fim);
+      c._aulas = gerarAulas(c);
+      c._totalH = c._aulas.reduce((s,a) => s + a.horas, 0);
+      c._maxFaltasH = Math.floor(c._totalH * 0.25);
+    });
+  } catch { userCourses = []; }
+
+  // Carregar disciplinas arquivadas
+  try {
+    archivedCourses = JSON.parse(localStorage.getItem(LS.archived) || '[]');
+  } catch { archivedCourses = []; }
+
+  // Reconstruir lista de cursos ativos e mapa de aulas
+  rebuildCourses();
+
   function mig(raw, defs) {
     if (!raw) return defs.map(t => ({id:uid(),text:t,checked:false}));
     try {
@@ -145,6 +186,15 @@ function save(quiet=false) {
   localStorage.setItem(LS.ev, JSON.stringify(evSerial));
   localStorage.setItem(LS.tasks, JSON.stringify(tasks));
   localStorage.setItem(LS.topics, JSON.stringify(topics));
+  // Serializar disciplinas do usuário (sem _aulas, regeneradas no load)
+  const userCoursesSerial = userCourses.map(c => ({
+    id: c.id, nome: c.nome, turma: c.turma, local: c.local,
+    horarios: c.horarios, cor: c.cor, cls: c.cls||'',
+    ini: c.ini instanceof Date ? c.ini.toISOString() : c.ini,
+    fim: c.fim instanceof Date ? c.fim.toISOString() : c.fim
+  }));
+  localStorage.setItem(LS.userCourses, JSON.stringify(userCoursesSerial));
+  localStorage.setItem(LS.archived, JSON.stringify(archivedCourses));
   if (!quiet) showToast('salvo');
   updateFooter();
 }
@@ -600,10 +650,6 @@ document.getElementById('newEvSave').addEventListener('click', () => {
 const CAL_INI = 7, CAL_FIM = 21, SLOT = 48; // px/hora
 const CALENDAR_DRAG_THRESHOLD = 5; // px mínimos de movimento para iniciar drag
 
-// Lookup rápido: aulaId → { aula, curso }
-const AULA_MAP = {};
-COURSES.forEach(c => c._aulas.forEach(a => { AULA_MAP[a.id] = { aula:a, curso:c }; }));
-
 // Fix fuso horário: 'YYYY-MM-DD' → Date local (não UTC)
 function parseDateLocal(str) {
   const [y,m,d] = str.split('-').map(Number);
@@ -696,10 +742,13 @@ function renderCalendar() {
       const durPx = (a.fim - a.ini)   * SLOT;
       const past  = isP || (isT && a.fim <= now.getHours());
       const chk   = att[a.id] || false;
-      h += `<div class="cal-ev ${a.curso.cls}${past?' ev-past':''}"
-        style="top:${topPx}px;height:${durPx}px"
+      const hasBuiltinCls = ['c1','c2','c3','c4'].includes(a.curso.cls);
+      const colorStyle = hasBuiltinCls ? '' : `background:${a.curso.cor}1a;border-color:${a.curso.cor};`;
+      const nameStyle  = hasBuiltinCls ? '' : `color:${a.curso.cor}`;
+      h += `<div class="cal-ev ${a.curso.cls||''}${past?' ev-past':''}"
+        style="top:${topPx}px;height:${durPx}px;${colorStyle}"
         data-aula="${a.id}">
-        <div class="ev-name">${esc(a.curso.nome)}</div>
+        <div class="ev-name"${nameStyle?` style="${nameStyle}"`:''}>${esc(a.curso.nome)}</div>
         <div class="ev-time">${a.ini}h–${a.fim}h · ${a.horas}h</div>
         ${chk ? `<div class="ev-check">✓ presente</div>` : ''}
       </div>`;
@@ -930,7 +979,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft')  { wkOff--; renderCalendar(); }
   if (e.key === 'ArrowRight') { wkOff++; renderCalendar(); }
   if (e.key === 'Home' || e.key === 't') { wkOff = 0; renderCalendar(); scrollToNow(); }
-  if (e.key === 'Escape') { closePopup(); closeNewEvModal(); }
+  if (e.key === 'Escape') { closePopup(); closeNewEvModal(); closeAddCourseModal(); closeArchivedModal(); }
 });
 
 // ═══════════════════════════════════════════════
@@ -969,6 +1018,7 @@ function renderAttendance() {
   COURSES.forEach(c => {
     const s = calcStats(c);
     const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const isUserCourse = userCourses.some(uc => uc.id === c.id);
 
     let pillTxt, pillCls = '';
     if (s.reprovado) {
@@ -996,6 +1046,8 @@ function renderAttendance() {
         <span class="att-code">${c.id}</span>
         <span class="att-hbadge">${c._totalH}h</span>
         <span class="att-pill ${pillCls}">${pillTxt}</span>
+        <button class="att-arch-btn" data-c="${c.id}" title="arquivar disciplina">📦</button>
+        ${isUserCourse ? `<button class="att-del-btn" data-c="${c.id}" title="remover disciplina">✕</button>` : ''}
         <span class="att-chev">▾</span>
       </div>
       <div class="att-prog">
@@ -1075,6 +1127,17 @@ function renderAttendance() {
     });
 
     card.querySelector('.att-head').addEventListener('click', () => card.classList.toggle('open'));
+    card.querySelector('.att-arch-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm(`Arquivar "${c.nome}"?\nOs dados de frequência serão preservados.`)) archiveCourse(c);
+    });
+    const delBtn = card.querySelector('.att-del-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (confirm(`Remover disciplina "${c.nome}"?\nEsta ação não pode ser desfeita.`)) deleteCourse(c.id);
+      });
+    }
     card.querySelector('.att-mark-btn').addEventListener('click', e => {
       e.stopPropagation();
       c._aulas.filter(a => a.date <= hoje).forEach(a => {
@@ -1172,6 +1235,340 @@ document.getElementById('btnDark').addEventListener('click', () => {
   const dark = document.body.classList.toggle('dark');
   document.getElementById('btnDark').textContent = dark ? '☀ claro' : '🌙 escuro';
   localStorage.setItem(LS.dark, dark);
+});
+
+// ═══════════════════════════════════════════════
+// DISCIPLINAS — ADICIONAR / EDITAR / ARQUIVAR
+// ═══════════════════════════════════════════════
+const COURSE_COLORS = ['#f59e0b','#3b82f6','#8b5cf6','#10b981','#ef4444','#ec4899','#6366f1','#14b8a6','#f97316','#06b6d4'];
+let editingCourseId = null;
+
+function addHorarioRow(dia=1, ini=8, fim=10) {
+  const row = document.createElement('div');
+  row.className = 'horario-row';
+  const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  row.innerHTML = `
+    <select class="form-select horario-dia">
+      ${DAYS.map((d,i) => `<option value="${i}"${i===dia?' selected':''}>${d}</option>`).join('')}
+    </select>
+    <input type="number" class="form-input horario-ini" min="6" max="22" value="${ini}">
+    <span class="horario-sep">h –</span>
+    <input type="number" class="form-input horario-fim" min="7" max="23" value="${fim}">
+    <span class="horario-sep">h</span>
+    <button type="button" class="btn-rem-horario" title="remover">✕</button>`;
+  row.querySelector('.btn-rem-horario').onclick = () => row.remove();
+  return row;
+}
+
+function initCourseColorRow() {
+  const row = document.getElementById('cColorRow');
+  row.innerHTML = '';
+  COURSE_COLORS.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'color-swatch'; s.style.background = c; s.dataset.color = c;
+    s.onclick = () => {
+      row.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('sel'));
+      s.classList.add('sel');
+    };
+    row.appendChild(s);
+  });
+  row.querySelector('.color-swatch').classList.add('sel');
+}
+
+function getSelectedCourseColor() {
+  const sel = document.querySelector('#cColorRow .color-swatch.sel');
+  return sel ? sel.dataset.color : COURSE_COLORS[0];
+}
+
+function setSelectedCourseColor(c) {
+  document.querySelectorAll('#cColorRow .color-swatch').forEach(s => {
+    s.classList.toggle('sel', s.dataset.color === c);
+  });
+}
+
+function openAddCourseModal(prefill=null) {
+  editingCourseId = prefill ? prefill.id : null;
+  document.getElementById('addCourseTitle').textContent = editingCourseId ? 'Editar disciplina' : 'Nova disciplina';
+  document.getElementById('cNome').value  = prefill ? prefill.nome : '';
+  document.getElementById('cId').value    = prefill ? prefill.id   : '';
+  document.getElementById('cId').disabled = !!editingCourseId;
+  document.getElementById('cTurma').value = prefill ? (prefill.turma||'') : '';
+  document.getElementById('cLocal').value = prefill ? (prefill.local||'') : '';
+
+  const today = new Date();
+  const fim3  = new Date(today); fim3.setMonth(today.getMonth() + 4);
+  if (prefill) {
+    const ini = prefill.ini instanceof Date ? prefill.ini : new Date(prefill.ini);
+    const fim = prefill.fim instanceof Date ? prefill.fim : new Date(prefill.fim);
+    document.getElementById('cIni').value = ini.toISOString().slice(0,10);
+    document.getElementById('cFim').value = fim.toISOString().slice(0,10);
+  } else {
+    document.getElementById('cIni').value = today.toISOString().slice(0,10);
+    document.getElementById('cFim').value = fim3.toISOString().slice(0,10);
+  }
+
+  const horariosDiv = document.getElementById('cHorarios');
+  horariosDiv.innerHTML = '';
+  if (prefill && prefill.horarios && prefill.horarios.length) {
+    prefill.horarios.forEach(h => horariosDiv.appendChild(addHorarioRow(h.dia, h.ini, h.fim)));
+  } else {
+    horariosDiv.appendChild(addHorarioRow(1, 8, 10));
+  }
+
+  initCourseColorRow();
+  if (prefill) setSelectedCourseColor(prefill.cor);
+  document.getElementById('addCourseModal').classList.add('open');
+  document.getElementById('cNome').focus();
+}
+
+function closeAddCourseModal() {
+  document.getElementById('addCourseModal').classList.remove('open');
+  editingCourseId = null;
+}
+
+document.getElementById('addCourseClose').onclick  = closeAddCourseModal;
+document.getElementById('addCourseCancel').onclick = closeAddCourseModal;
+document.getElementById('addCourseModal').addEventListener('mousedown', e => {
+  if (e.target === document.getElementById('addCourseModal')) closeAddCourseModal();
+});
+document.getElementById('addHorario').onclick = () => {
+  document.getElementById('cHorarios').appendChild(addHorarioRow());
+};
+document.getElementById('btnAddCourse').onclick = () => openAddCourseModal();
+
+document.getElementById('addCourseSave').addEventListener('click', () => {
+  const nome   = document.getElementById('cNome').value.trim();
+  const cid    = editingCourseId || document.getElementById('cId').value.trim().toUpperCase();
+  const turma  = document.getElementById('cTurma').value.trim();
+  const local  = document.getElementById('cLocal').value.trim();
+  const iniStr = document.getElementById('cIni').value;
+  const fimStr = document.getElementById('cFim').value;
+  const cor    = getSelectedCourseColor();
+
+  if (!nome || !cid || !iniStr || !fimStr) { showToast('preencha nome, código e datas'); return; }
+
+  const horarioRows = document.querySelectorAll('#cHorarios .horario-row');
+  if (!horarioRows.length) { showToast('adicione pelo menos um horário'); return; }
+  const horarios = [];
+  for (const row of horarioRows) {
+    const dia = parseInt(row.querySelector('.horario-dia').value);
+    const ini = parseInt(row.querySelector('.horario-ini').value);
+    const fim = parseInt(row.querySelector('.horario-fim').value);
+    if (isNaN(dia) || isNaN(ini) || isNaN(fim) || fim <= ini) {
+      showToast('horário inválido: fim deve ser maior que início'); return;
+    }
+    horarios.push({dia, ini, fim});
+  }
+
+  const [iy,im,id2] = iniStr.split('-').map(Number);
+  const [fy,fm,fd]  = fimStr.split('-').map(Number);
+  const iniDate = new Date(iy, im-1, id2);
+  const fimDate = new Date(fy, fm-1, fd);
+  if (fimDate <= iniDate) { showToast('data de fim deve ser após o início'); return; }
+
+  if (editingCourseId) {
+    const idx = userCourses.findIndex(c => c.id === editingCourseId);
+    if (idx !== -1) {
+      const c = userCourses[idx];
+      c.nome = nome; c.turma = turma; c.local = local;
+      c.horarios = horarios; c.ini = iniDate; c.fim = fimDate; c.cor = cor;
+      c._aulas = gerarAulas(c);
+      c._totalH = c._aulas.reduce((s,a) => s+a.horas, 0);
+      c._maxFaltasH = Math.floor(c._totalH * 0.25);
+    }
+  } else {
+    if ([...BASE_COURSES, ...userCourses].some(c => c.id === cid)) {
+      showToast('código já existe'); return;
+    }
+    const newCourse = { id: cid, nome, turma, local, horarios, cor, cls: '', ini: iniDate, fim: fimDate };
+    newCourse._aulas = gerarAulas(newCourse);
+    newCourse._totalH = newCourse._aulas.reduce((s,a) => s+a.horas, 0);
+    newCourse._maxFaltasH = Math.floor(newCourse._totalH * 0.25);
+    userCourses.push(newCourse);
+  }
+
+  rebuildCourses();
+  save(true);
+  renderCalendar();
+  renderAttendance();
+  closeAddCourseModal();
+  showToast(editingCourseId ? 'disciplina atualizada' : 'disciplina adicionada');
+});
+
+function deleteCourse(id) {
+  const idx = userCourses.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  const c = userCourses[idx];
+  if (c._aulas) c._aulas.forEach(a => delete att[a.id]);
+  userCourses.splice(idx, 1);
+  rebuildCourses();
+  save(true);
+  renderCalendar();
+  renderAttendance();
+  showToast('disciplina removida');
+}
+
+function archiveCourse(c) {
+  const attSnapshot = {};
+  if (c._aulas) c._aulas.forEach(a => { if (att[a.id] !== undefined) attSnapshot[a.id] = att[a.id]; });
+  const archived = {
+    courseId: c.id,
+    course: {
+      id: c.id, nome: c.nome, turma: c.turma||'', local: c.local||'',
+      horarios: c.horarios, cor: c.cor, cls: c.cls||'',
+      ini: c.ini instanceof Date ? c.ini.toISOString() : c.ini,
+      fim: c.fim instanceof Date ? c.fim.toISOString() : c.fim
+    },
+    attSnapshot,
+    archivedAt: new Date().toISOString()
+  };
+  archivedCourses.push(archived);
+  const uidx = userCourses.findIndex(uc => uc.id === c.id);
+  if (uidx !== -1) userCourses.splice(uidx, 1);
+  if (c._aulas) c._aulas.forEach(a => delete att[a.id]);
+  rebuildCourses();
+  save(true);
+  renderCalendar();
+  renderAttendance();
+  renderArchivedSection();
+  showToast(`${c.nome} arquivada`);
+}
+
+// ═══════════════════════════════════════════════
+// SEÇÃO ARQUIVADOS
+// ═══════════════════════════════════════════════
+let currentArchivedItem = null;
+
+function renderArchivedSection() {
+  const section = document.getElementById('archivedSection');
+  const grid    = document.getElementById('archivedGrid');
+  if (!section || !grid) return;
+
+  if (!archivedCourses.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  grid.innerHTML = '';
+
+  archivedCourses.forEach(archived => {
+    const c   = archived.course;
+    const ini = new Date(c.ini);
+    const fim = new Date(c.fim);
+    const tempC = {...c, ini, fim};
+    tempC._aulas = gerarAulas(tempC);
+    const totalH     = tempC._aulas.reduce((s,a) => s+a.horas, 0);
+    const attendedH  = tempC._aulas.filter(a => archived.attSnapshot[a.id]).reduce((s,a) => s+a.horas, 0);
+    const pct        = totalH > 0 ? (attendedH / totalH * 100) : 100;
+
+    const card = document.createElement('div');
+    card.className = 'archived-card';
+    card.innerHTML = `
+      <div class="archived-dot" style="background:${c.cor}"></div>
+      <div class="archived-info">
+        <div class="archived-name">${esc(c.nome)}</div>
+        <div class="archived-meta">${c.id} · ${ini.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})} – ${fim.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})}</div>
+      </div>
+      <div class="archived-pct ${pct>=75?'ok':'danger'}">${pct.toFixed(0)}%</div>`;
+    card.onclick = () => openArchivedModal(archived);
+    grid.appendChild(card);
+  });
+}
+
+function openArchivedModal(archived) {
+  currentArchivedItem = archived;
+  const c = {...archived.course};
+  c.ini = new Date(c.ini);
+  c.fim = new Date(c.fim);
+  c._aulas = gerarAulas(c);
+  c._totalH    = c._aulas.reduce((s,a) => s+a.horas, 0);
+  c._maxFaltasH = Math.floor(c._totalH * 0.25);
+  const attSnap    = archived.attSnapshot;
+  const attendedH  = c._aulas.filter(a => attSnap[a.id]).reduce((s,a) => s+a.horas, 0);
+  const missedH    = c._totalH - attendedH;
+  const pct        = c._totalH > 0 ? (attendedH / c._totalH * 100) : 100;
+  const archivedAt = new Date(archived.archivedAt);
+  const WDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  document.getElementById('archivedModalContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
+      <div style="width:10px;height:10px;border-radius:50%;background:${c.cor};flex-shrink:0"></div>
+      <div>
+        <div style="font-weight:600;font-size:15px">${esc(c.nome)}</div>
+        <div style="font-size:11px;color:var(--text3)">${esc(c.id)}${c.turma?' · turma '+esc(c.turma):''}${c.local?' · '+esc(c.local):''}</div>
+      </div>
+    </div>
+    <div class="att-summary-bar" style="border:1px solid var(--border);border-radius:8px;margin-bottom:.75rem">
+      <div class="att-stat"><span class="att-stat-label">Período</span>
+        <span class="att-stat-val">${c.ini.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})} – ${c.fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span></div>
+      <div class="att-stat"><span class="att-stat-label">C. Horária</span>
+        <span class="att-stat-val">${c._totalH}h</span></div>
+      <div class="att-stat"><span class="att-stat-label">Frequência</span>
+        <span class="att-stat-val ${pct>=75?'ok':'danger'}">${pct.toFixed(0)}%</span></div>
+      <div class="att-stat"><span class="att-stat-label">Faltas</span>
+        <span class="att-stat-val ${missedH>c._maxFaltasH?'danger':''}">${missedH}h / ${c._maxFaltasH}h</span></div>
+      <div class="att-stat"><span class="att-stat-label">Arquivado</span>
+        <span class="att-stat-val">${archivedAt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span></div>
+    </div>
+    <div class="att-list" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem">
+      ${c._aulas.map(a => {
+        const chk = attSnap[a.id] || false;
+        return `<div class="att-row">
+          <span style="font-size:12px;font-weight:600;color:${chk?'var(--ok)':'var(--warn)'};">${chk?'✓':'✕'}</span>
+          <span class="att-row-date">${a.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span>
+          <span class="att-row-day">${WDAYS[a.date.getDay()]}</span>
+          <span class="att-row-h">${a.ini}h–${a.fim}h</span>
+          <span class="att-row-hval">${a.horas}h</span>
+          ${chk ? '<span class="abadge" style="background:var(--okb);color:var(--ok)">presente</span>' : '<span class="abadge falta">falta</span>'}
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('archivedModal').classList.add('open');
+}
+
+function closeArchivedModal() {
+  document.getElementById('archivedModal').classList.remove('open');
+  currentArchivedItem = null;
+}
+
+document.getElementById('archivedModalClose').onclick = closeArchivedModal;
+document.getElementById('archivedModal').addEventListener('mousedown', e => {
+  if (e.target === document.getElementById('archivedModal')) closeArchivedModal();
+});
+
+document.getElementById('archivedUnarchive').addEventListener('click', () => {
+  if (!currentArchivedItem) return;
+  const archived = currentArchivedItem;
+  const c = {...archived.course};
+  c.ini = new Date(c.ini);
+  c.fim = new Date(c.fim);
+  c._aulas = gerarAulas(c);
+  c._totalH    = c._aulas.reduce((s,a) => s+a.horas, 0);
+  c._maxFaltasH = Math.floor(c._totalH * 0.25);
+
+  const isBase = BASE_COURSES.some(bc => bc.id === c.id);
+  if (!isBase) userCourses.push(c);
+  Object.assign(att, archived.attSnapshot);
+  const idx = archivedCourses.findIndex(a => a.courseId === archived.courseId);
+  if (idx !== -1) archivedCourses.splice(idx, 1);
+
+  rebuildCourses();
+  save(true);
+  renderCalendar();
+  renderAttendance();
+  renderArchivedSection();
+  closeArchivedModal();
+  showToast(`${c.nome} desarquivada`);
+});
+
+document.getElementById('archivedDelete').addEventListener('click', () => {
+  if (!currentArchivedItem) return;
+  const nome = currentArchivedItem.course.nome;
+  if (!confirm(`Remover permanentemente "${nome}" dos arquivados?\nOs dados de frequência serão perdidos.`)) return;
+  const idx = archivedCourses.findIndex(a => a.courseId === currentArchivedItem.courseId);
+  if (idx !== -1) archivedCourses.splice(idx, 1);
+  save(true);
+  renderArchivedSection();
+  closeArchivedModal();
+  showToast('removido dos arquivados');
 });
 
 // ═══════════════════════════════════════════════
@@ -1441,6 +1838,7 @@ function init() {
   renderAttendance();
   renderList('task');
   renderList('topic');
+  renderArchivedSection();
   updateFooter();
   initColorRow();
   // Scroll para hora atual após render
@@ -1518,6 +1916,7 @@ setInterval(() => {
   renderCalendar();
   renderSemProg();
   renderAttendance();
+  renderArchivedSection();
   updateFooter();
 }, 60000);
 
@@ -1536,6 +1935,7 @@ setInterval(async () => {
       renderAttendance();
       renderList('task');
       renderList('topic');
+      renderArchivedSection();
       updateFooter();
     }
   } finally {

@@ -616,3 +616,59 @@ body.dark .hbtn.geo-active {
   color: var(--ok);
   background: var(--okb);
 }
+
+/* ─ ARCHIVE BUTTON IN ATT-CARD ─ */
+.att-arch-btn, .att-del-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; padding: 2px 4px; border-radius: 5px;
+  color: var(--text3); opacity: 0; transition: opacity .15s, background .15s;
+  flex-shrink: 0; line-height: 1;
+}
+.att-head:hover .att-arch-btn,
+.att-head:hover .att-del-btn { opacity: 1; }
+.att-arch-btn:hover { background: var(--surface3); color: var(--text2); }
+.att-del-btn:hover { background: var(--warnb); color: var(--warn); }
+
+/* ─ COURSE MODAL ─ */
+.modal-course { max-width: 500px; }
+.horarios-list { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .45rem; }
+.horario-row {
+  display: flex; align-items: center; gap: .35rem; flex-wrap: nowrap;
+}
+.horario-row .form-select { flex: 2; min-width: 0; }
+.horario-row .form-input { flex: 1; min-width: 0; text-align: center; }
+.horario-sep { font-size: 12px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+.btn-rem-horario {
+  background: none; border: 1px solid var(--border); border-radius: 5px;
+  color: var(--text3); cursor: pointer; padding: 3px 7px; font-size: 12px;
+  transition: all .15s; flex-shrink: 0;
+}
+.btn-rem-horario:hover { background: var(--warnb); color: var(--warn); border-color: var(--warn); }
+.btn-add-horario {
+  background: none; border: 1px dashed var(--border2); border-radius: 6px;
+  color: var(--accent); cursor: pointer; padding: 4px 12px; font-size: 12px;
+  font-family: var(--sans); transition: all .15s; width: 100%;
+}
+.btn-add-horario:hover { background: var(--accent-bg); border-color: var(--accent); }
+
+/* ─ ARCHIVED SECTION ─ */
+.archived-grid { display: flex; flex-direction: column; gap: .45rem; }
+.archived-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  padding: .65rem 1rem; display: flex; align-items: center; gap: .7rem;
+  cursor: pointer; transition: background .1s, box-shadow .15s; box-shadow: var(--sh);
+}
+.archived-card:hover { background: var(--surface2); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.archived-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.archived-info { flex: 1; min-width: 0; }
+.archived-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.archived-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 1px; }
+.archived-pct { font-family: var(--mono); font-size: 13px; font-weight: 600; flex-shrink: 0; padding: 2px 8px; border-radius: 20px; }
+.archived-pct.ok     { background: var(--okb);   color: var(--ok); }
+.archived-pct.danger { background: var(--warnb);  color: var(--warn); }
+
+/* ─ ARCHIVED MODAL ─ */
+.modal-lg { max-width: 520px; }
+.archived-modal-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.btn-save.danger { background: var(--warn); }
+.btn-save.danger:hover { opacity: .88; }

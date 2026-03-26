@@ -86,7 +86,7 @@
 
   <!-- PRESENÇA -->
   <section>
-    <p class="st">frequência por disciplina</p>
+    <p class="st">frequência por disciplina <button class="hbtn" id="btnAddCourse" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px;padding:2px 8px">+ disciplina</button></p>
     <div class="att-grid" id="attGrid"></div>
   </section>
 
@@ -105,6 +105,12 @@
         <div class="ladd"><input class="linput" id="topicInp" placeholder="novo tópico…" autocomplete="off"><button class="laddbtn" id="topicAdd">+</button></div>
       </div>
     </div>
+  </section>
+
+  <!-- ARQUIVADOS -->
+  <section id="archivedSection" style="display:none">
+    <p class="st">arquivados</p>
+    <div class="archived-grid" id="archivedGrid"></div>
   </section>
 
 </main>
@@ -192,6 +198,69 @@
 </div>
 
 <input type="file" id="importFile" accept=".json" style="display:none">
+
+<!-- MODAL adicionar/editar disciplina -->
+<div class="modal-bg" id="addCourseModal">
+  <div class="modal modal-course">
+    <button class="modal-close" id="addCourseClose">×</button>
+    <h3 id="addCourseTitle">Nova disciplina</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome</label>
+        <input class="form-input" id="cNome" placeholder="ex: Cálculo II" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Código</label>
+        <input class="form-input" id="cId" placeholder="ex: MA0221" autocomplete="off" style="text-transform:uppercase">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Turma</label>
+        <input class="form-input" id="cTurma" placeholder="01" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Local</label>
+        <input class="form-input" id="cLocal" placeholder="ex: Bloco A – Sala 10" autocomplete="off">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Horários</label>
+      <div id="cHorarios" class="horarios-list"></div>
+      <button type="button" class="btn-add-horario" id="addHorario">+ horário</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Início do semestre</label>
+        <input class="form-input" type="date" id="cIni">
+      </div>
+      <div class="form-group">
+        <label>Fim do semestre</label>
+        <input class="form-input" type="date" id="cFim">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Cor</label>
+      <div class="form-color-row" id="cColorRow"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="addCourseCancel">Cancelar</button>
+      <button class="btn-save" id="addCourseSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL disciplina arquivada (detalhes + histórico) -->
+<div class="modal-bg" id="archivedModal">
+  <div class="modal modal-lg">
+    <button class="modal-close" id="archivedModalClose">×</button>
+    <div id="archivedModalContent"></div>
+    <div class="modal-footer archived-modal-actions">
+      <button class="btn-cancel" id="archivedUnarchive">↩ desarquivar</button>
+      <button class="btn-save danger" id="archivedDelete">✕ remover</button>
+    </div>
+  </div>
+</div>
 
 <!-- OVERLAY DE CARREGAMENTO -->
 <div class="load-overlay" id="loadOverlay">
