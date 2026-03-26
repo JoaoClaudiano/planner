@@ -132,6 +132,8 @@ _setSyncBadge._hideTimer = null;
 
 function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Valida que o valor é uma cor hexadecimal (#RRGGBB) para evitar injeção de CSS
+function sanitizeCor(cor) { return /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : '#6366f1'; }
 
 function load() {
   try { att = JSON.parse(localStorage.getItem(LS.att) || '{}'); } catch { att = {}; }
@@ -524,7 +526,7 @@ function openAulaPopup(aulaId, rect) {
 function openCustomPopup(evId, rect) {
   const ev = customEvents.find(e => e.id === evId); if (!ev) return;
   const typeLabel = {lembrete:'📌 Lembrete',prova:'📝 Prova',entrega:'📋 Entrega',outro:'📎 Outro'}[ev.type] || '📎';
-  document.getElementById('evPopupTitle').innerHTML = `<span style="color:${ev.cor}">${esc(ev.nome)}</span>`;
+  document.getElementById('evPopupTitle').innerHTML = `<span style="color:${sanitizeCor(ev.cor)}">${esc(ev.nome)}</span>`;
   document.getElementById('evPopupMeta').innerHTML = `
     <span>${typeLabel}</span>
     <span>📅 ${ev.date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
@@ -639,6 +641,10 @@ document.getElementById('newEvSave').addEventListener('click', () => {
   const cor   = getSelectedColor();
 
   if (!nome || !date || !ini || !fim) { showToast('preencha título, data e horário'); return; }
+  if (nome.length > 100) { showToast('título deve ter no máximo 100 caracteres'); return; }
+  if (note.length > 500) { showToast('observação deve ter no máximo 500 caracteres'); return; }
+  const TIPOS_VALIDOS = ['lembrete','prova','entrega','outro'];
+  if (!TIPOS_VALIDOS.includes(type)) { showToast('tipo de evento inválido'); return; }
 
   const evDate = parseDateLocal(date);
   if (editingEvId) {
@@ -765,8 +771,9 @@ function renderCalendar() {
       const chk   = att[a.id] || false;
       const isCancelled = cancelled.has(a.id);
       const hasBuiltinCls = ['c1','c2','c3','c4'].includes(a.curso.cls);
-      const colorStyle = hasBuiltinCls ? '' : `background:${a.curso.cor}1a;border-color:${a.curso.cor};`;
-      const nameStyle  = hasBuiltinCls ? '' : `color:${a.curso.cor}`;
+      const safeCor    = sanitizeCor(a.curso.cor);
+      const colorStyle = hasBuiltinCls ? '' : `background:${safeCor}1a;border-color:${safeCor};`;
+      const nameStyle  = hasBuiltinCls ? '' : `color:${safeCor}`;
       h += `<div class="cal-ev ${a.curso.cls||''}${past?' ev-past':''}${isCancelled?' ev-cancelled':''}"
         style="top:${topPx}px;height:${durPx}px;${colorStyle}"
         data-aula="${a.id}">
@@ -781,10 +788,11 @@ function renderCalendar() {
       const topPx = (e._ini - CAL_INI) * SLOT;
       const durPx = Math.max((e._fim - e._ini) * SLOT, 20);
       const typeIcon = {lembrete:'📌',prova:'📝',entrega:'📋',outro:'📎'}[e.type] || '📎';
+      const safeCor  = sanitizeCor(e.cor);
       h += `<div class="cal-ev ev-custom${isP?' ev-past':''}"
-        style="top:${topPx}px;height:${durPx}px;border-color:${e.cor};background:${e.cor}18"
+        style="top:${topPx}px;height:${durPx}px;border-color:${safeCor};background:${safeCor}18"
         data-custom="${e.id}">
-        <div class="ev-name" style="color:${e.cor}">${typeIcon} ${esc(e.nome)}</div>
+        <div class="ev-name" style="color:${safeCor}">${typeIcon} ${esc(e.nome)}</div>
         <div class="ev-time">${e.ini}–${e.fim}</div>
       </div>`;
     });
@@ -862,6 +870,7 @@ function initCalendarDrag() {
         el.setPointerCapture(e.pointerId);
 
         // cria elemento fantasma
+        const safeCor = sanitizeCor(ev.cor);
         ghost = document.createElement('div');
         ghost.className = el.className + ' cal-ev-drag-ghost';
         ghost.style.cssText = `
@@ -873,9 +882,9 @@ function initCalendarDrag() {
           opacity:0.75;
           pointer-events:none;
           z-index:9999;
-          border-color:${ev.cor};
-          background:${ev.cor}28;
-          border-left:3px solid ${ev.cor};
+          border-color:${safeCor};
+          background:${safeCor}28;
+          border-left:3px solid ${safeCor};
           border-radius:6px;
           padding:3px 6px;
           font-size:11px;
@@ -1055,7 +1064,8 @@ function renderAttendance() {
       pillCls = s.pctPresenca >= 75 ? 'safe' : '';
     }
 
-    const fillColor = s.reprovado || s.emRisco ? 'var(--warn)' : c.cor;
+    const safeCor   = sanitizeCor(c.cor);
+    const fillColor = s.reprovado || s.emRisco ? 'var(--warn)' : safeCor;
     const pctFill   = Math.max(0, Math.min(s.pctPresenca, 100));
 
     const card = document.createElement('div');
@@ -1064,7 +1074,7 @@ function renderAttendance() {
 
     card.innerHTML = `
       <div class="att-head">
-        <div class="att-dot" style="background:${c.cor}"></div>
+        <div class="att-dot" style="background:${safeCor}"></div>
         <span class="att-name">${esc(c.nome)}</span>
         <span class="att-code">${c.id}</span>
         <span class="att-hbadge">${c._totalH}h</span>
@@ -1253,6 +1263,7 @@ function renderList(type) {
 
 function addItem(type, text) {
   if (!text.trim()) return;
+  if (text.trim().length > 200) { showToast('texto deve ter no máximo 200 caracteres'); return; }
   const arr = type === 'task' ? tasks : topics;
   const item = {id: uid(), text: text.trim(), checked: false};
   arr.push(item);
@@ -1387,6 +1398,10 @@ document.getElementById('addCourseSave').addEventListener('click', () => {
   const cor    = getSelectedCourseColor();
 
   if (!nome || !cid || !iniStr || !fimStr) { showToast('preencha nome, código e datas'); return; }
+  if (nome.length > 100) { showToast('nome deve ter no máximo 100 caracteres'); return; }
+  if (cid.length > 20)   { showToast('código deve ter no máximo 20 caracteres'); return; }
+  if (turma.length > 20) { showToast('turma deve ter no máximo 20 caracteres'); return; }
+  if (local.length > 100){ showToast('local deve ter no máximo 100 caracteres'); return; }
 
   const horarioRows = document.querySelectorAll('#cHorarios .horario-row');
   if (!horarioRows.length) { showToast('adicione pelo menos um horário'); return; }
@@ -1502,7 +1517,7 @@ function renderArchivedSection() {
     const card = document.createElement('div');
     card.className = 'archived-card';
     card.innerHTML = `
-      <div class="archived-dot" style="background:${c.cor}"></div>
+      <div class="archived-dot" style="background:${sanitizeCor(c.cor)}"></div>
       <div class="archived-info">
         <div class="archived-name">${esc(c.nome)}</div>
         <div class="archived-meta">${c.id} · ${ini.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})} – ${fim.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})}</div>
@@ -1530,7 +1545,7 @@ function openArchivedModal(archived) {
 
   document.getElementById('archivedModalContent').innerHTML = `
     <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
-      <div style="width:10px;height:10px;border-radius:50%;background:${c.cor};flex-shrink:0"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:${sanitizeCor(c.cor)};flex-shrink:0"></div>
       <div>
         <div style="font-weight:600;font-size:15px">${esc(c.nome)}</div>
         <div style="font-size:11px;color:var(--text3)">${esc(c.id)}${c.turma?' · turma '+esc(c.turma):''}${c.local?' · '+esc(c.local):''}</div>

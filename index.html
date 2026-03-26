@@ -97,12 +97,12 @@
       <div class="lcard">
         <div class="lcard-head"><span>⏱ tarefas</span><span class="lcnt" id="taskCnt">—</span></div>
         <ul class="litems" id="taskList"></ul>
-        <div class="ladd"><input class="linput" id="taskInp" placeholder="nova tarefa…" autocomplete="off"><button class="laddbtn" id="taskAdd">+</button></div>
+        <div class="ladd"><input class="linput" id="taskInp" placeholder="nova tarefa…" autocomplete="off" maxlength="200"><button class="laddbtn" id="taskAdd">+</button></div>
       </div>
       <div class="lcard">
         <div class="lcard-head"><span>📚 tópicos</span><span class="lcnt" id="topicCnt">—</span></div>
         <ul class="litems" id="topicList"></ul>
-        <div class="ladd"><input class="linput" id="topicInp" placeholder="novo tópico…" autocomplete="off"><button class="laddbtn" id="topicAdd">+</button></div>
+        <div class="ladd"><input class="linput" id="topicInp" placeholder="novo tópico…" autocomplete="off" maxlength="200"><button class="laddbtn" id="topicAdd">+</button></div>
       </div>
     </div>
   </section>
@@ -156,7 +156,7 @@
     <h3 id="newEvTitle">Novo lembrete</h3>
     <div class="form-group">
       <label>Título</label>
-      <input class="form-input" id="evName" placeholder="ex: Prova de Resistência dos Materiais" autocomplete="off">
+      <input class="form-input" id="evName" placeholder="ex: Prova de Resistência dos Materiais" autocomplete="off" maxlength="100">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -185,7 +185,7 @@
     </div>
     <div class="form-group">
       <label>Nota (opcional)</label>
-      <textarea class="form-textarea" id="evNote" placeholder="detalhes, capítulos, etc."></textarea>
+      <textarea class="form-textarea" id="evNote" placeholder="detalhes, capítulos, etc." maxlength="500"></textarea>
     </div>
     <div class="form-group">
       <label>Cor</label>
@@ -208,21 +208,21 @@
     <div class="form-row">
       <div class="form-group">
         <label>Nome</label>
-        <input class="form-input" id="cNome" placeholder="ex: Cálculo II" autocomplete="off">
+        <input class="form-input" id="cNome" placeholder="ex: Cálculo II" autocomplete="off" maxlength="100">
       </div>
       <div class="form-group">
         <label>Código</label>
-        <input class="form-input" id="cId" placeholder="ex: MA0221" autocomplete="off" style="text-transform:uppercase">
+        <input class="form-input" id="cId" placeholder="ex: MA0221" autocomplete="off" style="text-transform:uppercase" maxlength="20">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Turma</label>
-        <input class="form-input" id="cTurma" placeholder="01" autocomplete="off">
+        <input class="form-input" id="cTurma" placeholder="01" autocomplete="off" maxlength="20">
       </div>
       <div class="form-group">
         <label>Local</label>
-        <input class="form-input" id="cLocal" placeholder="ex: Bloco A – Sala 10" autocomplete="off">
+        <input class="form-input" id="cLocal" placeholder="ex: Bloco A – Sala 10" autocomplete="off" maxlength="100">
       </div>
     </div>
     <div class="form-group">
