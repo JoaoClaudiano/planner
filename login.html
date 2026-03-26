@@ -109,6 +109,20 @@
     <button class="btn-save login-submit" type="submit" id="loginBtn">Entrar</button>
   </form>
   <p class="login-hint">deixe em branco para entrar como convidado · preencha para sincronizar com a nuvem</p>
+
+  <!-- Magic Link (passwordless) ─────────────────────────────────────── -->
+  <button class="magic-toggle" id="magicToggle" type="button">criar conta</button>
+
+  <div class="magic-section" id="magicSection" hidden>
+    <div class="magic-divider"><span>entrar sem senha</span></div>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input class="form-input" type="email" id="magicEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="login-err" id="magicErr"></div>
+    <button class="btn-save login-submit" id="magicBtn" type="button">Enviar link mágico</button>
+    <p class="magic-ok" id="magicOk" hidden>✓ link enviado · verifique sua caixa de entrada</p>
+  </div>
 </div>
 
 <footer>
@@ -176,6 +190,52 @@
       btn.textContent = 'Entrar';
     } else {
       window.location.href = 'index.html';
+    }
+  });
+
+  // ── Magic Link (passwordless) ────────────────────────────────────────────
+  const magicToggle  = document.getElementById('magicToggle');
+  const magicSection = document.getElementById('magicSection');
+  const magicBtn     = document.getElementById('magicBtn');
+  const magicErrEl   = document.getElementById('magicErr');
+  const magicOkEl    = document.getElementById('magicOk');
+
+  magicToggle.addEventListener('click', () => {
+    const open = !magicSection.hidden;
+    magicSection.hidden = open;
+    magicToggle.textContent = open ? 'criar conta' : 'fechar';
+  });
+
+  magicBtn.addEventListener('click', async () => {
+    const email = document.getElementById('magicEmail').value.trim();
+    magicErrEl.textContent = '';
+    magicOkEl.hidden = true;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      magicErrEl.textContent = 'insira um e-mail válido.'; return;
+    }
+
+    if (!sb) {
+      magicErrEl.textContent = 'Supabase não configurado.';
+      return;
+    }
+
+    magicBtn.disabled = true;
+    magicBtn.textContent = 'Enviando…';
+
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/index.html' },
+    });
+
+    magicBtn.disabled = false;
+    magicBtn.textContent = 'Enviar link mágico';
+
+    if (error) {
+      magicErrEl.textContent = error.message;
+    } else {
+      magicOkEl.hidden = false;
+      document.getElementById('magicEmail').value = '';
     }
   });
 
