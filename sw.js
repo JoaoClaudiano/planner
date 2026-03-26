@@ -3,7 +3,7 @@
 // SW.JS — Service Worker: cache-first + Background Sync
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'rotina-estudos-v3';
+const CACHE_NAME = 'rotina-estudos-v4';
 const ASSETS = [
   './',
   './index.html',

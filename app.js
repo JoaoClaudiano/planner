@@ -68,8 +68,6 @@ let undoBuf = null, undoTm = null;
 const listTm = {};
 let supaUser = null; // usuário autenticado no Supabase
 let _pendingSaves = 0;  // contador de gravações Supabase em andamento
-let geoAttActive  = false; // true quando a presença automática por geo está ativa
-let geoIntervalId = null;  // ID do setInterval de verificação periódica
 
 function _onSaveStart() {
   _pendingSaves++;
@@ -294,9 +292,9 @@ function _sbExec(label, promise) {
 
 function sbSaveAtt(aulaId, presente) {
   if (!sb || !supaUser) return;
-  // Se offline, enfileira a operação para sincronizar depois
+  // Se offline, enfileira a operação para sincronizar depois (deduplicação por aulaId)
   if (!navigator.onLine) {
-    offlineAddOp({ type: 'sbSaveAtt', aulaId, presente })
+    offlineUpsertOp({ type: 'sbSaveAtt', aulaId, presente })
       .then(() => updateOfflineBadge())
       .catch(e => console.error('Erro ao enfileirar sbSaveAtt:', e));
     return;
@@ -1117,7 +1115,7 @@ async function updateOfflineBadge() {
   const pendingEl = document.getElementById('pendingBadge');
   if (!pendingEl) return;
   try {
-    const count = await offlineCountOps();
+    const count = await offlineCountPendingOps();
     if (count > 0) {
       pendingEl.textContent = `⏳ ${count} pendente${count !== 1 ? 's' : ''}`;
       pendingEl.style.display = '';
@@ -1134,6 +1132,14 @@ function updateOnlineStatus() {
   if (navigator.onLine) processOfflineQueue();
 }
 
+// Limite de tentativas e backoff exponencial (2s, 4s, 8s … máx 60s)
+const OFFLINE_MAX_RETRIES    = 5;
+const OFFLINE_BACKOFF_BASE_MS = 2000;
+
+function _offlineBackoffMs(retryCount) {
+  return Math.min(OFFLINE_BACKOFF_BASE_MS * 2 ** (retryCount - 1), 60000);
+}
+
 // Processa a fila de operações pendentes (chamado ao voltar online ou pelo SW)
 async function processOfflineQueue() {
   if (!sb || !supaUser || !navigator.onLine) return;
@@ -1141,7 +1147,19 @@ async function processOfflineQueue() {
   try { ops = await offlineGetOps(); } catch { return; }
   if (!ops.length) return;
 
-  for (const op of ops) {
+  // Filtra apenas ops prontas: não-falhas e com backoff expirado
+  const now = Date.now();
+  const ready = ops.filter(op => {
+    if ((op.status || 'pending') === 'failed') return false;
+    const retries = op.retryCount || 0;
+    if (retries > 0) {
+      if (now - (op.lastAttempt || 0) < _offlineBackoffMs(retries)) return false;
+    }
+    return true;
+  });
+  if (!ready.length) return;
+
+  for (const op of ready) {
     try {
       if (op.type === 'sbSaveAtt') {
         const { error } = await sb.from('presencas')
@@ -1149,10 +1167,27 @@ async function processOfflineQueue() {
             { user_id: supaUser.id, aula_id: op.aulaId, presente: op.presente },
             { onConflict: 'user_id,aula_id' }
           );
-        if (!error) await offlineDeleteOp(op.id);
-        else console.error('processOfflineQueue sbSaveAtt:', error);
+        if (!error) {
+          await offlineDeleteOp(op.id);
+        } else {
+          const newCount = (op.retryCount || 0) + 1;
+          await offlineUpdateOp(op.id, {
+            retryCount:  newCount,
+            status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
+            lastAttempt: Date.now(),
+          });
+          console.error('processOfflineQueue sbSaveAtt:', error);
+        }
       }
-    } catch (e) { console.error('processOfflineQueue:', op, e); }
+    } catch (e) {
+      const newCount = (op.retryCount || 0) + 1;
+      await offlineUpdateOp(op.id, {
+        retryCount:  newCount,
+        status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
+        lastAttempt: Date.now(),
+      });
+      console.error('processOfflineQueue:', op, e);
+    }
   }
 
   await updateOfflineBadge();
@@ -1174,6 +1209,8 @@ const GEO_LEAD_H        = 5 / 60;     // janela de 5 min (em horas) antes do in�
 const GEO_TIMEOUT_MS    = 10000;       // timeout da requisição de geolocalização
 const GEO_MAX_AGE_MS    = 60000;       // máxima idade de uma posição em cache
 const GEO_CHECK_INTERVAL_MS = 2 * 60 * 1000; // intervalo de verificação (2 min)
+
+let geoIntervalId = null; // ID do setInterval de verificação periódica
 
 // Distância Haversine entre dois pontos geográficos (em metros)
 function haversineDistM(lat1, lng1, lat2, lng2) {
@@ -1229,74 +1266,17 @@ function geoCheckOnce() {
   );
 }
 
-// Atualiza visual do botão de acordo com o estado ativo/inativo
-function updateGeoBtn() {
-  const btn = document.getElementById('btnGeoAtt');
-  if (!btn) return;
-  if (geoAttActive) {
-    btn.textContent = '🟢 presença auto';
-    btn.title       = 'Presença automática ATIVA – clique para desativar';
-    btn.classList.add('geo-active');
-  } else {
-    btn.textContent = '📍 presença auto';
-    btn.title       = 'Ativar presença automática por geolocalização';
-    btn.classList.remove('geo-active');
-  }
-}
-
-// Inicia o monitoramento periódico de localização
-function startGeoAtt() {
+// Inicia o monitoramento periódico de localização (automático, sempre ativo)
+function initGeoAtt() {
   if (geoIntervalId) return; // já rodando
-  geoAttActive = true;
-  localStorage.setItem('geoAttActive', 'true');
-  updateGeoBtn();
+  if (!('geolocation' in navigator)) return;
   geoCheckOnce(); // verificação imediata
-
-  // Verifica a cada GEO_CHECK_INTERVAL_MS; pausa automaticamente quando a aba está oculta
-  geoIntervalId = setInterval(() => {
-    if (document.hidden) return;
-    geoCheckOnce();
-  }, GEO_CHECK_INTERVAL_MS);
+  geoIntervalId = setInterval(geoCheckOnce, GEO_CHECK_INTERVAL_MS);
 }
 
-// Para o monitoramento
-function stopGeoAtt() {
-  geoAttActive = false;
-  localStorage.removeItem('geoAttActive');
-  if (geoIntervalId) { clearInterval(geoIntervalId); geoIntervalId = null; }
-  updateGeoBtn();
-}
-
-// Alterna entre ativo/inativo ao clicar no botão
-function toggleGeoAtt() {
-  if (geoAttActive) {
-    stopGeoAtt();
-    showToast('presença automática desativada');
-    return;
-  }
-  if (!('geolocation' in navigator)) {
-    showToast('geolocalização não disponível neste dispositivo');
-    return;
-  }
-  // Verifica estado da permissão antes de pedir ao usuário
-  if (navigator.permissions) {
-    navigator.permissions.query({ name: 'geolocation' }).then(perm => {
-      if (perm.state === 'denied') {
-        showToast('⚠ permissão de localização negada – verifique as configurações');
-      } else {
-        startGeoAtt();
-        showToast('📍 presença automática ativada');
-      }
-    }).catch(() => { startGeoAtt(); showToast('📍 presença automática ativada'); });
-  } else {
-    startGeoAtt();
-    showToast('📍 presença automática ativada');
-  }
-}
-
-// Page Visibility API: retoma verificação ao voltar para a aba
+// Verifica localização imediatamente ao retornar para a aba
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && geoAttActive) geoCheckOnce();
+  if (!document.hidden) geoCheckOnce();
 });
 
 // ═══════════════════════════════════════════════
@@ -1367,10 +1347,10 @@ async function startApp() {
     init();
     hideLoadOverlay();
     showCriticalAttendanceAlerts();
-    // Inicializa status offline e restaura geo se estava ativo
+    // Inicializa status offline e inicia presença automática por geolocalização
     updateOnlineStatus();
     updateOfflineBadge();
-    if (localStorage.getItem('geoAttActive') === 'true') startGeoAtt();
+    initGeoAtt();
   } else {
     // Sem sessão: exibe login (app já renderizado em background)
     init();
@@ -1429,7 +1409,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
-    if (localStorage.getItem('geoAttActive') === 'true') startGeoAtt();
+    initGeoAtt();
   } else {
     errEl.textContent = errMsg;
     btn.disabled = false;
@@ -1439,9 +1419,6 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
 
 // ── Handler do botão de logout ──
 document.getElementById('btnLogout').addEventListener('click', () => doSignOut());
-
-// ── Handler do botão de presença automática ──
-document.getElementById('btnGeoAtt').addEventListener('click', toggleGeoAtt);
 
 // Re-render a cada minuto (linha de agora, badges "hoje/futuro")
 setInterval(() => {
