@@ -417,7 +417,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jellyfish-svg {
   width: 96px; height: auto; overflow: visible;
   filter: drop-shadow(0 8px 26px rgba(59,130,246,.30));
-  animation: jelly-float 3.6s linear infinite;
+  animation: jelly-float 3.6s ease-in-out infinite;
 }
 .jbell {
   fill: url(#jg-body);
@@ -438,7 +438,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jbell-group {
   /* origin = horizontal center (60) and top (8) of the bell dome in SVG coordinates */
   transform-origin: 60px 8px;
-  animation: jelly-bell 3.6s linear infinite;
+  animation: jelly-bell 3.6s ease-in-out infinite;
 }
 .jt {
   fill: none;
@@ -448,23 +448,30 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   stroke: rgba(186,230,253,.38); stroke-width: 0.75;
 }
 @keyframes jelly-float {
-  /* Oblate pulsatile swimmer (Dabiri et al.): quick propulsive rise, slow passive sink.
-     Period synced to bell (3.6s): contraction ~5%, elastic rebound ~25%, passive glide ~70%. */
-  0%   { transform: rotate(-14deg)   translateY(0px); }
-  5%   { transform: rotate(-12.5deg) translateY(-18px); }
-  22%  { transform: rotate(-13.5deg) translateY(-12px); }
-  55%  { transform: rotate(-14.5deg) translateY(-4px); }
-  100% { transform: rotate(-14deg)   translateY(0px); }
+  /* Navier-Stokes + elasticidade: resistência viscosa suaviza a propulsão;
+     subida propulsiva gradual, afundamento passivo lento. */
+  0%   { transform: rotate(-14deg)   translateY(0px);  }
+  10%  { transform: rotate(-13.5deg) translateY(-5px); }
+  22%  { transform: rotate(-12.5deg) translateY(-14px);}
+  36%  { transform: rotate(-13deg)   translateY(-8px); }
+  55%  { transform: rotate(-13.5deg) translateY(-3px); }
+  100% { transform: rotate(-14deg)   translateY(0px);  }
 }
 @keyframes jelly-bell {
-  /* Power-stroke model: contraction completes in ~5% of cycle (~0.18s),
-     elastic rebound in ~30%, then ~65% rest — matches real Aurelia aurita duty cycle. */
-  0%   { transform: scaleY(1)    scaleX(1);    }
-  5%   { transform: scaleY(.60)  scaleX(1.22); }
-  16%  { transform: scaleY(1.10) scaleX(.93);  }
-  27%  { transform: scaleY(.98)  scaleX(1.01); }
-  36%  { transform: scaleY(1.00) scaleX(1.00); }
-  100% { transform: scaleY(1)    scaleX(1);    }
+  /* Modelo Navier-Stokes + elasticidade: membrana elástica (mesogléia) em fluido viscoso.
+     A drag viscoso suaviza o impulso muscular → contração quasi-sinusoidal amortecida.
+     O volume do sino decresce no pico (~0.859 no pico) — o fluido é expulso pelo orifício
+     oral, gerando propulsão por jato (mecanismo real da Aurelia aurita). */
+  0%   { transform: scaleY(1.000) scaleX(1.000); } /* repouso */
+  5%   { transform: scaleY(0.970) scaleX(1.018); } /* início suave da contração */
+  10%  { transform: scaleY(0.900) scaleX(1.060); } /* contração acelerando */
+  18%  { transform: scaleY(0.750) scaleX(1.145); } /* pico de contração */
+  26%  { transform: scaleY(0.870) scaleX(1.075); } /* recuo elástico */
+  36%  { transform: scaleY(0.980) scaleX(1.011); } /* retorno ao repouso */
+  44%  { transform: scaleY(1.020) scaleX(0.990); } /* leve overshoot elástico */
+  52%  { transform: scaleY(1.005) scaleX(0.997); } /* amortecendo */
+  60%  { transform: scaleY(1.000) scaleX(1.000); } /* repouso */
+  100% { transform: scaleY(1.000) scaleX(1.000); } /* deslize passivo */
 }
 .login-card {
   background: var(--surface); border: 1px solid var(--border);
