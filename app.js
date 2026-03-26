@@ -487,7 +487,7 @@ function openAulaPopup(aulaId, rect) {
     <span>📅 ${aula.date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
     <span>🕐 ${aula.ini}h – ${aula.fim}h (${aula.horas}h)</span>
     <span>📍 ${esc(curso.local)}</span>
-    <span>🔖 ${curso.id} · turma ${curso.turma}</span>
+    <span>🔖 ${esc(curso.id)} · turma ${esc(curso.turma)}</span>
   `;
 
   const isCancelled = cancelled.has(aulaId);
@@ -526,7 +526,12 @@ function openAulaPopup(aulaId, rect) {
 function openCustomPopup(evId, rect) {
   const ev = customEvents.find(e => e.id === evId); if (!ev) return;
   const typeLabel = {lembrete:'📌 Lembrete',prova:'📝 Prova',entrega:'📋 Entrega',outro:'📎 Outro'}[ev.type] || '📎';
-  document.getElementById('evPopupTitle').innerHTML = `<span style="color:${sanitizeCor(ev.cor)}">${esc(ev.nome)}</span>`;
+  const titleEl = document.getElementById('evPopupTitle');
+  titleEl.innerHTML = '';
+  const titleSpan = document.createElement('span');
+  titleSpan.style.color = sanitizeCor(ev.cor);
+  titleSpan.textContent = ev.nome;
+  titleEl.appendChild(titleSpan);
   document.getElementById('evPopupMeta').innerHTML = `
     <span>${typeLabel}</span>
     <span>📅 ${ev.date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span>
@@ -1076,11 +1081,11 @@ function renderAttendance() {
       <div class="att-head">
         <div class="att-dot" style="background:${safeCor}"></div>
         <span class="att-name">${esc(c.nome)}</span>
-        <span class="att-code">${c.id}</span>
+        <span class="att-code">${esc(c.id)}</span>
         <span class="att-hbadge">${c._totalH}h</span>
         <span class="att-pill ${pillCls}">${pillTxt}</span>
-        <button class="att-arch-btn" data-c="${c.id}" title="arquivar disciplina">📦</button>
-        ${isUserCourse ? `<button class="att-del-btn" data-c="${c.id}" title="remover disciplina">✕</button>` : ''}
+        <button class="att-arch-btn" data-c="${esc(c.id)}" title="arquivar disciplina">📦</button>
+        ${isUserCourse ? `<button class="att-del-btn" data-c="${esc(c.id)}" title="remover disciplina">✕</button>` : ''}
         <span class="att-chev">▾</span>
       </div>
       <div class="att-prog">
@@ -1112,7 +1117,7 @@ function renderAttendance() {
         </div>
 
         <!-- Lista de aulas -->
-        <div class="att-list" id="al-${c.id}"></div>
+        <div class="att-list"></div>
 
         <div class="att-footer">
           <div>
@@ -1121,14 +1126,14 @@ function renderAttendance() {
             ${s.reprovado ? `<div class="att-warn-txt">✕ Limite de ${s.maxFaltasH}h ultrapassado em ${(s.horasFalta-s.maxFaltasH)}h</div>` : ''}
             ${!s.emRisco && !s.reprovado && s.pctPresenca >= 75 ? `<div style="font-size:11px;color:var(--ok)">✓ Presença em dia (${s.pctPresenca.toFixed(0)}%)</div>` : ''}
           </div>
-          <button class="att-mark-btn" data-c="${c.id}">✓ marcar todas passadas</button>
+          <button class="att-mark-btn" data-c="${esc(c.id)}">✓ marcar todas passadas</button>
         </div>
       </div>`;
 
     container.appendChild(card);
 
     // ── Lista de aulas ──
-    const listEl = card.querySelector(`#al-${c.id}`);
+    const listEl = card.querySelector('.att-list');
     c._aulas.forEach(aula => {
       const isPast   = aula.date <  hoje;
       const isToday  = aula.date.getTime() === hoje.getTime();
@@ -1520,7 +1525,7 @@ function renderArchivedSection() {
       <div class="archived-dot" style="background:${sanitizeCor(c.cor)}"></div>
       <div class="archived-info">
         <div class="archived-name">${esc(c.nome)}</div>
-        <div class="archived-meta">${c.id} · ${ini.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})} – ${fim.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})}</div>
+        <div class="archived-meta">${esc(c.id)} · ${ini.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})} – ${fim.toLocaleDateString('pt-BR',{month:'short',year:'numeric'})}</div>
       </div>
       <div class="archived-pct ${pct>=75?'ok':'danger'}">${pct.toFixed(0)}%</div>`;
     card.onclick = () => openArchivedModal(archived);
