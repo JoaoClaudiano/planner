@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — flow.studio</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+  </div>
+  <div class="hright">
+    <button class="hbtn" id="btnDark">☀ claro</button>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>política de privacidade</h1>
+    <p>Última atualização: março de 2025</p>
+  </div>
+
+  <div class="page-section">
+    <h2>1. introdução</h2>
+    <div class="page-card">
+      <p>O <strong>flow.studio</strong> respeita a sua privacidade. Esta política descreve quais informações coletamos, como as utilizamos e como as protegemos.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>2. dados coletados</h2>
+    <div class="page-card">
+      <ul>
+        <li><strong>Modo convidado:</strong> nenhum dado é enviado a servidores externos. Todas as informações (agenda, frequências, anotações) são armazenadas exclusivamente no seu dispositivo via localStorage/IndexedDB.</li>
+        <li><strong>Modo com conta:</strong> seu endereço de e-mail é coletado para autenticação. Os dados acadêmicos são sincronizados e armazenados no Supabase de forma segura.</li>
+        <li><strong>Dados de uso:</strong> não coletamos dados de navegação, telemetria ou rastreamento de comportamento.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>3. uso das informações</h2>
+    <div class="page-card">
+      <ul>
+        <li>Autenticação e identificação do usuário (somente quando há conta)</li>
+        <li>Sincronização dos seus dados entre dispositivos (somente quando há conta)</li>
+        <li>Os dados nunca são vendidos, compartilhados ou utilizados para fins publicitários</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>4. armazenamento e segurança</h2>
+    <div class="page-card">
+      <p>Os dados em nuvem são armazenados via <strong>Supabase</strong>, com transmissão criptografada (HTTPS/TLS). Cada usuário só tem acesso aos próprios dados, garantidos por políticas de segurança em nível de linha (Row Level Security).</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>5. cookies e armazenamento local</h2>
+    <div class="page-card">
+      <p>O flow.studio utiliza <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">localStorage</code> e <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">IndexedDB</code> do navegador para salvar preferências (como modo escuro) e dados do usuário localmente. Não utilizamos cookies de rastreamento de terceiros.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>6. exclusão de dados</h2>
+    <div class="page-card">
+      <p>Você pode apagar todos os dados locais limpando o armazenamento do navegador para este site. Para excluir dados em nuvem, entre em <a href="contato.html" style="color:var(--accent)">contato</a> com nossa equipe.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>7. alterações nesta política</h2>
+    <div class="page-card">
+      <p>Podemos atualizar esta política periodicamente. Recomendamos revisá-la regularmente. O uso continuado do serviço após alterações implica aceitação da política revisada.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>8. contato</h2>
+    <div class="page-card">
+      <p>Para questões sobre privacidade, envie uma mensagem pela nossa <a href="contato.html" style="color:var(--accent)">página de contato</a>.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="finfo">flow.studio · sistema acadêmico pessoal</span>
+  <nav class="fnav">
+    <a href="sobre.html">sobre</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  const KEY = 'fs-dark';
+  const btn = document.getElementById('btnDark');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☾ escuro' : '☀ claro';
+  }
+  applyTheme(localStorage.getItem(KEY) === '1');
+  btn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    localStorage.setItem(KEY, dark ? '1' : '0');
+    applyTheme(dark);
+  });
+})();
+</script>
+</body>
+</html>

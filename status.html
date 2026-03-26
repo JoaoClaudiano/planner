@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status do Sistema — flow.studio</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+  </div>
+  <div class="hright">
+    <button class="hbtn" id="btnDark">☀ claro</button>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>status do sistema</h1>
+    <p id="lastCheck">Verificando componentes…</p>
+  </div>
+
+  <div class="page-section">
+    <h2>componentes</h2>
+    <div class="page-card">
+      <div class="status-item">
+        <span class="status-name">Aplicação Web</span>
+        <span class="status-badge ok" id="s-app">operacional</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Armazenamento Local</span>
+        <span class="status-badge" id="s-storage">verificando…</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Service Worker (PWA offline)</span>
+        <span class="status-badge" id="s-sw">verificando…</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Conectividade</span>
+        <span class="status-badge" id="s-net">verificando…</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Sincronização em Nuvem (Supabase)</span>
+        <span class="status-badge" id="s-cloud">verificando…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>informações do ambiente</h2>
+    <div class="page-card">
+      <div class="status-item">
+        <span class="status-name">Navegador</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="e-browser">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Plataforma</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="e-platform">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Modo de instalação (PWA)</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="e-pwa">—</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name">Idioma</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="e-lang">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>problemas?</h2>
+    <div class="page-card">
+      <p>Se algum componente estiver com falha, tente recarregar a página. Persistindo o problema, <a href="contato.html" style="color:var(--accent)">entre em contato</a> com a equipe.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="finfo">flow.studio · sistema acadêmico pessoal</span>
+  <nav class="fnav">
+    <a href="sobre.html">sobre</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  const KEY = 'fs-dark';
+  const btn = document.getElementById('btnDark');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☾ escuro' : '☀ claro';
+  }
+  applyTheme(localStorage.getItem(KEY) === '1');
+  btn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    localStorage.setItem(KEY, dark ? '1' : '0');
+    applyTheme(dark);
+  });
+})();
+
+(function () {
+  function setBadge(id, text, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'status-badge ' + (type || 'ok');
+  }
+
+  // Storage
+  try {
+    localStorage.setItem('_fs_test', '1');
+    localStorage.removeItem('_fs_test');
+    setBadge('s-storage', 'operacional', 'ok');
+  } catch (e) {
+    setBadge('s-storage', 'indisponível', 'warn');
+  }
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      setBadge('s-sw', regs.length > 0 ? 'ativo' : 'não registrado', regs.length > 0 ? 'ok' : 'info');
+    });
+  } else {
+    setBadge('s-sw', 'não suportado', 'info');
+  }
+
+  // Connectivity
+  function updateNet() {
+    setBadge('s-net', navigator.onLine ? 'online' : 'offline', navigator.onLine ? 'ok' : 'warn');
+  }
+  updateNet();
+  window.addEventListener('online',  updateNet);
+  window.addEventListener('offline', updateNet);
+
+  // Cloud (Supabase) — simple fetch probe
+  const SUPABASE_URL = 'https://oatepbdrtyajuaavvhif.supabase.co';
+  if (navigator.onLine) {
+    fetch(SUPABASE_URL + '/rest/v1/', { method: 'HEAD', signal: AbortSignal.timeout(5000) })
+      .then(r => setBadge('s-cloud', r.ok || r.status === 401 ? 'operacional' : 'degradado', r.ok || r.status === 401 ? 'ok' : 'warn'))
+      .catch(() => setBadge('s-cloud', 'sem resposta', 'warn'));
+  } else {
+    setBadge('s-cloud', 'offline', 'warn');
+  }
+
+  // Environment info
+  const ua = navigator.userAgent;
+  let browser = 'desconhecido';
+  if (/Firefox\//.test(ua))           browser = 'Firefox';
+  else if (/Edg\//.test(ua))          browser = 'Edge';
+  else if (/OPR\//.test(ua))          browser = 'Opera';
+  else if (/Chrome\//.test(ua))       browser = 'Chrome';
+  else if (/Safari\//.test(ua))       browser = 'Safari';
+
+  document.getElementById('e-browser').textContent  = browser;
+  document.getElementById('e-platform').textContent = navigator.platform || '—';
+  document.getElementById('e-pwa').textContent      =
+    window.matchMedia('(display-mode: standalone)').matches ? 'instalado' : 'navegador';
+  document.getElementById('e-lang').textContent     = navigator.language || '—';
+
+  // Last check timestamp
+  document.getElementById('lastCheck').textContent =
+    'Verificado em: ' + new Date().toLocaleString('pt-BR');
+})();
+</script>
+</body>
+</html>
