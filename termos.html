@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termos de Uso — flow.studio</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+  </div>
+  <div class="hright">
+    <button class="hbtn" id="btnDark">☀ claro</button>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>termos de uso</h1>
+    <p>Última atualização: março de 2025</p>
+  </div>
+
+  <div class="page-section">
+    <h2>1. aceitação</h2>
+    <div class="page-card">
+      <p>Ao acessar ou utilizar o <strong>flow.studio</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer parte dos termos, não utilize o serviço.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>2. descrição do serviço</h2>
+    <div class="page-card">
+      <p>O flow.studio é uma aplicação web de uso pessoal para controle de frequência acadêmica, agenda semanal e anotações. O serviço pode ser utilizado sem cadastro (modo convidado, com dados armazenados localmente) ou com conta opcional para sincronização em nuvem.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>3. uso permitido</h2>
+    <div class="page-card">
+      <ul>
+        <li>O serviço destina-se exclusivamente ao uso pessoal e não comercial.</li>
+        <li>Você é responsável por manter a confidencialidade das suas credenciais de acesso.</li>
+        <li>É proibido utilizar o serviço para qualquer finalidade ilegal ou não autorizada.</li>
+        <li>Não é permitido tentar comprometer a segurança ou integridade do sistema.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>4. dados e privacidade</h2>
+    <div class="page-card">
+      <p>Seus dados acadêmicos são armazenados localmente no seu dispositivo quando você usa o modo convidado. Quando você opta pela sincronização em nuvem, os dados são armazenados de forma segura via Supabase. Consulte nossa <a href="privacidade.html" style="color:var(--accent)">Política de Privacidade</a> para mais detalhes.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>5. isenção de responsabilidade</h2>
+    <div class="page-card">
+      <p>O flow.studio é fornecido "como está", sem garantias de qualquer tipo. Não nos responsabilizamos por perda de dados, interrupções no serviço ou quaisquer danos resultantes do uso ou da impossibilidade de uso do serviço. Recomendamos exportar seus dados regularmente como medida de segurança.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>6. modificações</h2>
+    <div class="page-card">
+      <p>Reservamo-nos o direito de modificar estes Termos de Uso a qualquer momento. Alterações significativas serão comunicadas por meio do serviço. O uso continuado após as alterações constitui aceitação dos novos termos.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>7. contato</h2>
+    <div class="page-card">
+      <p>Em caso de dúvidas sobre estes termos, entre em <a href="contato.html" style="color:var(--accent)">contato</a>.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="finfo">flow.studio · sistema acadêmico pessoal</span>
+  <nav class="fnav">
+    <a href="sobre.html">sobre</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  const KEY = 'fs-dark';
+  const btn = document.getElementById('btnDark');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☾ escuro' : '☀ claro';
+  }
+  applyTheme(localStorage.getItem(KEY) === '1');
+  btn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    localStorage.setItem(KEY, dark ? '1' : '0');
+    applyTheme(dark);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contato — flow.studio</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+  </div>
+  <div class="hright">
+    <button class="hbtn" id="btnDark">☀ claro</button>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>contato</h1>
+    <p>Envie sua mensagem — responderemos o mais breve possível.</p>
+  </div>
+
+  <div class="page-section">
+    <h2>enviar mensagem</h2>
+    <div class="page-card">
+      <form class="contact-form" id="contactForm">
+        <div class="form-group">
+          <label>Seu nome</label>
+          <input class="form-input" type="text" id="cName" placeholder="Como devemos chamá-lo?" autocomplete="name" required>
+        </div>
+        <div class="form-group">
+          <label>Seu e-mail</label>
+          <input class="form-input" type="email" id="cEmail" placeholder="seu@email.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label>Assunto</label>
+          <select class="form-select" id="cSubject">
+            <option value="sugestao">💡 Sugestão de melhoria</option>
+            <option value="bug">🐛 Reportar um problema</option>
+            <option value="privacidade">🔒 Dúvida sobre privacidade</option>
+            <option value="conta">👤 Problema com minha conta</option>
+            <option value="outro">📌 Outro assunto</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mensagem</label>
+          <textarea class="form-textarea contact-form" id="cMessage" placeholder="Descreva sua dúvida, sugestão ou problema com o máximo de detalhes possível…" required></textarea>
+        </div>
+        <div id="cStatus" style="font-size:12px;min-height:16px;color:var(--ok)"></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn-save" type="submit" id="cSubmit">Enviar mensagem</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>e-mail direto</h2>
+    <div class="page-card">
+      <p>Prefere enviar por e-mail diretamente? Escreva para <a href="mailto:jooclaudiano@gmail.com" style="color:var(--accent);font-family:var(--mono);font-size:12px">jooclaudiano@gmail.com</a>.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>tempo de resposta</h2>
+    <div class="page-card">
+      <p>Tentamos responder todas as mensagens em até 48 horas úteis. Para problemas urgentes com perda de dados, mencione isso no assunto da mensagem.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="finfo">flow.studio · sistema acadêmico pessoal</span>
+  <nav class="fnav">
+    <a href="sobre.html">sobre</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  const KEY = 'fs-dark';
+  const btn = document.getElementById('btnDark');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☾ escuro' : '☀ claro';
+  }
+  applyTheme(localStorage.getItem(KEY) === '1');
+  btn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    localStorage.setItem(KEY, dark ? '1' : '0');
+    applyTheme(dark);
+  });
+})();
+
+(function () {
+  const form    = document.getElementById('contactForm');
+  const status  = document.getElementById('cStatus');
+  const submit  = document.getElementById('cSubmit');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const name    = document.getElementById('cName').value.trim();
+    const email   = document.getElementById('cEmail').value.trim();
+    const subject = document.getElementById('cSubject');
+    const subjectText = subject.options[subject.selectedIndex].text;
+    const message = document.getElementById('cMessage').value.trim();
+
+    const body = encodeURIComponent(
+      'Nome: ' + name + '\n' +
+      'E-mail: ' + email + '\n' +
+      'Assunto: ' + subjectText + '\n\n' +
+      message
+    );
+
+    const mailtoLink = 'mailto:jooclaudiano@gmail.com'
+      + '?subject=' + encodeURIComponent('[flow.studio] ' + subjectText)
+      + '&body=' + body;
+
+    window.location.href = mailtoLink;
+
+    status.style.color = 'var(--ok)';
+    status.textContent = '✓ Abrindo seu cliente de e-mail…';
+    submit.disabled = true;
+    setTimeout(() => { submit.disabled = false; status.textContent = ''; }, 5000);
+  });
+})();
+</script>
+</body>
+</html>
