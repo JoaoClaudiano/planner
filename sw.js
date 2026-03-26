@@ -3,13 +3,26 @@
 // SW.JS — Service Worker: cache-first + Background Sync
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'rotina-estudos-v4';
+const CACHE_NAME = 'rotina-estudos-v5';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './db.js',
+  './manifest.json',
+  './favicon.svg',
+  './favicon.ico',
+  './apple-touch-icon.png',
+  './icon-72.png',
+  './icon-96.png',
+  './icon-144.png',
+  './icon-152.png',
+  './icon-167.png',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-384.png',
+  './icon-512.png',
 ];
 
 // ── Instalar: cacheia recursos estáticos ──

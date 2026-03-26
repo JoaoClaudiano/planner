@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="flow.studio jellyfish icon">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    <radialGradient id="bell" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="45%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </radialGradient>
+    <radialGradient id="inner" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ddd6fe" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.4"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+
+  <!-- Subtle ambient glow around jellyfish -->
+  <ellipse cx="256" cy="220" rx="130" ry="110" fill="#7c3aed" opacity="0.12" filter="url(#softglow)"/>
+
+  <!-- Tentacles (behind bell) — long wavy ones -->
+  <g stroke-linecap="round" fill="none" opacity="0.85">
+    <!-- Outermost left -->
+    <path d="M 178 290 Q 155 330 165 370 Q 148 410 158 450" stroke="#6d28d9" stroke-width="5"/>
+    <!-- Left -->
+    <path d="M 205 300 Q 190 342 198 382 Q 185 418 192 455" stroke="#7c3aed" stroke-width="5.5"/>
+    <!-- Center-left -->
+    <path d="M 232 308 Q 225 352 235 392 Q 228 428 232 465" stroke="#8b5cf6" stroke-width="5"/>
+    <!-- Center -->
+    <path d="M 256 310 Q 256 355 256 395 Q 256 430 252 468" stroke="#7c3aed" stroke-width="6"/>
+    <!-- Center-right -->
+    <path d="M 280 308 Q 287 352 277 392 Q 284 428 280 465" stroke="#8b5cf6" stroke-width="5"/>
+    <!-- Right -->
+    <path d="M 307 300 Q 322 342 314 382 Q 327 418 320 455" stroke="#7c3aed" stroke-width="5.5"/>
+    <!-- Outermost right -->
+    <path d="M 334 290 Q 357 330 347 370 Q 364 410 354 450" stroke="#6d28d9" stroke-width="5"/>
+  </g>
+
+  <!-- Short oral arms / fringe at bell base -->
+  <g stroke-linecap="round" fill="none" opacity="0.7">
+    <path d="M 192 286 Q 186 302 190 315 Q 185 326 188 338" stroke="#a78bfa" stroke-width="3.5"/>
+    <path d="M 218 295 Q 215 312 220 325 Q 216 336 220 348" stroke="#c4b5fd" stroke-width="3"/>
+    <path d="M 244 300 Q 243 317 246 330 Q 243 342 245 354" stroke="#a78bfa" stroke-width="3.5"/>
+    <path d="M 268 300 Q 269 317 266 330 Q 269 342 267 354" stroke="#a78bfa" stroke-width="3.5"/>
+    <path d="M 294 295 Q 297 312 292 325 Q 296 336 292 348" stroke="#c4b5fd" stroke-width="3"/>
+    <path d="M 320 286 Q 326 302 322 315 Q 327 326 324 338" stroke="#a78bfa" stroke-width="3.5"/>
+  </g>
+
+  <!-- Main bell body -->
+  <path d="M 120 265 Q 120 170 256 155 Q 392 170 392 265 Q 392 295 256 305 Q 120 295 120 265 Z" fill="url(#bell)" filter="url(#glow)"/>
+
+  <!-- Inner bell translucent layer -->
+  <path d="M 148 262 Q 148 186 256 174 Q 364 186 364 262 Q 364 284 256 292 Q 148 284 148 262 Z" fill="url(#inner)"/>
+
+  <!-- Bell rim -->
+  <path d="M 120 265 Q 120 295 256 305 Q 392 295 392 265" stroke="#a78bfa" stroke-width="3" fill="none" opacity="0.6"/>
+
+  <!-- Radial ribs inside bell -->
+  <g stroke="#c4b5fd" stroke-width="1.5" fill="none" opacity="0.35">
+    <path d="M 256 174 Q 220 220 210 265"/>
+    <path d="M 256 174 Q 232 225 230 270"/>
+    <path d="M 256 174 Q 256 230 256 275"/>
+    <path d="M 256 174 Q 280 225 282 270"/>
+    <path d="M 256 174 Q 292 220 302 265"/>
+  </g>
+
+  <!-- Bioluminescent spots -->
+  <g filter="url(#glow)">
+    <circle cx="210" cy="230" r="7" fill="#e0e7ff" opacity="0.9"/>
+    <circle cx="240" cy="210" r="5" fill="#ddd6fe" opacity="0.8"/>
+    <circle cx="265" cy="215" r="6" fill="#e0e7ff" opacity="0.85"/>
+    <circle cx="295" cy="228" r="7" fill="#ddd6fe" opacity="0.9"/>
+    <circle cx="256" cy="245" r="4" fill="#f5f3ff" opacity="0.7"/>
+    <circle cx="228" cy="255" r="3.5" fill="#e0e7ff" opacity="0.65"/>
+    <circle cx="284" cy="252" r="3.5" fill="#e0e7ff" opacity="0.65"/>
+  </g>
+
+  <!-- Top highlight / specular -->
+  <ellipse cx="220" cy="200" rx="42" ry="24" fill="white" opacity="0.12"/>
+  <ellipse cx="212" cy="196" rx="18" ry="10" fill="white" opacity="0.18"/>
+</svg>
