@@ -179,8 +179,8 @@ function doUndo() {
 // ═══════════════════════════════════════════════
 // AUTENTICAÇÃO E SUPABASE
 // ═══════════════════════════════════════════════
-function showLoginOverlay()  { document.getElementById('loginOverlay').classList.add('show'); }
-function hideLoginOverlay()  { document.getElementById('loginOverlay').classList.remove('show'); }
+function showLoginOverlay()  { window.location.href = 'login.html'; }
+function hideLoginOverlay()  { /* handled by page navigation */ }
 function showLoadOverlay()   { document.getElementById('loadOverlay').classList.add('show'); }
 function hideLoadOverlay()   { document.getElementById('loadOverlay').classList.remove('show'); }
 
@@ -213,12 +213,8 @@ async function doSignOut() {
   if (sb) await sb.auth.signOut();
   supaUser = null;
   att = {}; customEvents = []; tasks = []; topics = [];
-  const syncBadge = document.getElementById('syncBadge');
-  if (syncBadge) syncBadge.style.display = 'none';
-  document.getElementById('btnLogout').style.display = 'none';
-  init(); // re-render com estado vazio antes de exibir o login
-  showLoginOverlay();
-  showToast('saiu');
+  sessionStorage.removeItem('fs-guest');
+  window.location.href = 'login.html';
 }
 
 // ── Leitura completa do Supabase ──
@@ -1333,7 +1329,8 @@ async function startApp() {
   }
 
   showLoadOverlay();
-  const hasSession = await checkSession();
+  const isGuest   = sessionStorage.getItem('fs-guest') === '1';
+  const hasSession = !isGuest && await checkSession();
 
   if (hasSession) {
     // Tenta carregar dados do Supabase
@@ -1342,7 +1339,6 @@ async function startApp() {
       // Fallback para dados do localStorage se Supabase falhar
       console.warn('Falha ao carregar Supabase, usando localStorage');
     }
-    hideLoginOverlay();
     document.getElementById('btnLogout').style.display = '';
     init();
     hideLoadOverlay();
@@ -1351,13 +1347,18 @@ async function startApp() {
     updateOnlineStatus();
     updateOfflineBadge();
     initGeoAtt();
-  } else {
-    // Sem sessão: exibe login (app já renderizado em background)
+  } else if (isGuest) {
+    // Modo convidado: dados apenas no localStorage
+    document.getElementById('btnLogout').style.display = '';
     init();
     hideLoadOverlay();
-    showLoginOverlay();
+    showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
+  } else {
+    // Sem sessão: redireciona para a página de login
+    hideLoadOverlay();
+    window.location.href = 'login.html';
   }
 }
 
@@ -1370,52 +1371,6 @@ function showCriticalAttendanceAlerts() {
     }
   });
 }
-
-// ── Handler do formulário de login ──
-document.getElementById('loginForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPass').value;
-  const btn   = document.getElementById('loginBtn');
-  const errEl = document.getElementById('loginErr');
-
-  errEl.textContent = '';
-  btn.disabled = true;
-  btn.textContent = 'Entrando…';
-
-  // Sem credenciais: entrada anônima (apenas localStorage)
-  if (!email && !pass) {
-    hideLoginOverlay();
-    document.getElementById('btnLogout').style.display = '';
-    init();
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-    showToast('bem-vindo, convidado!');
-    showCriticalAttendanceAlerts();
-    updateOnlineStatus();
-    updateOfflineBadge();
-    return;
-  }
-
-  const errMsg = await signIn(email, pass);
-  if (!errMsg) {
-    showLoadOverlay();
-    await sbLoad();
-    hideLoginOverlay();
-    document.getElementById('btnLogout').style.display = '';
-    init();
-    hideLoadOverlay();
-    showToast('bem-vindo!');
-    showCriticalAttendanceAlerts();
-    updateOnlineStatus();
-    updateOfflineBadge();
-    initGeoAtt();
-  } else {
-    errEl.textContent = errMsg;
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-  }
-});
 
 // ── Handler do botão de logout ──
 document.getElementById('btnLogout').addEventListener('click', () => doSignOut());

@@ -406,16 +406,6 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 }
 @keyframes pulse-opacity { from { opacity: .5; } to { opacity: 1; } }
 
-/* ─ LOGIN OVERLAY ─ */
-.login-overlay {
-  display: none;
-  position: fixed; inset: 0; z-index: 9000;
-  background: var(--bg);
-  flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 1rem;
-}
-
 /* ─ JELLYFISH ─ */
 .jellyfish-wrap {
   display: flex; justify-content: center;
@@ -427,7 +417,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jellyfish-svg {
   width: 96px; height: auto; overflow: visible;
   filter: drop-shadow(0 8px 26px rgba(59,130,246,.30));
-  animation: jelly-float 5.4s ease-in-out infinite;
+  animation: jelly-float 3.6s linear infinite;
 }
 .jbell {
   fill: url(#jg-body);
@@ -448,7 +438,7 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jbell-group {
   /* origin = horizontal center (60) and top (8) of the bell dome in SVG coordinates */
   transform-origin: 60px 8px;
-  animation: jelly-bell 3.6s ease-in-out infinite;
+  animation: jelly-bell 3.6s linear infinite;
 }
 .jt {
   fill: none;
@@ -458,24 +448,24 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
   stroke: rgba(186,230,253,.38); stroke-width: 0.75;
 }
 @keyframes jelly-float {
-  0%   { transform: rotate(-14deg) translateY(0px); }
-  50%  { transform: rotate(-13deg) translateY(-14px); }
-  100% { transform: rotate(-14deg) translateY(0px); }
+  /* Oblate pulsatile swimmer (Dabiri et al.): quick propulsive rise, slow passive sink.
+     Period synced to bell (3.6s): contraction ~5%, elastic rebound ~25%, passive glide ~70%. */
+  0%   { transform: rotate(-14deg)   translateY(0px); }
+  5%   { transform: rotate(-12.5deg) translateY(-18px); }
+  22%  { transform: rotate(-13.5deg) translateY(-12px); }
+  55%  { transform: rotate(-14.5deg) translateY(-4px); }
+  100% { transform: rotate(-14deg)   translateY(0px); }
 }
 @keyframes jelly-bell {
-  /* Quick contraction → elastic over-expansion → damped settle → long rest */
-  0%, 50%, 100% { transform: scaleY(1)    scaleX(1);    }
-  8%            { transform: scaleY(.66) scaleX(1.17); }
-  18%           { transform: scaleY(1.11) scaleX(.93); }
-  28%           { transform: scaleY(.97) scaleX(1.02); }
-  38%           { transform: scaleY(1.01) scaleX(.99); }
+  /* Power-stroke model: contraction completes in ~5% of cycle (~0.18s),
+     elastic rebound in ~30%, then ~65% rest — matches real Aurelia aurita duty cycle. */
+  0%   { transform: scaleY(1)    scaleX(1);    }
+  5%   { transform: scaleY(.60)  scaleX(1.22); }
+  16%  { transform: scaleY(1.10) scaleX(.93);  }
+  27%  { transform: scaleY(.98)  scaleX(1.01); }
+  36%  { transform: scaleY(1.00) scaleX(1.00); }
+  100% { transform: scaleY(1)    scaleX(1);    }
 }
-.login-canvas {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-}
-.login-overlay.show { display: flex; }
 .login-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 16px; padding: 2rem 2.25rem;
@@ -507,6 +497,26 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 }
 .login-optional {
   font-size: 10px; color: var(--text3); font-weight: 400;
+}
+
+/* ─ LOGIN PAGE (login.html) ─ */
+body.login-page {
+  min-height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative;
+}
+body.login-page #loginCanvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+body.login-page .jellyfish-wrap,
+body.login-page .login-card { position: relative; z-index: 1; }
+body.login-page footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 2;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: blur(8px);
 }
 
 /* ─ LOADING OVERLAY ─ */

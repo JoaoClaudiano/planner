@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>flow.studio — entrar</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Theme color (light / dark) -->
+<meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#4c1d95" media="(prefers-color-scheme: dark)">
+
+<!-- Favicon -->
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="flow.studio">
+<meta name="description" content="Controle de presenças e agenda acadêmica">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<!-- Supabase JS (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-page">
+
+<!-- Particle network background -->
+<canvas id="loginCanvas"></canvas>
+
+<!-- Jellyfish -->
+<div class="jellyfish-wrap">
+  <svg class="jellyfish-svg" viewBox="0 0 120 240" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="jg-body" cx="50%" cy="28%" r="68%">
+        <stop offset="0%"   stop-color="#e0f7ff" stop-opacity="0.22"/>
+        <stop offset="40%"  stop-color="#93c5fd" stop-opacity="0.11"/>
+        <stop offset="75%"  stop-color="#3b82f6" stop-opacity="0.07"/>
+        <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.03"/>
+      </radialGradient>
+      <radialGradient id="jg-glow" cx="40%" cy="26%" r="54%">
+        <stop offset="0%"   stop-color="#ffffff"  stop-opacity="0.52"/>
+        <stop offset="60%"  stop-color="#bae6fd"  stop-opacity="0.13"/>
+        <stop offset="100%" stop-color="#93c5fd"  stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="jg-rim" cx="50%" cy="100%" r="55%">
+        <stop offset="0%"   stop-color="#7dd3fc" stop-opacity="0.60"/>
+        <stop offset="100%" stop-color="#bae6fd" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="jf-glow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Bell group (contains tentacles behind, then bell in front) -->
+    <g class="jbell-group">
+      <!-- Tentacles (rendered behind the bell) -->
+      <g class="jt-group">
+        <path class="jt"         id="jt1"/>
+        <path class="jt"         id="jt2"/>
+        <path class="jt"         id="jt3"/>
+        <path class="jt"         id="jt4"/>
+        <path class="jt"         id="jt5"/>
+        <path class="jt"         id="jt6"/>
+        <path class="jt"         id="jt7"/>
+        <path class="jt"         id="jt8"/>
+        <path class="jt jt-thin" id="jt9"/>
+        <path class="jt jt-thin" id="jt10"/>
+        <path class="jt jt-thin" id="jt11"/>
+      </g>
+      <!-- Bell body -->
+      <path class="jbell" d="M 15,60 Q 12,8 60,8 Q 108,8 105,60 Q 98,70 91,60 Q 84,70 77,60 Q 71,68 65,60 Q 60,68 55,60 Q 49,68 43,60 Q 36,70 29,60 Q 22,70 15,60 Z"/>
+      <!-- Internal gonad structures (4 horseshoe shapes – Aurelia aurita style) -->
+      <g class="jbell-gonads">
+        <ellipse cx="46" cy="33" rx="8.5" ry="5" transform="rotate(-22 46 33)"/>
+        <ellipse cx="74" cy="33" rx="8.5" ry="5" transform="rotate(22 74 33)"/>
+        <ellipse cx="44" cy="49" rx="7.5" ry="4.5" transform="rotate(18 44 49)"/>
+        <ellipse cx="76" cy="49" rx="7.5" ry="4.5" transform="rotate(-18 76 49)"/>
+      </g>
+      <!-- Rim gradient overlay -->
+      <path class="jbell-rim" d="M 15,60 Q 22,70 29,60 Q 36,70 43,60 Q 49,68 55,60 Q 60,68 65,60 Q 71,68 77,60 Q 84,70 91,60 Q 98,70 105,60"/>
+      <!-- Top glow highlight -->
+      <ellipse class="jbell-glow" cx="60" cy="30" rx="32" ry="22"/>
+      <ellipse class="jbell-spot" cx="46" cy="21" rx="9" ry="6" transform="rotate(-15 46 21)"/>
+      <ellipse class="jbell-spot jbell-spot2" cx="71" cy="35" rx="5" ry="3.5" transform="rotate(10 71 35)"/>
+    </g>
+  </svg>
+</div>
+
+<!-- Login card -->
+<div class="login-card">
+  <div class="login-logo">flow<b>.</b>studio</div>
+  <p class="login-sub">sistema pessoal de frequência acadêmica</p>
+  <form id="loginForm" autocomplete="on">
+    <div class="form-group">
+      <label>E-mail <span class="login-optional">(opcional)</span></label>
+      <input class="form-input" type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha <span class="login-optional">(opcional)</span></label>
+      <input class="form-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-save login-submit" type="submit" id="loginBtn">Entrar</button>
+  </form>
+  <p class="login-hint">deixe em branco para entrar como convidado · preencha para sincronizar com a nuvem</p>
+</div>
+
+<footer>
+  <span class="finfo">flow.studio · sistema acadêmico pessoal</span>
+  <nav class="fnav">
+    <a href="sobre.html">sobre</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  // ── Dark mode ──────────────────────────────────────────────────────────────
+  const KEY = 'fs-dark';
+  function applyTheme(dark) { document.body.classList.toggle('dark', dark); }
+  applyTheme(localStorage.getItem(KEY) === '1');
+
+  // ── Supabase ──────────────────────────────────────────────────────────────
+  const SUPABASE_URL = 'https://wpxfhdlrygvucbmyfqaa.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_Hk9OZq-sfye_BWxtHESWag_5XxSZbMl';
+  const sb = (typeof supabase !== 'undefined')
+    ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+    : null;
+
+  // Se já há sessão ativa, vai direto para o app
+  if (sb) {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'index.html';
+    });
+  }
+
+  // ── Login form ────────────────────────────────────────────────────────────
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const btn   = document.getElementById('loginBtn');
+    const errEl = document.getElementById('loginErr');
+
+    errEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Entrando…';
+
+    // Sem credenciais: entrada como convidado (apenas localStorage)
+    if (!email && !pass) {
+      sessionStorage.setItem('fs-guest', '1');
+      window.location.href = 'index.html';
+      return;
+    }
+
+    if (!sb) {
+      errEl.textContent = 'Supabase não configurado. Substitua SUPABASE_URL e SUPABASE_KEY.';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      return;
+    }
+
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      errEl.textContent = error.message;
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+
+  // ── Particle network canvas ───────────────────────────────────────────────
+  const canvas = document.getElementById('loginCanvas');
+  const ctx    = canvas.getContext('2d');
+
+  let W, H, particles, mouse, ripples, animId;
+
+  const PARTICLE_COUNT  = 90;
+  const CONNECT_DIST    = 130;
+  const REPEL_DIST      = 80;
+  const SPEED           = 0.35;
+  const MAX_SPEED       = SPEED * 2;
+  const BASE_HUE        = 210;
+  const HUE_SHIFT_SPEED = 0.0003;
+  const HUE_SHIFT_RANGE = 50;
+  let hueBase = BASE_HUE;
+
+  function isDark() { return document.body.classList.contains('dark'); }
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function mkParticle() {
+    const angle = Math.random() * Math.PI * 2;
+    return {
+      x:   Math.random() * W,
+      y:   Math.random() * H,
+      vx:  Math.cos(angle) * SPEED * (0.5 + Math.random()),
+      vy:  Math.sin(angle) * SPEED * (0.5 + Math.random()),
+      r:   1.5 + Math.random() * 1.5,
+      hue: hueBase + (Math.random() - 0.5) * 60,
+    };
+  }
+
+  function addRipple(x, y) {
+    ripples.push({ x, y, r: 0, alpha: 0.7, hue: hueBase + Math.random() * 60 });
+  }
+
+  function step(ts) {
+    animId = requestAnimationFrame(step);
+    hueBase = BASE_HUE + Math.sin(ts * HUE_SHIFT_SPEED) * HUE_SHIFT_RANGE;
+    ctx.clearRect(0, 0, W, H);
+
+    // Ripples
+    ripples = ripples.filter(rp => rp.alpha > 0.01);
+    for (const rp of ripples) {
+      rp.r += 2.5; rp.alpha *= 0.96;
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsla(${rp.hue},80%,65%,${rp.alpha})`;
+      ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Particles
+    const dark = isDark();
+    for (const p of particles) {
+      const dx = mouse.x - p.x, dy = mouse.y - p.y;
+      const d  = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (d < REPEL_DIST) {
+        p.vx -= (dx / d) * 0.04; p.vy -= (dy / d) * 0.04;
+      } else if (d < 220) {
+        p.vx += (dx / d) * 0.015; p.vy += (dy / d) * 0.015;
+      }
+      const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      if (spd > MAX_SPEED) { p.vx = (p.vx / spd) * MAX_SPEED; p.vy = (p.vy / spd) * MAX_SPEED; }
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      p.hue += 0.05;
+      const lum = dark ? 65 : 45, sat = dark ? 75 : 65;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue},${sat}%,${lum}%,0.75)`;
+      ctx.fill();
+    }
+
+    // Connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          const alpha = (1 - dist / CONNECT_DIST) * 0.45;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `hsla(${(a.hue + b.hue) / 2},70%,${dark ? 65 : 50}%,${alpha})`;
+          ctx.lineWidth = 0.8; ctx.stroke();
+        }
+      }
+    }
+  }
+
+  resize();
+  mouse   = { x: W / 2, y: H / 2 };
+  ripples = [];
+  particles = Array.from({ length: PARTICLE_COUNT }, mkParticle);
+  animId = requestAnimationFrame(step);
+
+  document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  document.addEventListener('click', e => {
+    addRipple(e.clientX, e.clientY);
+    for (const p of particles) {
+      const dx = p.x - e.clientX, dy = p.y - e.clientY;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (d < 120) { const f = (1 - d / 120) * 2.5; p.vx += (dx / d) * f; p.vy += (dy / d) * f; }
+    }
+  });
+  window.addEventListener('resize', resize);
+})();
+
+// ── Jellyfish tentacle wave animation ─────────────────────────────────────
+// Model: 2D traveling wave (Purcell flagella / jellyfish tentacle kinematics).
+// Each tentacle carries a primary wave + secondary harmonic (lateral component)
+// and a longitudinal component (π/2 phase-shifted) creating elliptical motion
+// at each point — consistent with travelling-wave locomotion theory.
+(function () {
+  const STEPS = 14;
+  const defs = [
+    { id:'jt1',  x:19,  y:61, len:155, amp:10, spd:1.00, ph:0.00, ph2:0.40, spd2:1.61, driftAmp:5, driftPh:0.0  },
+    { id:'jt2',  x:29,  y:63, len:142, amp:11, spd:0.84, ph:0.90, ph2:1.10, spd2:1.40, driftAmp:6, driftPh:1.1  },
+    { id:'jt3',  x:40,  y:64, len:165, amp:12, spd:1.07, ph:1.80, ph2:2.00, spd2:1.73, driftAmp:4, driftPh:2.3  },
+    { id:'jt4',  x:52,  y:65, len:150, amp:11, spd:0.91, ph:2.70, ph2:0.80, spd2:1.54, driftAmp:7, driftPh:3.5  },
+    { id:'jt5',  x:68,  y:65, len:150, amp:11, spd:0.95, ph:3.55, ph2:2.50, spd2:1.47, driftAmp:7, driftPh:4.7  },
+    { id:'jt6',  x:80,  y:64, len:165, amp:12, spd:1.09, ph:4.45, ph2:1.60, spd2:1.68, driftAmp:4, driftPh:0.8  },
+    { id:'jt7',  x:91,  y:63, len:142, amp:11, spd:0.86, ph:5.35, ph2:0.50, spd2:1.37, driftAmp:6, driftPh:1.9  },
+    { id:'jt8',  x:101, y:61, len:155, amp:10, spd:1.01, ph:6.20, ph2:3.10, spd2:1.58, driftAmp:5, driftPh:3.0  },
+    { id:'jt9',  x:34,  y:63, len:172, amp:8,  spd:1.18, ph:1.25, ph2:1.80, spd2:1.83, driftAmp:8, driftPh:0.4  },
+    { id:'jt10', x:60,  y:66, len:176, amp:8,  spd:1.21, ph:3.10, ph2:2.30, spd2:1.96, driftAmp:9, driftPh:2.1  },
+    { id:'jt11', x:86,  y:63, len:172, amp:8,  spd:1.16, ph:4.95, ph2:0.90, spd2:1.75, driftAmp:8, driftPh:1.5  },
+  ];
+
+  const paths = defs.map(d => ({ ...d, el: document.getElementById(d.id) }))
+                    .filter(d => d.el);
+
+  // Wave parameters
+  const AMP_POWER        = 0.52;   // amplitude growth toward tip (< 1 → concave, more natural)
+  const DAMPING          = 0.16;   // softens tip flail slightly
+  const WAVE_SPD         = 1.1;    // base speed multiplier
+  const WAVE_FREQ        = 3.4;    // sine cycles along tentacle (spatial frequency)
+  const WAVE2_RATIO      = 0.32;   // secondary harmonic lateral amplitude fraction
+  const WAVE2_FREQ_RATIO = 0.6;    // secondary harmonic spatial frequency ratio
+  const DRIFT_SPD        = 0.38;   // slow water-current drift oscillation speed
+  // Longitudinal (y-axis) wave: π/2 phase shift creates 2D elliptical traveling wave
+  const LONG_RATIO       = 0.18;   // longitudinal amplitude as fraction of lateral
+
+  function wavePath(tx, ty, length, amplitude, phase, spd, t, ph2, spd2, driftAmp, driftPh) {
+    const drift = driftAmp * Math.sin(t * DRIFT_SPD + driftPh);
+    let d = 'M ' + tx + ',' + ty;
+    for (let i = 1; i <= STEPS; i++) {
+      const frac   = i / STEPS;
+      const cpFrac = (i - 0.5) / STEPS;
+      const amp    = amplitude * Math.pow(frac,   AMP_POWER) * (1 - frac   * DAMPING);
+      const cpAmp  = amplitude * Math.pow(cpFrac, AMP_POWER) * (1 - cpFrac * DAMPING);
+
+      // Primary + secondary lateral wave
+      const w1n  = Math.sin(t * WAVE_SPD * spd  + phase + frac   * Math.PI * WAVE_FREQ);
+      const w2n  = Math.sin(t * WAVE_SPD * spd2 + ph2   + frac   * Math.PI * (WAVE_FREQ * WAVE2_FREQ_RATIO));
+      const w1cp = Math.sin(t * WAVE_SPD * spd  + phase + cpFrac * Math.PI * WAVE_FREQ);
+      const w2cp = Math.sin(t * WAVE_SPD * spd2 + ph2   + cpFrac * Math.PI * (WAVE_FREQ * WAVE2_FREQ_RATIO));
+
+      // Longitudinal wave (π/2 phase-shifted) — creates elliptical 2D motion at each point
+      const longN  = LONG_RATIO * Math.sin(t * WAVE_SPD * spd  + phase + frac   * Math.PI * WAVE_FREQ + Math.PI * 0.5);
+      const longCp = LONG_RATIO * Math.sin(t * WAVE_SPD * spd  + phase + cpFrac * Math.PI * WAVE_FREQ + Math.PI * 0.5);
+
+      const nx  = tx + frac   * drift + amp   * (w1n  + WAVE2_RATIO * w2n);
+      const cpX = tx + cpFrac * drift + cpAmp * (w1cp + WAVE2_RATIO * w2cp);
+      // Longitudinal displacement grows from root (0) to tip (full), keeping root fixed
+      const ny  = ty + frac   * length + amp   * longN;
+      const cpY = ty + cpFrac * length + cpAmp * longCp;
+
+      d += ' Q ' + cpX.toFixed(1) + ',' + cpY.toFixed(1)
+                 + ' ' + nx.toFixed(1) + ',' + ny.toFixed(1);
+    }
+    return d;
+  }
+
+  function animate(ts) {
+    const t = ts * 0.001;
+    for (const tn of paths) {
+      tn.el.setAttribute('d', wavePath(
+        tn.x, tn.y, tn.len, tn.amp, tn.ph, tn.spd, t,
+        tn.ph2, tn.spd2, tn.driftAmp, tn.driftPh
+      ));
+    }
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
