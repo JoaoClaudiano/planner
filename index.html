@@ -157,6 +157,7 @@
 
 <!-- OVERLAY DE LOGIN -->
 <div class="login-overlay" id="loginOverlay">
+  <canvas class="login-canvas" id="loginCanvas"></canvas>
   <div class="login-card">
     <div class="login-logo">rotina<b>·</b>estudos</div>
     <p class="login-sub">sistema pessoal de frequência acadêmica</p>
@@ -183,5 +184,185 @@
 
 <script src="db.js"></script>
 <script src="app.js"></script>
+<script>
+(function () {
+  const overlay = document.getElementById('loginOverlay');
+  const canvas  = document.getElementById('loginCanvas');
+  const ctx     = canvas.getContext('2d');
+
+  let W, H, particles, mouse, ripples, animId, running;
+
+  const PARTICLE_COUNT  = 90;
+  const CONNECT_DIST    = 130;
+  const REPEL_DIST      = 80;
+  const SPEED           = 0.35;
+  const MAX_SPEED       = SPEED * 2;
+  const BASE_HUE        = 210;
+  const HUE_SHIFT_SPEED = 0.0003;
+  const HUE_SHIFT_RANGE = 50;
+
+  // Palette – blue-violet family that shifts slowly over time
+  let hueBase = BASE_HUE;
+
+  function isDark() { return document.body.classList.contains('dark'); }
+
+  function resize() {
+    W = canvas.width  = overlay.clientWidth;
+    H = canvas.height = overlay.clientHeight;
+  }
+
+  function mkParticle() {
+    const angle = Math.random() * Math.PI * 2;
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: Math.cos(angle) * SPEED * (0.5 + Math.random()),
+      vy: Math.sin(angle) * SPEED * (0.5 + Math.random()),
+      r: 1.5 + Math.random() * 1.5,
+      hue: hueBase + (Math.random() - 0.5) * 60,
+    };
+  }
+
+  function init() {
+    resize();
+    mouse   = { x: W / 2, y: H / 2 };
+    ripples = [];
+    particles = Array.from({ length: PARTICLE_COUNT }, mkParticle);
+  }
+
+  function addRipple(x, y) {
+    ripples.push({ x, y, r: 0, maxR: 160, alpha: 0.7, hue: hueBase + Math.random() * 60 });
+  }
+
+  function step(ts) {
+    if (!running) return;
+    animId = requestAnimationFrame(step);
+
+    // Slowly drift hue
+    hueBase = BASE_HUE + Math.sin(ts * HUE_SHIFT_SPEED) * HUE_SHIFT_RANGE;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // ── ripples ──
+    ripples = ripples.filter(rp => rp.alpha > 0.01);
+    for (const rp of ripples) {
+      rp.r += 2.5;
+      rp.alpha *= 0.96;
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsla(${rp.hue},80%,65%,${rp.alpha})`;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    }
+
+    // ── particles ──
+    const dark = isDark();
+    for (const p of particles) {
+      // Soft attraction towards mouse
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const d  = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (d < REPEL_DIST) {
+        // Gentle repulsion when very close
+        p.vx -= (dx / d) * 0.04;
+        p.vy -= (dy / d) * 0.04;
+      } else if (d < 220) {
+        p.vx += (dx / d) * 0.015;
+        p.vy += (dy / d) * 0.015;
+      }
+
+      // Cap speed
+      const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      if (spd > MAX_SPEED) { p.vx = (p.vx / spd) * MAX_SPEED; p.vy = (p.vy / spd) * MAX_SPEED; }
+
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Wrap edges
+      if (p.x < 0)  p.x = W;
+      if (p.x > W)  p.x = 0;
+      if (p.y < 0)  p.y = H;
+      if (p.y > H)  p.y = 0;
+
+      // Drift hue gently
+      p.hue += 0.05;
+
+      const lum  = dark ? 65 : 45;
+      const sat  = dark ? 75 : 65;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue},${sat}%,${lum}%,0.75)`;
+      ctx.fill();
+    }
+
+    // ── connections ──
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          const alpha = (1 - dist / CONNECT_DIST) * 0.45;
+          const midHue = (a.hue + b.hue) / 2;
+          const lum2   = dark ? 65 : 50;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `hsla(${midHue},70%,${lum2}%,${alpha})`;
+          ctx.lineWidth   = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    init();
+    animId = requestAnimationFrame(step);
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(animId);
+  }
+
+  // Watch overlay visibility
+  const mo = new MutationObserver(() => {
+    if (overlay.classList.contains('show')) { start(); }
+    else { stop(); }
+  });
+  mo.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+
+  // If already visible on load
+  if (overlay.classList.contains('show')) start();
+
+  // Mouse tracking on the overlay (canvas has pointer-events:none, attach to overlay)
+  overlay.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - r.left;
+    mouse.y = e.clientY - r.top;
+  });
+
+  overlay.addEventListener('click', e => {
+    const r = canvas.getBoundingClientRect();
+    addRipple(e.clientX - r.left, e.clientY - r.top);
+    // Burst: give nearby particles a velocity kick
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    for (const p of particles) {
+      const dx = p.x - cx, dy = p.y - cy;
+      const d  = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (d < 120) {
+        const force = (1 - d / 120) * 2.5;
+        p.vx += (dx / d) * force;
+        p.vy += (dy / d) * force;
+      }
+    }
+  });
+
+  window.addEventListener('resize', () => { if (running) { resize(); } });
+})();
+</script>
 </body>
 </html>
