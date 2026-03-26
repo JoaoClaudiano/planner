@@ -426,20 +426,27 @@
     { id:'jt11', x:86,  y:63, len:178, amp:7,  spd:1.15, ph:4.80 },
   ];
 
+  // IDs may not exist if the overlay hasn't rendered yet; filter silently for resilience
   const paths = defs.map(d => ({ ...d, el: document.getElementById(d.id) }))
                     .filter(d => d.el);
+
+  // AMP_POWER controls how fast amplitude grows toward the tip (< 1 = concave growth)
+  // DAMPING   slightly reduces amplitude at the very end so tips don't flail too wide
+  // WAVE_SPD  scales elapsed time → wave travel speed along the tentacle
+  // WAVE_FREQ number of full sine cycles visible along the tentacle length
+  const AMP_POWER = 0.55, DAMPING = 0.18, WAVE_SPD = 1.3, WAVE_FREQ = 3.6;
 
   function wavePath(tx, ty, length, amplitude, phase, t) {
     let d = 'M ' + tx + ',' + ty;
     for (let i = 1; i <= STEPS; i++) {
       const frac   = i / STEPS;
       const cpFrac = (i - 0.5) / STEPS;
-      const amp    = amplitude * Math.pow(frac, 0.55) * (1 - frac * 0.18);
-      const cpAmp  = amplitude * Math.pow(cpFrac, 0.55) * (1 - cpFrac * 0.18);
+      const amp    = amplitude * Math.pow(frac,   AMP_POWER) * (1 - frac   * DAMPING);
+      const cpAmp  = amplitude * Math.pow(cpFrac, AMP_POWER) * (1 - cpFrac * DAMPING);
       const ny     = ty + frac   * length;
       const cpY    = ty + cpFrac * length;
-      const nx     = tx + amp   * Math.sin(t * 1.3 + phase + frac   * Math.PI * 3.6);
-      const cpX    = tx + cpAmp * Math.sin(t * 1.3 + phase + cpFrac * Math.PI * 3.6);
+      const nx     = tx + amp   * Math.sin(t * WAVE_SPD + phase + frac   * Math.PI * WAVE_FREQ);
+      const cpX    = tx + cpAmp * Math.sin(t * WAVE_SPD + phase + cpFrac * Math.PI * WAVE_FREQ);
       d += ' Q ' + cpX.toFixed(1) + ',' + cpY.toFixed(1)
                  + ' ' + nx.toFixed(1) + ',' + ny.toFixed(1);
     }
