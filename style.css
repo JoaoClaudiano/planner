@@ -396,49 +396,46 @@ footer { border-top: 1px solid var(--border); padding: .6rem 1.25rem; display: f
 .jellyfish-wrap {
   display: flex; justify-content: center;
   width: 100%; max-width: 380px;
-  margin-bottom: -22px;
+  margin-bottom: -28px;
   position: relative; z-index: 2;
   pointer-events: none;
 }
 .jellyfish-svg {
-  width: 88px; height: auto; overflow: visible;
-  filter: drop-shadow(0 6px 18px rgba(59,130,246,.45));
-  animation: jelly-float 3.2s ease-in-out infinite;
+  width: 96px; height: auto; overflow: visible;
+  filter: drop-shadow(0 8px 26px rgba(59,130,246,.30));
+  animation: jelly-float 4.0s ease-in-out infinite;
 }
 .jbell {
   fill: url(#jg-body);
-  stroke: rgba(96,165,250,.4); stroke-width: .5;
+  stroke: rgba(147,197,253,.50); stroke-width: .6;
 }
 .jbell-glow { fill: url(#jg-glow); }
-.jbell-spot { fill: #fff; opacity: .22; }
+.jbell-spot { fill: #fff; opacity: .18; }
+.jbell-spot2 { opacity: .12; }
 .jbell-group {
   transform-box: fill-box; transform-origin: center top;
-  animation: jelly-bell 3.2s ease-in-out infinite;
+  animation: jelly-bell 4.0s ease-in-out infinite;
 }
 .jt {
   fill: none;
-  stroke: rgba(96,165,250,.7); stroke-width: 1.8; stroke-linecap: round;
-  transform-box: fill-box; transform-origin: top center;
+  stroke: rgba(147,197,253,.52); stroke-width: 1.3; stroke-linecap: round;
 }
-.jt1 { animation: jt-sway 2.8s ease-in-out infinite 0s; }
-.jt2 { animation: jt-sway 2.8s ease-in-out infinite .18s; }
-.jt3 { animation: jt-sway 2.8s ease-in-out infinite .08s; }
-.jt4 { animation: jt-sway 2.8s ease-in-out infinite .28s; }
-.jt5 { animation: jt-sway 2.8s ease-in-out infinite .15s; }
-.jt6 { animation: jt-sway 2.8s ease-in-out infinite .35s; }
+.jt-thin {
+  stroke: rgba(186,230,253,.38); stroke-width: 0.75;
+}
 @keyframes jelly-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-11px); }
+  0%   { transform: rotate(-7deg) translateY(0); }
+  25%  { transform: rotate(-8deg) translateY(-6px); }
+  50%  { transform: rotate(-6deg) translateY(-13px); }
+  75%  { transform: rotate(-8deg) translateY(-6px); }
+  100% { transform: rotate(-7deg) translateY(0); }
 }
 @keyframes jelly-bell {
-  0%, 100% { transform: scaleY(1); }
-  30% { transform: scaleY(.78); }
-  55% { transform: scaleY(1.04); }
-}
-@keyframes jt-sway {
-  0%, 100% { transform: rotate(0deg); }
-  35% { transform: rotate(7deg); }
-  70% { transform: rotate(-7deg); }
+  0%, 100% { transform: scaleY(1)    scaleX(1);    }
+  18%       { transform: scaleY(.80) scaleX(1.06); }
+  38%       { transform: scaleY(1.05) scaleX(.97); }
+  58%       { transform: scaleY(.96) scaleX(1.02); }
+  78%       { transform: scaleY(1.01) scaleX(.99); }
 }
 .login-canvas {
   position: absolute; inset: 0;

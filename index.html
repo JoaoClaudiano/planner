@@ -159,32 +159,47 @@
 <div class="login-overlay" id="loginOverlay">
   <canvas class="login-canvas" id="loginCanvas"></canvas>
   <div class="jellyfish-wrap">
-    <svg class="jellyfish-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+    <svg class="jellyfish-svg" viewBox="0 0 120 240" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <radialGradient id="jg-body" cx="50%" cy="25%" r="65%">
-          <stop offset="0%" stop-color="#bfdbfe" stop-opacity="0.95"/>
-          <stop offset="55%" stop-color="#60a5fa" stop-opacity="0.80"/>
-          <stop offset="100%" stop-color="#2563eb" stop-opacity="0.55"/>
+        <radialGradient id="jg-body" cx="50%" cy="30%" r="65%">
+          <stop offset="0%"   stop-color="#e0f7ff" stop-opacity="0.20"/>
+          <stop offset="55%"  stop-color="#7dd3fc" stop-opacity="0.09"/>
+          <stop offset="100%" stop-color="#2563eb" stop-opacity="0.04"/>
         </radialGradient>
-        <radialGradient id="jg-glow" cx="40%" cy="30%" r="50%">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65"/>
-          <stop offset="100%" stop-color="#93c5fd" stop-opacity="0"/>
+        <radialGradient id="jg-glow" cx="40%" cy="28%" r="52%">
+          <stop offset="0%"   stop-color="#ffffff"  stop-opacity="0.48"/>
+          <stop offset="70%"  stop-color="#bae6fd"  stop-opacity="0.10"/>
+          <stop offset="100%" stop-color="#93c5fd"  stop-opacity="0"/>
         </radialGradient>
+        <radialGradient id="jg-rim" cx="50%" cy="100%" r="55%">
+          <stop offset="0%"   stop-color="#7dd3fc" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#bae6fd" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="jf-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
       </defs>
-      <!-- Tentacles (rendered behind the bell) -->
+      <!-- Tentacles (rendered behind the bell, animated by JS) -->
       <g class="jt-group">
-        <path class="jt jt1" d="M 20,53 Q 17,72 21,90 Q 24,108 18,122"/>
-        <path class="jt jt2" d="M 32,57 Q 29,76 33,93 Q 36,110 30,124"/>
-        <path class="jt jt3" d="M 44,60 Q 42,80 46,97 Q 48,114 43,127"/>
-        <path class="jt jt4" d="M 56,60 Q 58,80 54,97 Q 52,114 57,127"/>
-        <path class="jt jt5" d="M 68,57 Q 71,76 67,93 Q 64,110 70,124"/>
-        <path class="jt jt6" d="M 80,53 Q 83,72 79,90 Q 76,108 82,122"/>
+        <path class="jt"      id="jt1"/>
+        <path class="jt"      id="jt2"/>
+        <path class="jt"      id="jt3"/>
+        <path class="jt"      id="jt4"/>
+        <path class="jt"      id="jt5"/>
+        <path class="jt"      id="jt6"/>
+        <path class="jt"      id="jt7"/>
+        <path class="jt"      id="jt8"/>
+        <path class="jt jt-thin" id="jt9"/>
+        <path class="jt jt-thin" id="jt10"/>
+        <path class="jt jt-thin" id="jt11"/>
       </g>
       <!-- Bell (rendered in front of tentacles) -->
       <g class="jbell-group">
-        <path class="jbell" d="M 10,52 Q 8,4 50,4 Q 92,4 90,52 Q 82,60 74,52 Q 66,60 58,52 Q 54,60 50,52 Q 46,60 42,52 Q 34,60 26,52 Q 18,60 10,52 Z"/>
-        <ellipse class="jbell-glow" cx="50" cy="28" rx="28" ry="20"/>
-        <ellipse class="jbell-spot" cx="38" cy="20" rx="7" ry="5" transform="rotate(-15 38 20)"/>
+        <path class="jbell" d="M 15,60 Q 12,8 60,8 Q 108,8 105,60 Q 98,70 91,60 Q 84,70 77,60 Q 71,68 65,60 Q 60,68 55,60 Q 49,68 43,60 Q 36,70 29,60 Q 22,70 15,60 Z"/>
+        <ellipse class="jbell-glow" cx="60" cy="30" rx="32" ry="22"/>
+        <ellipse class="jbell-spot" cx="46" cy="21" rx="9" ry="6" transform="rotate(-15 46 21)"/>
+        <ellipse class="jbell-spot jbell-spot2" cx="71" cy="35" rx="5" ry="3.5" transform="rotate(10 71 35)"/>
       </g>
     </svg>
   </div>
@@ -392,6 +407,60 @@
   });
 
   window.addEventListener('resize', () => { if (running) { resize(); } });
+})();
+
+// ── Jellyfish tentacle wave animation ──────────────────────────────────────
+(function () {
+  const STEPS = 12;
+  const defs = [
+    { id:'jt1',  x:19,  y:61, len:162, amp:9,  spd:1.00, ph:0.0  },
+    { id:'jt2',  x:29,  y:63, len:148, amp:10, spd:0.88, ph:0.85 },
+    { id:'jt3',  x:40,  y:64, len:170, amp:11, spd:1.05, ph:1.70 },
+    { id:'jt4',  x:52,  y:65, len:156, amp:10, spd:0.93, ph:2.55 },
+    { id:'jt5',  x:68,  y:65, len:156, amp:10, spd:0.93, ph:3.40 },
+    { id:'jt6',  x:80,  y:64, len:170, amp:11, spd:1.05, ph:4.25 },
+    { id:'jt7',  x:91,  y:63, len:148, amp:10, spd:0.88, ph:5.10 },
+    { id:'jt8',  x:101, y:61, len:162, amp:9,  spd:1.00, ph:5.95 },
+    { id:'jt9',  x:34,  y:63, len:178, amp:7,  spd:1.15, ph:1.20 },
+    { id:'jt10', x:60,  y:66, len:182, amp:7,  spd:1.20, ph:3.00 },
+    { id:'jt11', x:86,  y:63, len:178, amp:7,  spd:1.15, ph:4.80 },
+  ];
+
+  // IDs may not exist if the overlay hasn't rendered yet; filter silently for resilience
+  const paths = defs.map(d => ({ ...d, el: document.getElementById(d.id) }))
+                    .filter(d => d.el);
+
+  // AMP_POWER controls how fast amplitude grows toward the tip (< 1 = concave growth)
+  // DAMPING   slightly reduces amplitude at the very end so tips don't flail too wide
+  // WAVE_SPD  scales elapsed time → wave travel speed along the tentacle
+  // WAVE_FREQ number of full sine cycles visible along the tentacle length
+  const AMP_POWER = 0.55, DAMPING = 0.18, WAVE_SPD = 1.3, WAVE_FREQ = 3.6;
+
+  function wavePath(tx, ty, length, amplitude, phase, t) {
+    let d = 'M ' + tx + ',' + ty;
+    for (let i = 1; i <= STEPS; i++) {
+      const frac   = i / STEPS;
+      const cpFrac = (i - 0.5) / STEPS;
+      const amp    = amplitude * Math.pow(frac,   AMP_POWER) * (1 - frac   * DAMPING);
+      const cpAmp  = amplitude * Math.pow(cpFrac, AMP_POWER) * (1 - cpFrac * DAMPING);
+      const ny     = ty + frac   * length;
+      const cpY    = ty + cpFrac * length;
+      const nx     = tx + amp   * Math.sin(t * WAVE_SPD + phase + frac   * Math.PI * WAVE_FREQ);
+      const cpX    = tx + cpAmp * Math.sin(t * WAVE_SPD + phase + cpFrac * Math.PI * WAVE_FREQ);
+      d += ' Q ' + cpX.toFixed(1) + ',' + cpY.toFixed(1)
+                 + ' ' + nx.toFixed(1) + ',' + ny.toFixed(1);
+    }
+    return d;
+  }
+
+  function animate(ts) {
+    const t = ts * 0.001;
+    for (const tn of paths) {
+      tn.el.setAttribute('d', wavePath(tn.x, tn.y, tn.len, tn.amp, tn.ph, t * tn.spd));
+    }
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
 })();
 </script>
 </body>
