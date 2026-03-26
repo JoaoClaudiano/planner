@@ -13,7 +13,7 @@
 <body>
 <header>
   <div style="display:flex;align-items:center">
-    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
   </div>
   <div class="hright">
     <button class="hbtn" id="btnDark">☀ claro</button>
@@ -23,20 +23,20 @@
 <main class="page-wrap">
   <div class="page-hero">
     <h1>termos de uso</h1>
-    <p>Última atualização: março de 2025</p>
+    <p>Última atualização: março de 2025 · Leia atentamente antes de utilizar o serviço.</p>
   </div>
 
   <div class="page-section">
     <h2>1. aceitação</h2>
     <div class="page-card">
-      <p>Ao acessar ou utilizar o <strong>flow.planner</strong>, você concorda com estes Termos de Uso. Se não concordar com qualquer parte dos termos, não utilize o serviço.</p>
+      <p>Ao acessar ou utilizar o <strong>flow.planner</strong>, você concorda com estes Termos de Uso e com nossa <a href="privacidade.html" style="color:var(--accent)">Política de Privacidade</a>. Se não concordar com qualquer parte dos termos, não utilize o serviço.</p>
     </div>
   </div>
 
   <div class="page-section">
     <h2>2. descrição do serviço</h2>
     <div class="page-card">
-      <p>O flow.planner é uma aplicação web de uso pessoal para controle de frequência acadêmica, agenda semanal e anotações. O serviço pode ser utilizado sem cadastro (modo convidado, com dados armazenados localmente) ou com conta opcional para sincronização em nuvem.</p>
+      <p>O flow.planner é uma aplicação web de uso pessoal para controle de frequência acadêmica, agenda semanal e anotações. O serviço pode ser utilizado sem cadastro (modo convidado, com dados armazenados exclusivamente no dispositivo do usuário) ou com conta opcional para sincronização em nuvem via Supabase.</p>
     </div>
   </div>
 
@@ -48,6 +48,7 @@
         <li>Você é responsável por manter a confidencialidade das suas credenciais de acesso.</li>
         <li>É proibido utilizar o serviço para qualquer finalidade ilegal ou não autorizada.</li>
         <li>Não é permitido tentar comprometer a segurança ou integridade do sistema.</li>
+        <li>O uso do serviço para fins de automação massiva, scraping ou engenharia reversa não é permitido.</li>
       </ul>
     </div>
   </div>
@@ -55,31 +56,40 @@
   <div class="page-section">
     <h2>4. dados e privacidade</h2>
     <div class="page-card">
-      <p>Seus dados acadêmicos são armazenados localmente no seu dispositivo quando você usa o modo convidado. Quando você opta pela sincronização em nuvem, os dados são armazenados de forma segura via Supabase. Consulte nossa <a href="privacidade.html" style="color:var(--accent)">Política de Privacidade</a> para mais detalhes.</p>
+      <p>Seus dados acadêmicos são armazenados localmente no seu dispositivo quando você usa o modo convidado. Quando você opta pela sincronização em nuvem, os dados são armazenados de forma segura via Supabase, com criptografia em trânsito (HTTPS/TLS) e isolamento por usuário (Row Level Security). Consulte nossa <a href="privacidade.html" style="color:var(--accent)">Política de Privacidade</a> para mais detalhes.</p>
     </div>
   </div>
 
   <div class="page-section">
     <h2>5. isenção de responsabilidade</h2>
     <div class="page-card">
-      <p>O flow.planner é fornecido "como está", sem garantias de qualquer tipo. Não nos responsabilizamos por perda de dados, interrupções no serviço ou quaisquer danos resultantes do uso ou da impossibilidade de uso do serviço. Recomendamos exportar seus dados regularmente como medida de segurança.</p>
+      <p>O flow.planner é fornecido "como está", sem garantias de qualquer tipo, expressas ou implícitas. Não nos responsabilizamos por perda de dados, interrupções no serviço ou quaisquer danos resultantes do uso ou da impossibilidade de uso do serviço. Recomendamos exportar seus dados regularmente como medida de segurança.</p>
     </div>
   </div>
 
   <div class="page-section">
-    <h2>6. modificações</h2>
+    <h2>6. disponibilidade do serviço</h2>
+    <div class="page-card">
+      <p>O flow.planner é disponibilizado sem garantia de disponibilidade contínua. Podemos realizar manutenções, atualizações ou interrupções a qualquer momento. O modo offline (PWA) permite o uso do aplicativo mesmo sem conexão com a internet, minimizando o impacto de indisponibilidades.</p>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>7. modificações</h2>
     <div class="page-card">
       <p>Reservamo-nos o direito de modificar estes Termos de Uso a qualquer momento. Alterações significativas serão comunicadas por meio do serviço. O uso continuado após as alterações constitui aceitação dos novos termos.</p>
     </div>
   </div>
 
   <div class="page-section">
-    <h2>7. contato</h2>
+    <h2>8. contato</h2>
     <div class="page-card">
       <p>Em caso de dúvidas sobre estes termos, entre em <a href="contato.html" style="color:var(--accent)">contato</a>.</p>
     </div>
   </div>
 </main>
+
+<button class="btt" id="btt">↑</button>
 
 <footer>
   <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
@@ -106,6 +116,9 @@
     localStorage.setItem(KEY, dark ? '1' : '0');
     applyTheme(dark);
   });
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
+  btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 })();
 </script>
 </body>

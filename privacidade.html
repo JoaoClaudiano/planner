@@ -13,7 +13,7 @@
 <body>
 <header>
   <div style="display:flex;align-items:center">
-    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
   </div>
   <div class="hright">
     <button class="hbtn" id="btnDark">☀ claro</button>
@@ -23,13 +23,13 @@
 <main class="page-wrap">
   <div class="page-hero">
     <h1>política de privacidade</h1>
-    <p>Última atualização: março de 2025</p>
+    <p>Última atualização: março de 2025 · Comprometemo-nos com a proteção dos seus dados.</p>
   </div>
 
   <div class="page-section">
     <h2>1. introdução</h2>
     <div class="page-card">
-      <p>O <strong>flow.planner</strong> respeita a sua privacidade. Esta política descreve quais informações coletamos, como as utilizamos e como as protegemos.</p>
+      <p>O <strong>flow.planner</strong> foi construído com privacidade por princípio. Esta política descreve quais informações coletamos, como as utilizamos, como as protegemos e quais são os seus direitos como usuário.</p>
     </div>
   </div>
 
@@ -38,8 +38,9 @@
     <div class="page-card">
       <ul>
         <li><strong>Modo convidado:</strong> nenhum dado é enviado a servidores externos. Todas as informações (agenda, frequências, anotações) são armazenadas exclusivamente no seu dispositivo via localStorage/IndexedDB.</li>
-        <li><strong>Modo com conta:</strong> seu endereço de e-mail é coletado para autenticação. Os dados acadêmicos são sincronizados e armazenados no Supabase de forma segura.</li>
-        <li><strong>Dados de uso:</strong> não coletamos dados de navegação, telemetria ou rastreamento de comportamento.</li>
+        <li><strong>Modo com conta:</strong> seu endereço de e-mail é coletado para autenticação. Os dados acadêmicos são sincronizados e armazenados no Supabase de forma segura e criptografada.</li>
+        <li><strong>Dados de uso:</strong> não coletamos dados de navegação, telemetria ou rastreamento de comportamento em nenhum dos modos.</li>
+        <li><strong>Mensagens de contato:</strong> se você enviar uma mensagem pelo formulário de contato, os dados fornecidos (nome, e-mail e mensagem) serão utilizados exclusivamente para responder à sua solicitação.</li>
       </ul>
     </div>
   </div>
@@ -50,7 +51,8 @@
       <ul>
         <li>Autenticação e identificação do usuário (somente quando há conta)</li>
         <li>Sincronização dos seus dados entre dispositivos (somente quando há conta)</li>
-        <li>Os dados nunca são vendidos, compartilhados ou utilizados para fins publicitários</li>
+        <li>Os dados nunca são vendidos, compartilhados com terceiros ou utilizados para fins publicitários</li>
+        <li>Não realizamos perfilamento ou análise comportamental dos usuários</li>
       </ul>
     </div>
   </div>
@@ -58,38 +60,45 @@
   <div class="page-section">
     <h2>4. armazenamento e segurança</h2>
     <div class="page-card">
-      <p>Os dados em nuvem são armazenados via <strong>Supabase</strong>, com transmissão criptografada (HTTPS/TLS). Cada usuário só tem acesso aos próprios dados, garantidos por políticas de segurança em nível de linha (Row Level Security).</p>
+      <p>Os dados em nuvem são armazenados via <strong>Supabase</strong>, com transmissão criptografada (HTTPS/TLS). Cada usuário só tem acesso aos próprios dados, garantidos por políticas de segurança em nível de linha (Row Level Security — RLS). O Supabase está em conformidade com padrões de segurança internacionais.</p>
     </div>
   </div>
 
   <div class="page-section">
     <h2>5. cookies e armazenamento local</h2>
     <div class="page-card">
-      <p>O flow.planner utiliza <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">localStorage</code> e <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">IndexedDB</code> do navegador para salvar preferências (como modo escuro) e dados do usuário localmente. Não utilizamos cookies de rastreamento de terceiros.</p>
+      <p>O flow.planner utiliza <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">localStorage</code> e <code style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px">IndexedDB</code> do navegador para salvar preferências (como modo escuro) e dados do usuário localmente. Não utilizamos cookies de rastreamento de terceiros nem ferramentas de analytics.</p>
     </div>
   </div>
 
   <div class="page-section">
-    <h2>6. exclusão de dados</h2>
+    <h2>6. seus direitos</h2>
     <div class="page-card">
-      <p>Você pode apagar todos os dados locais limpando o armazenamento do navegador para este site. Para excluir dados em nuvem, entre em <a href="contato.html" style="color:var(--accent)">contato</a> com nossa equipe.</p>
+      <ul>
+        <li><strong>Acesso:</strong> você pode exportar todos os seus dados a qualquer momento pelo botão "exportar" no aplicativo.</li>
+        <li><strong>Exclusão local:</strong> limpe o armazenamento do navegador para este site para remover todos os dados locais.</li>
+        <li><strong>Exclusão em nuvem:</strong> entre em <a href="contato.html" style="color:var(--accent)">contato</a> para solicitar a exclusão completa dos seus dados em nuvem.</li>
+        <li><strong>Portabilidade:</strong> seus dados podem ser exportados em formato JSON a qualquer momento.</li>
+      </ul>
     </div>
   </div>
 
   <div class="page-section">
     <h2>7. alterações nesta política</h2>
     <div class="page-card">
-      <p>Podemos atualizar esta política periodicamente. Recomendamos revisá-la regularmente. O uso continuado do serviço após alterações implica aceitação da política revisada.</p>
+      <p>Podemos atualizar esta política periodicamente. Recomendamos revisá-la regularmente. O uso continuado do serviço após alterações implica aceitação da política revisada. Mudanças significativas serão destacadas na data de atualização.</p>
     </div>
   </div>
 
   <div class="page-section">
     <h2>8. contato</h2>
     <div class="page-card">
-      <p>Para questões sobre privacidade, envie uma mensagem pela nossa <a href="contato.html" style="color:var(--accent)">página de contato</a>.</p>
+      <p>Para questões sobre privacidade ou exercício dos seus direitos, envie uma mensagem pela nossa <a href="contato.html" style="color:var(--accent)">página de contato</a>.</p>
     </div>
   </div>
 </main>
+
+<button class="btt" id="btt">↑</button>
 
 <footer>
   <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
@@ -116,6 +125,9 @@
     localStorage.setItem(KEY, dark ? '1' : '0');
     applyTheme(dark);
   });
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
+  btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 })();
 </script>
 </body>

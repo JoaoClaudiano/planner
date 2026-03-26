@@ -13,7 +13,7 @@
 <body>
 <header>
   <div style="display:flex;align-items:center">
-    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>studio</span></a>
+    <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
   </div>
   <div class="hright">
     <button class="hbtn" id="btnDark">☀ claro</button>
@@ -29,7 +29,7 @@
   <div class="page-section">
     <h2>o que é</h2>
     <div class="page-card">
-      <p>O <strong>flow.planner</strong> é um sistema pessoal de frequência acadêmica e agenda semanal. Ele foi criado para ajudar estudantes a acompanharem suas presenças, tarefas e tópicos de estudo de forma simples e eficiente, diretamente no navegador.</p>
+      <p>O <strong>flow.planner</strong> é um sistema pessoal de frequência acadêmica e agenda semanal desenvolvido para estudantes universitários. Ele foi criado para facilitar o acompanhamento de presenças, organização de tarefas e controle de tópicos de estudo, tudo de forma simples, rápida e diretamente no navegador — sem instalações ou configurações complexas.</p>
     </div>
   </div>
 
@@ -37,13 +37,15 @@
     <h2>recursos principais</h2>
     <div class="page-card">
       <ul>
-        <li>Agenda semanal interativa com visualização por semestre</li>
-        <li>Controle de frequência por disciplina com cálculo automático de percentual</li>
-        <li>Criação de eventos, lembretes, provas e entregas</li>
-        <li>Anotações de tarefas e tópicos de estudo</li>
-        <li>Sincronização com a nuvem via Supabase (opcional)</li>
-        <li>Modo escuro e suporte a PWA (instalável no celular)</li>
-        <li>Funcionamento offline com sincronização quando a conexão retornar</li>
+        <li><strong>Agenda semanal interativa</strong> com visualização por semana e navegação por teclado (← →)</li>
+        <li><strong>Controle de frequência por disciplina</strong> com cálculo automático de percentual e alerta de limite de faltas</li>
+        <li><strong>Criação de eventos personalizados</strong>: lembretes, provas, entregas e outros tipos</li>
+        <li><strong>Arrastar e soltar eventos</strong> no calendário para remarcação rápida (desktop e mobile)</li>
+        <li><strong>Anotações organizadas</strong> em listas de tarefas e tópicos de estudo</li>
+        <li><strong>Sincronização com a nuvem</strong> via Supabase (opcional, com conta gratuita)</li>
+        <li><strong>Modo escuro e PWA</strong>: instalável no celular como aplicativo nativo</li>
+        <li><strong>Funcionamento offline</strong> com sincronização automática ao reconectar</li>
+        <li><strong>Exportação e importação de dados</strong> em formato JSON para backup local</li>
       </ul>
     </div>
   </div>
@@ -51,7 +53,8 @@
   <div class="page-section">
     <h2>filosofia</h2>
     <div class="page-card">
-      <p>O flow.planner foi desenvolvido com foco em leveza e praticidade. Não exige cadastro obrigatório — você pode usá-lo imediatamente como convidado, com todos os dados salvos localmente no seu dispositivo. A sincronização com a nuvem é opcional e ativada apenas quando você escolhe criar uma conta.</p>
+      <p>O flow.planner foi desenvolvido com foco em leveza, privacidade e praticidade. Não exige cadastro obrigatório — você pode começar a usar imediatamente como convidado, com todos os dados salvos localmente no seu próprio dispositivo.</p>
+      <p style="margin-top:1rem">A sincronização com a nuvem é totalmente opcional e ativada apenas quando você opta por criar uma conta. Nenhum dado é coletado sem o seu consentimento, e nenhuma telemetria é enviada para servidores externos no modo convidado.</p>
     </div>
   </div>
 
@@ -59,21 +62,31 @@
     <h2>tecnologia</h2>
     <div class="page-card">
       <ul>
-        <li>HTML, CSS e JavaScript puros — sem frameworks pesados</li>
-        <li>PWA com service worker para uso offline</li>
-        <li>Supabase como backend opcional de sincronização</li>
-        <li>Armazenamento local via IndexedDB / localStorage</li>
+        <li><strong>HTML, CSS e JavaScript puros</strong> — sem frameworks pesados, carregamento instantâneo</li>
+        <li><strong>Progressive Web App (PWA)</strong> com service worker para uso offline completo</li>
+        <li><strong>Supabase</strong> como backend opcional de autenticação e sincronização em nuvem</li>
+        <li><strong>IndexedDB / localStorage</strong> para armazenamento local persistente nos dispositivos</li>
+        <li><strong>Design responsivo</strong> otimizado para desktop, tablet e smartphone</li>
       </ul>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>versão e atualizações</h2>
+    <div class="page-card">
+      <p>O flow.planner está em constante evolução. Melhorias, correções e novos recursos são lançados periodicamente. Por ser um PWA, as atualizações são aplicadas automaticamente quando você acessa o sistema com conexão à internet.</p>
     </div>
   </div>
 
   <div class="page-section">
     <h2>contato</h2>
     <div class="page-card">
-      <p>Dúvidas, sugestões ou problemas? <a href="contato.html" style="color:var(--accent)">Entre em contato</a> com a equipe do flow.planner.</p>
+      <p>Dúvidas, sugestões ou problemas? <a href="contato.html" style="color:var(--accent)">Entre em contato</a> com a equipe do flow.planner. Respondemos em até 48 horas úteis.</p>
     </div>
   </div>
 </main>
+
+<button class="btt" id="btt">↑</button>
 
 <footer>
   <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
@@ -100,6 +113,9 @@
     localStorage.setItem(KEY, dark ? '1' : '0');
     applyTheme(dark);
   });
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
+  btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 })();
 </script>
 </body>
