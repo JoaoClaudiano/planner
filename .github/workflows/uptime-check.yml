@@ -72,7 +72,7 @@ jobs:
               data = {}
 
           history = data.get("history", [])
-          history.append({"ts": timestamp, "web": web, "supabase": supabase, "overall": overall})
+          history.append({"ts": timestamp, "web": web, "supabase": supabase, "pwa": "up", "overall": overall})
           history = history[-90:]  # keep last 90 checks (22.5 hours at 15-min intervals)
 
           data = {
