@@ -41,8 +41,7 @@ jobs:
 
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           WEB=$(check_url "https://joaoclaudiano.github.io/planner/")
-          SUPABASE=$(check_url "https://oatepbdrtyajuaavvhif.supabase.co/rest/v1/")
-
+          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/")
           if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
             OVERALL="up"
           else
