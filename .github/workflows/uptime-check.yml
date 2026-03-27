@@ -2,7 +2,7 @@ name: Uptime Check
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -73,7 +73,7 @@ jobs:
 
           history = data.get("history", [])
           history.append({"ts": timestamp, "web": web, "supabase": supabase, "overall": overall})
-          history = history[-90:]  # keep last 90 checks (7.5 hours at 5-min intervals)
+          history = history[-90:]  # keep last 90 checks (22.5 hours at 15-min intervals)
 
           data = {
               "last_check": timestamp,
