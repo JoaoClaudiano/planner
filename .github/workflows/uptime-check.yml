@@ -45,17 +45,10 @@ jobs:
           SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           # Fallback to the public anon key when the secret is not set
           _SB_KEY="${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME}"
-          # Keep-alive: fire a real DB query so Supabase free-tier doesn't pause the project.
-          # The RLS policy only allows 'authenticated', so the anon key gets 403 — that's OK:
-          # the query still reaches the database and counts as activity. Ignore the result.
-          curl -s -o /dev/null \
-            --max-time 15 \
-            --header "apikey: ${_SB_KEY}" \
-            --header "Authorization: Bearer ${_SB_KEY}" \
-            "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/presencas?limit=0" || true
-          # Health check: the PostgREST root (/rest/v1/) returns 200 for the anon role
-          # regardless of RLS, confirming the API and database are reachable.
-          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/" \
+          # Health check + keep-alive: query the `health` table which has an anon-readable
+          # RLS policy (FOR SELECT USING (true)). This returns HTTP 200 with data when the
+          # database is reachable, and also counts as activity to prevent free-tier auto-pause.
+          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/health?select=status&limit=1" \
             --header "apikey: ${_SB_KEY}" \
             --header "Authorization: Bearer ${_SB_KEY}")
           if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
