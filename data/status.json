@@ -1,0 +1,19 @@
+{
+  "last_check": "2026-03-27T02:00:00Z",
+  "overall": "up",
+  "components": {
+    "web": {
+      "status": "up",
+      "label": "Aplicação Web"
+    },
+    "supabase": {
+      "status": "up",
+      "label": "Sincronização (Supabase)"
+    },
+    "pwa": {
+      "status": "up",
+      "label": "Service Worker (PWA)"
+    }
+  },
+  "history": []
+}

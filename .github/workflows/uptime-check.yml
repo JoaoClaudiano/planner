@@ -1,0 +1,144 @@
+name: Uptime Check
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create incident label if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "incident" \
+            --color "d73a4a" \
+            --description "Incidente de disponibilidade" \
+            2>/dev/null || true
+
+      - name: Run uptime checks and update status.json
+        id: checks
+        run: |
+          check_url() {
+            local url="$1"
+            local code
+            code=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 --retry 2 "$url")
+            if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
+              echo "up"
+            else
+              echo "down"
+            fi
+          }
+
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          WEB=$(check_url "https://joaoclaudiano.github.io/planner/")
+          SUPABASE=$(check_url "https://oatepbdrtyajuaavvhif.supabase.co/rest/v1/")
+
+          if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
+            OVERALL="up"
+          else
+            OVERALL="down"
+          fi
+
+          echo "timestamp=$TIMESTAMP" >> "$GITHUB_OUTPUT"
+          echo "web=$WEB"             >> "$GITHUB_OUTPUT"
+          echo "supabase=$SUPABASE"   >> "$GITHUB_OUTPUT"
+          echo "overall=$OVERALL"     >> "$GITHUB_OUTPUT"
+
+          mkdir -p data
+
+          TIMESTAMP="$TIMESTAMP" WEB="$WEB" SUPABASE="$SUPABASE" OVERALL="$OVERALL" \
+          python3 - <<'PYEOF'
+          import json, os
+
+          timestamp = os.environ['TIMESTAMP']
+          web       = os.environ['WEB']
+          supabase  = os.environ['SUPABASE']
+          overall   = os.environ['OVERALL']
+
+          try:
+              with open('data/status.json') as f:
+                  data = json.load(f)
+          except Exception:
+              data = {}
+
+          history = data.get("history", [])
+          history.append({"ts": timestamp, "web": web, "supabase": supabase, "overall": overall})
+          history = history[-90:]  # keep last 90 checks (7.5 hours at 5-min intervals)
+
+          data = {
+              "last_check": timestamp,
+              "overall": overall,
+              "components": {
+                  "web":      {"status": web,      "label": "Aplicação Web"},
+                  "supabase": {"status": supabase, "label": "Sincronização (Supabase)"},
+                  "pwa":      {"status": "up",     "label": "Service Worker (PWA)"}
+              },
+              "history": history
+          }
+
+          with open('data/status.json', 'w') as f:
+              json.dump(data, f, indent=2)
+          PYEOF
+
+      - name: Commit and push status.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/status.json
+          git diff --cached --quiet || git commit -m "chore(status): update uptime [skip ci]"
+          git push
+
+      - name: Open incident issue if site is down
+        if: steps.checks.outputs.overall == 'down'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OPEN_COUNT=$(gh issue list \
+            --label "incident" \
+            --state open \
+            --json number \
+            --jq length)
+
+          if [ "$OPEN_COUNT" -eq 0 ]; then
+            gh issue create \
+              --title "⚠️ Incidente: Sistema Fora do Ar" \
+              --label "incident" \
+              --body "## Incidente detectado
+
+          **Detectado em:** ${{ steps.checks.outputs.timestamp }}
+
+          ### Status dos componentes
+          | Componente | Status |
+          |---|---|
+          | Aplicação Web | ${{ steps.checks.outputs.web }} |
+          | Sincronização (Supabase) | ${{ steps.checks.outputs.supabase }} |
+
+          ---
+          *Issue aberto automaticamente pelo monitoramento de uptime.*
+          *Será fechado automaticamente quando o sistema voltar ao normal.*"
+          fi
+
+      - name: Close incident issue if site is back up
+        if: steps.checks.outputs.overall == 'up'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue list \
+            --label "incident" \
+            --state open \
+            --json number \
+            --jq '.[].number' | \
+          while read -r NUM; do
+            gh issue close "$NUM" \
+              --comment "✅ Sistema restaurado em ${{ steps.checks.outputs.timestamp }}. Fechando automaticamente."
+          done
