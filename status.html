@@ -59,7 +59,7 @@
 }
 .sp-bar {
   flex: 1; min-width: 0; height: 20px; border-radius: 2px;
-  background: var(--border); transition: background .2s;
+  background: var(--border); transition: background .2s, opacity .15s;
   cursor: default;
 }
 .sp-bar.up   { background: var(--ok); }
@@ -103,6 +103,40 @@
 .sp-env-row:last-child { border-bottom: none; }
 .sp-env-key   { font-size: 13px; color: var(--text2); }
 .sp-env-val   { font-family: var(--mono); font-size: 11px; color: var(--text3); text-align: right; }
+
+/* Bar hover */
+.sp-bar:not(.empty):hover { opacity: .7; }
+.sp-bar.empty:hover        { opacity: .5; }
+
+/* Custom tooltip */
+#sp-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .35rem .7rem;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--sh);
+  line-height: 1.6;
+  text-align: center;
+  transform: translate(-50%, calc(-100% - 10px));
+  opacity: 0;
+  transition: opacity .12s;
+}
+#sp-tooltip.visible { opacity: 1; }
+#sp-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+}
 
 @media (max-width: 520px) {
   .sp-bar { height: 16px; }
@@ -293,6 +327,20 @@
     return ((up / history.length) * 100).toFixed(1);
   }
 
+  /* uptime bar tooltip */
+  const _tt = document.createElement('div');
+  _tt.id = 'sp-tooltip';
+  document.body.appendChild(_tt);
+
+  function showTooltip(bar, html) {
+    _tt.innerHTML = html;
+    _tt.classList.add('visible');
+    const r = bar.getBoundingClientRect();
+    _tt.style.left = (r.left + r.width / 2) + 'px';
+    _tt.style.top  = r.top + 'px';
+  }
+  function hideTooltip() { _tt.classList.remove('visible'); }
+
   /* uptime bars */
   function renderBars(containerId, history, key) {
     const el = document.getElementById(containerId);
@@ -303,16 +351,19 @@
     padded.forEach(entry => {
       const bar = document.createElement('span');
       bar.className = 'sp-bar';
+      let tip;
       if (!entry) {
         bar.classList.add('empty');
-        bar.title = 'sem dados';
+        tip = 'sem dados';
       } else if (entry[key] === 'up') {
         bar.classList.add('up');
-        bar.title = `${fmtDate(entry.ts)} — operacional`;
+        tip = `<span style="color:var(--text3)">${fmtDate(entry.ts)}</span><br><span style="color:var(--ok)">● operacional</span>`;
       } else {
         bar.classList.add('down');
-        bar.title = `${fmtDate(entry.ts)} — incidente`;
+        tip = `<span style="color:var(--text3)">${fmtDate(entry.ts)}</span><br><span style="color:var(--warn)">● incidente</span>`;
       }
+      bar.addEventListener('mouseenter', () => showTooltip(bar, tip));
+      bar.addEventListener('mouseleave', hideTooltip);
       el.appendChild(bar);
     });
   }
