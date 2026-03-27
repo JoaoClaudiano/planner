@@ -43,8 +43,13 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           WEB=$(check_url "https://joaoclaudiano.github.io/planner/")
           SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
-          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/" \
-            --header "apikey: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME}")
+          # Fallback to the public anon key when the secret is not set
+          _SB_KEY="${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME}"
+          # Query a real table (limit=0) so this counts as database activity and keeps the
+          # free-tier project alive (Supabase pauses projects after 7 days without DB queries).
+          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/presencas?limit=0" \
+            --header "apikey: ${_SB_KEY}" \
+            --header "Authorization: Bearer ${_SB_KEY}")
           if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
             OVERALL="up"
           else
@@ -124,6 +129,16 @@ jobs:
           |---|---|
           | Aplicação Web | ${{ steps.checks.outputs.web }} |
           | Sincronização (Supabase) | ${{ steps.checks.outputs.supabase }} |
+
+          ### Causa provável
+          O projeto Supabase no plano gratuito é pausado automaticamente após **7 dias sem atividade no banco de dados**. O monitoramento de uptime agora faz uma consulta real ao banco a cada 15 minutos para manter o projeto ativo, mas se a queda já ocorreu será necessária uma ação manual.
+
+          ### Como restaurar
+          1. Acesse [app.supabase.com](https://app.supabase.com) e faça login.
+          2. Abra o projeto **wpxfhdlrygvucbmyfqaa**.
+          3. Clique em **Restore project** (botão exibido quando o projeto está pausado).
+          4. Aguarde ~2 minutos para o banco inicializar.
+          5. Este issue será fechado automaticamente na próxima verificação (a cada 15 min).
 
           ---
           *Issue aberto automaticamente pelo monitoramento de uptime.*
