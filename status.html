@@ -164,7 +164,7 @@
   <div class="sp-overall is-up" id="sp-overall">
     <span class="sp-overall-dot"></span>
     <div class="sp-overall-text">
-      <strong id="sp-overall-text">Todos os sistemas operacionais</strong>
+      <strong id="sp-overall-text">Todos os serviços estão operacionais</strong>
       <small id="sp-overall-sub">Verificando…</small>
     </div>
   </div>
@@ -374,10 +374,10 @@
     const txt  = document.getElementById('sp-overall-text');
     const sub  = document.getElementById('sp-overall-sub');
     card.className = 'sp-overall ' + (up ? 'is-up' : 'is-down');
-    txt.textContent = up ? 'Todos os sistemas operacionais' : 'Incidente em andamento';
+    txt.textContent = up ? 'Todos os serviços estão operacionais' : 'Incidente em andamento';
     sub.textContent = lastCheck ? 'Última verificação: ' + fmtDate(lastCheck) : '';
     document.getElementById('sp-last-check').textContent =
-      lastCheck ? 'Monitorado a cada 15 minutos · ' + fmtDate(lastCheck) : 'Monitorado a cada 15 minutos';
+      lastCheck ? 'O sistema é monitorado em intervalos regulares · ' + fmtDate(lastCheck) : 'O sistema é monitorado em intervalos regulares';
   }
 
   /* ── Fetch status.json ────── */
