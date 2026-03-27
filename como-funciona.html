@@ -36,6 +36,70 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
 .doc-table td { padding: .45rem .7rem; border-bottom: 1px solid var(--border); color: var(--text2); }
 .doc-table tr:last-child td { border-bottom: none; }
 .note-box { background: var(--accent-bg); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: .65rem 1rem; margin: .75rem 0; font-size: 12px; color: var(--text2); }
+
+/* ── Search bar ── */
+.doc-search-wrap { position: relative; margin-bottom: 1.75rem; }
+.doc-search-wrap svg { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; width: 15px; height: 15px; }
+#docSearch {
+  width: 100%; height: 40px;
+  padding: 0 1rem 0 2.5rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; font-size: 13px; color: var(--text);
+  font-family: var(--sans); outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-shadow: var(--sh);
+}
+#docSearch::placeholder { color: var(--text3); }
+#docSearch:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.search-clear { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 50%; transition: color .15s, background .15s; display: none; }
+.search-clear:hover { color: var(--text); background: var(--surface2); }
+.search-no-results { font-size: 12px; color: var(--text3); text-align: center; padding: 2rem 0; display: none; }
+mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* ── FAQ accordion ── */
+.faq-item { border: 1px solid var(--border); border-radius: var(--r); margin-bottom: .6rem; overflow: hidden; transition: border-color .2s; }
+.faq-item:hover { border-color: var(--border2); }
+.faq-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: .85rem 1rem; background: none; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text);
+  text-align: left; gap: .75rem; transition: background .15s;
+}
+.faq-btn:hover { background: var(--surface2); }
+.faq-btn[aria-expanded="true"] { background: var(--surface2); }
+.faq-icon {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface3); display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--text2); transition: transform .3s ease, background .2s;
+}
+.faq-btn[aria-expanded="true"] .faq-icon { transform: rotate(45deg); background: var(--accent-bg); color: var(--accent); }
+.faq-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease;
+}
+.faq-item.open .faq-body { grid-template-rows: 1fr; }
+.faq-inner { overflow: hidden; padding: 0 1rem; }
+.faq-item.open .faq-inner { padding: 0 1rem .9rem; }
+.faq-inner p, .faq-inner li { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: .4rem; }
+.faq-inner ul { padding-left: 1.2rem; }
+.faq-inner li { margin-bottom: .25rem; }
+.faq-inner .note-box { margin-top: .5rem; }
+
+/* ── Scroll-to-top button ── */
+#scrollTop {
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 300;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); font-size: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .25s, background .15s, color .15s;
+  transform: translateY(10px);
+}
+#scrollTop.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+#scrollTop:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
 @media (max-width: 720px) { .doc-layout { flex-direction: column; } .doc-nav { position: static; width: 100%; } }
 </style>
 </head>
@@ -54,6 +118,14 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
     <h1>como funciona</h1>
     <p>Guia completo de uso e documentação técnica do flow.planner.</p>
   </div>
+
+  <!-- Barra de pesquisa -->
+  <div class="doc-search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="docSearch" type="search" placeholder="Pesquisar na documentação…" autocomplete="off" spellcheck="false" aria-label="Pesquisar na documentação">
+    <button class="search-clear" id="searchClear" aria-label="Limpar pesquisa" title="Limpar">✕</button>
+  </div>
+  <p class="search-no-results" id="searchNoResults">Nenhum resultado para "<span id="searchTerm"></span>".</p>
 
   <div class="doc-layout">
     <!-- Índice lateral -->
@@ -74,6 +146,7 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
       <a href="#offline">Modo offline</a>
       <a href="#pwa">PWA / App</a>
       <a href="#atalhos">Atalhos de teclado</a>
+      <a href="#faq">Perguntas frequentes</a>
     </nav>
 
     <div class="doc-content">
@@ -317,6 +390,171 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
         </table>
         <p style="margin-top:.5rem;font-size:12px;color:var(--text3)">Atalhos funcionam apenas quando o foco não está em um campo de texto.</p>
       </div>
+
+      <!-- FAQ -->
+      <div class="doc-section" id="faq">
+        <h2>❓ Perguntas frequentes</h2>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Preciso criar uma conta para usar o flow.planner?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Não. O app funciona <strong>sem login</strong> usando apenas o armazenamento local do navegador (localStorage / IndexedDB). Criar uma conta é opcional e permite sincronizar seus dados entre dispositivos via <strong>Supabase</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Meus dados ficam seguros se eu fechar o navegador?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Sim. Todos os dados são persistidos automaticamente no <strong>localStorage</strong> do seu navegador. Se você estiver logado, os dados também são sincronizados na nuvem. A única situação em que os dados locais são perdidos é se você limpar manualmente o cache e os dados do site.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Como o app calcula o limite de faltas?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>O cálculo segue a <strong>Lei 9.394/96 (LDB), art. 24, VI</strong>, que exige frequência mínima de <strong>75%</strong> do total de horas letivas. Portanto:</p>
+              <ul>
+                <li>Limite de faltas (h) = ⌊ Carga Horária Total × 0,25 ⌋</li>
+                <li>Exemplo: disciplina de 60h → limite de <strong>15h</strong> de falta.</li>
+              </ul>
+              <p>O cálculo é feito em <strong>horas</strong>, não em número de aulas, respeitando a carga horária real de cada disciplina.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Posso usar o app no celular sem internet?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Sim. O flow.planner é um <strong>PWA (Progressive Web App)</strong> com suporte completo a modo offline. Após a primeira visita, os arquivos são armazenados em cache pelo Service Worker. Alterações feitas offline são enfileiradas e sincronizadas automaticamente quando a conexão for restaurada.</p>
+              <div class="note-box">Para instalar como app nativo no celular, acesse o site pelo Chrome (Android) ou Safari (iOS) e use a opção "Adicionar à tela inicial".</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            O que acontece quando o semestre termina?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Quando a data de término do semestre é ultrapassada, <strong>todas as disciplinas ativas são arquivadas automaticamente</strong> com um snapshot do percentual de frequência final. Você pode revisar o histórico na seção <em>Arquivados</em> e desarquivar qualquer disciplina a qualquer momento.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Posso usar o app em mais de um dispositivo ao mesmo tempo?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Sim, desde que você esteja <strong>logado</strong> com a mesma conta. Os dados são sincronizados em tempo real via Supabase. Sem login, cada dispositivo mantém seu próprio armazenamento local independente, sem sincronização entre eles.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Como funciona a presença automática por geolocalização?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Se você conceder permissão de localização, o app verifica a cada <strong>2 minutos</strong> se você está dentro de um raio de <strong>1 km</strong> do campus. Quando há uma aula em andamento (ou com até 5 min de antecedência), a presença é marcada automaticamente. A verificação também ocorre ao retornar à aba do navegador.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Como exporto e importo meus dados?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Use os botões de exportação/importação no cabeçalho ou rodapé da página principal. O arquivo gerado é um <strong>Excel (.xlsx)</strong> com abas separadas para Presença, Eventos, Tarefas, Tópicos e Info.</p>
+              <div class="note-box">A exportação <strong>não inclui</strong> as disciplinas cadastradas — apenas os registros de presença, eventos e listas.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Posso cancelar uma aula sem perder o registro de presença?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Sim. Ao marcar uma aula como <strong>cancelada</strong>, ela é removida do cálculo de frequência — nem presença nem falta são contabilizadas. A aula aparece riscada no calendário com o label <em>⊘ cancelada</em>. Você pode desfazer o cancelamento a qualquer momento clicando em <em>"↩ desfazer cancelamento"</em>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            O que significa o indicador de tendência (↑ ↓)?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>É um indicador visual baseado nas últimas aulas da disciplina:</p>
+              <ul>
+                <li><strong style="color:var(--ok)">↑</strong> — você faltou na penúltima aula mas foi à última (recuperando).</li>
+                <li><strong style="color:#f97316">↓</strong> — você faltou à última aula.</li>
+                <li><strong style="color:var(--warn)">↓↓</strong> — faltou às duas últimas aulas consecutivas.</li>
+                <li><strong>—</strong> — frequência em dia ou sem histórico suficiente.</li>
+              </ul>
+              <p>O indicador é apenas informativo e não altera o cálculo de frequência.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Como arrasto eventos no calendário?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Apenas <strong>eventos personalizados</strong> (criados por você, não aulas de disciplinas) podem ser arrastados. Clique e segure sobre o evento e arraste-o até a nova posição na grade. O posicionamento faz snap em intervalos de <strong>15 minutos</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">
+            Como faço backup dos meus dados?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body" role="region">
+            <div class="faq-inner">
+              <p>Use a função de <strong>exportação</strong> para gerar um arquivo Excel com seus dados de presença, eventos e listas. Guarde esse arquivo em um local seguro. Para restaurar, basta importar o mesmo arquivo em qualquer dispositivo com a mesma conta ou no mesmo navegador.</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /faq -->
+
     </div><!-- /doc-content -->
   </div><!-- /doc-layout -->
 </main>
@@ -332,8 +570,12 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
   </nav>
 </footer>
 
+<!-- Scroll to top -->
+<button id="scrollTop" aria-label="Voltar ao topo" title="Voltar ao topo">↑</button>
+
 <script>
 (function() {
+  /* ── Dark mode ── */
   const sd = localStorage.getItem('v3_dark');
   const isDark = sd !== null ? sd === 'true' : true;
   if (isDark) { document.body.classList.add('dark'); document.getElementById('btnDark').textContent = '☀ claro'; }
@@ -343,7 +585,7 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
     localStorage.setItem('v3_dark', dark);
   });
 
-  // Highlight active nav item on scroll
+  /* ── Active nav on scroll ── */
   const sections = document.querySelectorAll('.doc-section[id]');
   const navLinks = document.querySelectorAll('.doc-nav a');
   const observer = new IntersectionObserver(entries => {
@@ -354,6 +596,115 @@ table.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; margi
     });
   }, { rootMargin: '-60px 0px -70% 0px', threshold: 0 });
   sections.forEach(s => observer.observe(s));
+
+  /* ── Scroll-to-top button ── */
+  const scrollBtn = document.getElementById('scrollTop');
+  let scrollTicking = false;
+  window.addEventListener('scroll', () => {
+    if (!scrollTicking) {
+      requestAnimationFrame(() => {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }, { passive: true });
+  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  /* ── FAQ accordion ── */
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.faq-item.open').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
+      });
+      // Open clicked (unless it was already open)
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  /* ── Search ── */
+  const searchInput = document.getElementById('docSearch');
+  const searchClear = document.getElementById('searchClear');
+  const noResults   = document.getElementById('searchNoResults');
+  const termSpan    = document.getElementById('searchTerm');
+  const SKIP_TAGS   = new Set(['SCRIPT','STYLE','INPUT','BUTTON','MARK']);
+  const MAX_QUERY   = 200;
+
+  function highlight(query) {
+    // Remove existing highlights
+    document.querySelectorAll('mark.search-hl').forEach(m => {
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+    document.querySelector('.doc-content').normalize();
+
+    const items = document.querySelectorAll('.doc-section');
+    if (!query) {
+      items.forEach(s => s.style.display = '');
+      noResults.style.display = 'none';
+      searchClear.style.display = 'none';
+      return;
+    }
+
+    searchClear.style.display = '';
+    termSpan.textContent = query;
+    const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    let anyVisible = false;
+
+    items.forEach(section => {
+      re.lastIndex = 0;
+      if (re.test(section.textContent)) {
+        section.style.display = '';
+        anyVisible = true;
+        re.lastIndex = 0;
+        walkAndHighlight(section, re);
+      } else {
+        section.style.display = 'none';
+      }
+    });
+
+    noResults.style.display = anyVisible ? 'none' : '';
+  }
+
+  function walkAndHighlight(node, re) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const val = node.nodeValue;
+      re.lastIndex = 0;
+      if (!re.test(val)) return;
+      re.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = re.exec(val)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(val.slice(last, m.index)));
+        const mark = document.createElement('mark');
+        mark.className = 'search-hl';
+        mark.textContent = m[0];
+        frag.appendChild(mark);
+        last = re.lastIndex;
+      }
+      if (last < val.length) frag.appendChild(document.createTextNode(val.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === Node.ELEMENT_NODE && !SKIP_TAGS.has(node.tagName)) {
+      Array.from(node.childNodes).forEach(c => walkAndHighlight(c, re));
+    }
+  }
+
+  let searchTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => highlight(searchInput.value.trim().slice(0, MAX_QUERY)), 150);
+  });
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    highlight('');
+    searchInput.focus();
+  });
 })();
 </script>
 </body>
