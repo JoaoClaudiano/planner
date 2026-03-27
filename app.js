@@ -131,7 +131,7 @@ function _setSyncBadge(state) {
 _setSyncBadge._hideTimer = null;
 
 function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 // Valida que o valor é uma cor hexadecimal (#RRGGBB) para evitar injeção de CSS
 function sanitizeCor(cor) { return /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : '#6366f1'; }
 
