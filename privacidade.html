@@ -6,6 +6,7 @@
 <title>Política de Privacidade — flow.planner</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="canonical" href="https://joaoclaudiano.github.io/planner/privacidade.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -101,7 +102,7 @@
 <button class="btt" id="btt">↑</button>
 
 <footer>
-  <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
+  <span class="finfo">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
   <nav class="fnav">
     <a href="como-funciona.html">como funciona</a>
     <a href="sobre.html">sobre</a>
@@ -131,5 +132,6 @@
   btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
 })();
 </script>
+<script>document.getElementById('fYear').textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -6,6 +6,7 @@
 <title>Como Funciona — flow.planner</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="canonical" href="https://joaoclaudiano.github.io/planner/como-funciona.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -560,7 +561,7 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
 </main>
 
 <footer>
-  <span class="finfo">flow.planner — documentação</span>
+  <span class="finfo">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
   <nav class="fnav">
     <a href="index.html">voltar ao app</a>
     <a href="sobre.html">sobre</a>
@@ -707,5 +708,5 @@ mark.search-hl { background: color-mix(in srgb, var(--accent) 22%, transparent);
   });
 })();
 </script>
+<script>document.getElementById('fYear').textContent = new Date().getFullYear();</script>
 </body>
-</html>

@@ -134,7 +134,7 @@
 </div>
 
 <footer>
-  <span class="finfo">flow.planner · sistema acadêmico pessoal</span>
+  <span class="finfo">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
   <nav class="fnav">
     <a href="como-funciona.html">como funciona</a>
     <a href="sobre.html">sobre</a>
@@ -360,6 +360,23 @@
   animId = requestAnimationFrame(step);
 
   document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  // ── Liquid Glass card tilt (parallax refraction) ─────────────────────────
+  (function () {
+    const card = document.querySelector('.login-card');
+    if (!card) return;
+    const TILT = 6; // max degrees
+    document.addEventListener('mousemove', ev => {
+      const cx = window.innerWidth  / 2;
+      const cy = window.innerHeight / 2;
+      const dx = (ev.clientX - cx) / cx;
+      const dy = (ev.clientY - cy) / cy;
+      card.style.transform =
+        `perspective(900px) rotateY(${dx * TILT}deg) rotateX(${-dy * TILT}deg)`;
+    });
+    document.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(900px) rotateY(0deg) rotateX(0deg)';
+    });
+  })();
   document.addEventListener('click', e => {
     addRipple(e.clientX, e.clientY);
     for (const p of particles) {
@@ -450,5 +467,6 @@
   requestAnimationFrame(animate);
 })();
 </script>
+<script>document.getElementById('fYear').textContent = new Date().getFullYear();</script>
 </body>
 </html>

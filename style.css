@@ -344,6 +344,7 @@ body.dark .cal-ev.c4 .ev-name { color: var(--c4); }
 /* ─ FOOTER ─ */
 footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
 .finfo { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.fcopy { width: 100%; font-family: var(--mono); font-size: 10px; color: var(--text3); text-align: center; padding-top: .2rem; border-top: 1px solid var(--border); margin-top: .25rem; }
 .factions { display: flex; gap: .35rem; }
 .fnav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
 .fnav a { font-family: var(--mono); font-size: 12px; color: var(--text3); text-decoration: none; transition: color .15s; }
@@ -492,12 +493,89 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
   60%  { transform: scaleY(1.000) scaleX(1.000); } /* repouso */
   100% { transform: scaleY(1.000) scaleX(1.000); } /* deslize passivo */
 }
+/* ─ LIQUID GLASS shimmer ─ */
+@keyframes liquid-shimmer {
+  0%   { left: -90%; opacity: 0; }
+  8%   { opacity: 1; }
+  72%  { left: 130%; opacity: 1; }
+  80%  { opacity: 0; }
+  100% { left: 130%; opacity: 0; }
+}
 .login-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 2rem 2.25rem;
+  position: relative; overflow: hidden;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 20px; padding: 2rem 2.25rem;
   width: 100%; max-width: 380px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  backdrop-filter: blur(28px) saturate(160%) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(160%) brightness(1.04);
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.18),
+    inset 0 1.5px 0 rgba(255,255,255,0.50),
+    inset 0 -1px 0 rgba(0,0,0,0.08);
   display: flex; flex-direction: column; gap: .6rem;
+  transition: box-shadow .35s, transform .35s;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+/* Specular highlight — static top-left streak */
+.login-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.42) 0%,
+    rgba(255,255,255,0.08) 38%,
+    transparent 65%);
+  pointer-events: none; z-index: 0;
+}
+/* Animated shimmer — travelling refraction sweep */
+.login-card::after {
+  content: '';
+  position: absolute;
+  top: -60%; left: -90%;
+  width: 55%; height: 220%;
+  background: linear-gradient(105deg,
+    transparent 38%,
+    rgba(255,255,255,0.22) 50%,
+    transparent 62%);
+  transform: rotate(12deg);
+  animation: liquid-shimmer 6s ease-in-out infinite;
+  pointer-events: none; z-index: 0;
+}
+/* Children must sit above pseudo-elements */
+.login-card > * { position: relative; z-index: 1; }
+/* Dark mode overrides */
+body.dark .login-card {
+  background: rgba(15,10,30,0.52);
+  border-color: rgba(167,139,250,0.22);
+  box-shadow:
+    0 8px 48px rgba(0,0,0,0.60),
+    inset 0 1.5px 0 rgba(200,180,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.30);
+}
+body.dark .login-card::before {
+  background: linear-gradient(135deg,
+    rgba(167,139,250,0.22) 0%,
+    rgba(139,92,246,0.07) 38%,
+    transparent 65%);
+}
+body.dark .login-card::after {
+  background: linear-gradient(105deg,
+    transparent 38%,
+    rgba(167,139,250,0.15) 50%,
+    transparent 62%);
+}
+/* Adaptive Glass — high contrast mode: fall back to solid surface */
+@media (prefers-contrast: more) {
+  .login-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--border2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  .login-card::before, .login-card::after { display: none; }
 }
 .login-logo {
   font-family: var(--mono); font-size: 18px;

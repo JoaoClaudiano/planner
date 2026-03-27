@@ -134,6 +134,7 @@
     <button class="hbtn" id="btnExport2">↑ exportar</button>
     <button class="hbtn" id="btnImport2">↓ importar</button>
   </div>
+  <span class="fcopy">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
 </footer>
 
 <button class="btt" id="btt">↑</button>
@@ -324,5 +325,6 @@
 
 <script src="db.js"></script>
 <script src="app.js"></script>
+<script>document.getElementById('fYear').textContent = new Date().getFullYear();</script>
 </body>
 </html>
