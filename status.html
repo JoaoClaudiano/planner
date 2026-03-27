@@ -353,7 +353,10 @@
       if (sbPct !== null) document.getElementById('up-supabase').textContent = `uptime: ${sbPct}% (últimas ${hist.length} verificações)`;
       renderBars('bars-supabase', hist, 'supabase');
 
-      /* pwa — checked client-side below */
+      /* pwa — bars from history, badge checked client-side below */
+      renderBars('bars-pwa', hist, 'pwa');
+      const pwaPct = calcUptime(hist, 'pwa');
+      if (pwaPct !== null) document.getElementById('up-pwa').textContent = `uptime: ${pwaPct}% (últimas ${hist.length} verificações)`;
     })
     .catch(() => {
       setOverall(true, null);
