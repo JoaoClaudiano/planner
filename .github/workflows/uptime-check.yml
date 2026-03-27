@@ -44,7 +44,7 @@ jobs:
           WEB=$(check_url "https://joaoclaudiano.github.io/planner/")
           SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/" \
-            --header "apikey: ${SUPABASE_ANON_KEY:-sb_publishable_Hk9OZq-sfye_BWxtHESWag_5XxSZbMl}")
+            --header "apikey: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME}")
           if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
             OVERALL="up"
           else

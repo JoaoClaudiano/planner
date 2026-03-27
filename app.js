@@ -6,7 +6,7 @@
 // Substitua pelos valores do seu projeto em https://app.supabase.com
 // ═══════════════════════════════════════════════
 const SUPABASE_URL = 'https://wpxfhdlrygvucbmyfqaa.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Hk9OZq-sfye_BWxtHESWag_5XxSZbMl';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME';
 // Cliente Supabase (disponível via CDN incluído no index.html)
 const sb = (typeof supabase !== 'undefined')
   ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
