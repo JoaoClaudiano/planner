@@ -30,8 +30,9 @@ jobs:
         run: |
           check_url() {
             local url="$1"
+            shift
             local code
-            code=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 --retry 2 "$url")
+            code=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 --retry 2 "$@" "$url")
             if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
               echo "up"
             else
@@ -41,7 +42,9 @@ jobs:
 
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           WEB=$(check_url "https://joaoclaudiano.github.io/planner/")
-          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/")
+          SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          SUPABASE=$(check_url "https://wpxfhdlrygvucbmyfqaa.supabase.co/rest/v1/" \
+            --header "apikey: ${SUPABASE_ANON_KEY:-sb_publishable_Hk9OZq-sfye_BWxtHESWag_5XxSZbMl}")
           if [ "$WEB" = "up" ] && [ "$SUPABASE" = "up" ]; then
             OVERALL="up"
           else
