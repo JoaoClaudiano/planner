@@ -1,5 +1,5 @@
 {
-  "last_check": "2026-03-28T18:01:20Z",
+  "last_check": "2026-03-28T19:00:24Z",
   "overall": "up",
   "components": {
     "web": {
@@ -340,6 +340,13 @@
     },
     {
       "ts": "2026-03-28T18:01:20Z",
+      "web": "up",
+      "supabase": "up",
+      "pwa": "up",
+      "overall": "up"
+    },
+    {
+      "ts": "2026-03-28T19:00:24Z",
       "web": "up",
       "supabase": "up",
       "pwa": "up",
