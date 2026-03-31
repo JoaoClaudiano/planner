@@ -378,10 +378,13 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 
 @media (max-width: 640px) { .semprog { display: none; } .clock { display: none; } main { padding: 1rem 1rem 2.5rem; } }
 @media (max-width: 420px) {
-  .login-card { padding: 1.5rem 1.25rem; }
+  .login-card { padding: 1.25rem 1.1rem; }
   body.login-page { padding: 1rem .75rem 6rem; }
   .page-wrap { padding: 1.5rem 1rem 4rem; }
   .page-card { padding: 1.1rem 1.25rem; }
+  .login-sub { font-size: 13px; }
+  .login-hint { font-size: 12px; }
+  .form-group label { font-size: 12px; }
 }
 
 /* ─ HEADER BADGE ─ */
@@ -499,17 +502,17 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 }
 .login-card {
   position: relative;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.32);
-  border-radius: 20px; padding: 2rem 2.25rem;
+  border-radius: 20px; padding: 1.5rem 2rem;
   width: 100%; max-width: 380px;
-  backdrop-filter: blur(32px) saturate(180%) brightness(1.06);
-  -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(1.06);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
   box-shadow:
     0 8px 40px rgba(0,0,0,0.28),
     inset 0 1.5px 0 rgba(255,255,255,0.55),
     inset 0 -1px 0 rgba(0,0,0,0.08);
-  display: flex; flex-direction: column; gap: .6rem;
+  display: flex; flex-direction: column; gap: .4rem;
   transition: box-shadow .35s, transform .35s;
   transform-style: preserve-3d;
   will-change: transform;
@@ -520,8 +523,8 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
   position: absolute; inset: 0;
   border-radius: inherit;
   background: linear-gradient(135deg,
-    rgba(255,255,255,0.35) 0%,
-    rgba(255,255,255,0.06) 38%,
+    rgba(255,255,255,0.20) 0%,
+    rgba(255,255,255,0.04) 38%,
     transparent 65%);
   pointer-events: none; z-index: 0;
 }
@@ -529,7 +532,7 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 .login-card > * { position: relative; z-index: 1; }
 /* Dark mode overrides */
 body.dark .login-card {
-  background: rgba(15,10,30,0.50);
+  background: rgba(15,10,30,0.38);
   border-color: rgba(167,139,250,0.28);
   box-shadow:
     0 8px 48px rgba(0,0,0,0.65),
@@ -538,10 +541,41 @@ body.dark .login-card {
 }
 body.dark .login-card::before {
   background: linear-gradient(135deg,
-    rgba(167,139,250,0.22) 0%,
-    rgba(139,92,246,0.06) 38%,
+    rgba(167,139,250,0.15) 0%,
+    rgba(139,92,246,0.04) 38%,
     transparent 65%);
 }
+/* Login page: bg is always dark — ensure legible text in light mode */
+body.login-page:not(.dark) .login-logo { color: #e8e0ff; }
+body.login-page:not(.dark) .login-logo b { color: #a78bfa; }
+body.login-page:not(.dark) .login-sub { color: rgba(220,210,255,0.80); }
+body.login-page:not(.dark) .login-hint,
+body.login-page:not(.dark) .login-optional { color: rgba(200,190,240,0.65); }
+body.login-page:not(.dark) .form-group label { color: rgba(220,210,255,0.75); }
+body.login-page:not(.dark) .magic-toggle {
+  color: rgba(220,210,255,0.75);
+  border-color: rgba(220,210,255,0.22);
+}
+body.login-page:not(.dark) .magic-toggle:hover {
+  color: #a78bfa;
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.15);
+}
+body.login-page:not(.dark) .magic-divider { color: rgba(200,190,240,0.55); }
+body.login-page:not(.dark) .magic-divider::before,
+body.login-page:not(.dark) .magic-divider::after { background: rgba(255,255,255,0.15); }
+body.login-page:not(.dark) .login-card .form-input,
+body.login-page:not(.dark) .login-card .form-select {
+  background: rgba(255,255,255,0.88);
+  border-color: rgba(255,255,255,0.30);
+  color: #181816;
+}
+body.login-page:not(.dark) .login-card .form-input:focus,
+body.login-page:not(.dark) .login-card .form-select:focus {
+  border-color: rgba(167,139,250,0.75);
+  background: rgba(255,255,255,0.95);
+}
+body.login-page:not(.dark) .login-card .form-input::placeholder { color: #9a9690; }
 /* Adaptive Glass — high contrast mode: fall back to solid surface */
 @media (prefers-contrast: more) {
   .login-card {
