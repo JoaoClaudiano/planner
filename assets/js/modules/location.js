@@ -96,22 +96,22 @@ export function initLocationModal() {
     searchBtn.disabled = true;
     searchResults.innerHTML = '<p class="loc-search-hint">Buscando…</p>';
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } });
-      const data = await res.json();
+      // Try Nominatim first
+      let items = await searchNominatim(q);
+      // Fall back to Photon when Nominatim returns nothing
+      if (!items.length) items = await searchPhoton(q).catch(() => []);
       searchResults.innerHTML = '';
-      if (!data.length) {
-        searchResults.innerHTML = '<p class="loc-search-hint">Nenhum resultado encontrado.</p>';
+      if (!items.length) {
+        searchResults.innerHTML = '<p class="loc-search-hint">Nenhum resultado encontrado. Tente o nome completo, endereço ou use a aba Manual.</p>';
       } else {
-        data.forEach(item => {
+        items.forEach(({ lat, lon, displayName, shortName }) => {
           const btn = document.createElement('button');
           btn.className = 'loc-result-btn';
-          const shortName = item.display_name.split(',').slice(0, MAX_DISPLAY_NAME_PARTS).join(', ');
           btn.textContent = shortName;
-          btn.title = item.display_name;
+          btn.title = displayName;
           btn.addEventListener('click', () => {
-            const name = item.display_name.split(',')[0].trim();
-            saveCampusCoords(parseFloat(item.lat), parseFloat(item.lon), name);
+            const name = displayName.split(',')[0].trim();
+            saveCampusCoords(lat, lon, name);
             updateGeoBanner();
             showToast(`📍 "${name}" salvo como escola!`);
             setTimeout(closeModal, 800);
@@ -123,6 +123,35 @@ export function initLocationModal() {
       searchResults.innerHTML = '<p class="loc-search-hint" style="color:var(--warn)">Erro ao buscar. Verifique sua conexão.</p>';
     }
     searchBtn.disabled = false;
+  }
+
+  async function searchNominatim(q) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=10&addressdetails=1`;
+    const res  = await fetch(url, { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } });
+    const data = await res.json();
+    return data.map(item => ({
+      lat:         parseFloat(item.lat),
+      lon:         parseFloat(item.lon),
+      displayName: item.display_name,
+      shortName:   item.display_name.split(',').slice(0, MAX_DISPLAY_NAME_PARTS).join(', '),
+    }));
+  }
+
+  async function searchPhoton(q) {
+    const url  = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&lang=pt`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    return (data.features || []).map(f => {
+      const p    = f.properties;
+      const name = p.name || p.street || q;
+      const parts = [name, p.city, p.state, p.country].filter(Boolean);
+      return {
+        lat:         f.geometry.coordinates[1],
+        lon:         f.geometry.coordinates[0],
+        displayName: parts.join(', '),
+        shortName:   parts.slice(0, MAX_DISPLAY_NAME_PARTS).join(', '),
+      };
+    });
   }
 
   // ── Manual tab ───────────────────────────────────────────
