@@ -8,6 +8,27 @@ import { supaUser } from './supabase.js';
 const MODAL_ID   = 'daySummaryModal';
 const CONTENT_ID = 'daySummaryContent';
 
+// ── Utilitário: escapa HTML básico ───────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Retorna minutos desde meia-noite para uma instância de Date ───────────────
+function minutesOfDay(d) {
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+// ── Verifica se duas datas normalizado a 00:00 são o mesmo dia ───────────────
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+
 // ── Abre o modal e renderiza o conteúdo ──────────────────────────────────────
 export function openDaySummaryModal() {
   const modal = document.getElementById(MODAL_ID);
@@ -43,9 +64,9 @@ export function renderDaySummary() {
   const el = document.getElementById(CONTENT_ID);
   if (!el) return;
 
-  const now   = new Date();
-  const hoje  = new Date(now); hoje.setHours(0, 0, 0, 0);
-  const hojeFim = new Date(hoje); hojeFim.setHours(23, 59, 59, 999);
+  const now     = new Date();
+  const hoje    = new Date(now); hoje.setHours(0, 0, 0, 0);
+  const nowMins = minutesOfDay(now);
 
   // ── Nome do usuário ──────────────────────────────────────────────────────
   let userName = '';
@@ -63,13 +84,12 @@ export function renderDaySummary() {
   const aulasHoje = Object.values(AULA_MAP)
     .filter(({ aula }) => {
       const d = new Date(aula.date); d.setHours(0, 0, 0, 0);
-      return d.getTime() === hoje.getTime() && !cancelled.has(aula.id);
+      return isSameDay(d, hoje) && !cancelled.has(aula.id);
     })
     .sort((a, b) => a.aula.ini - b.aula.ini);
 
   // ── Próxima aula (futura, considerando horário exato) ────────────────────
   const proximaAula = (() => {
-    const nowMins = now.getHours() * 60 + now.getMinutes();
     // Primeiro tenta aula de hoje que ainda não começou
     const restanteHoje = aulasHoje.find(({ aula }) => aula.ini * 60 > nowMins);
     if (restanteHoje) return restanteHoje;
@@ -96,7 +116,7 @@ export function renderDaySummary() {
   const tarefasPendentes = tasks.filter(t => !t.checked);
 
   // ── Métricas do semestre ──────────────────────────────────────────────────
-  const statsAll = COURSES.map(c => ({ c, s: calcStats(c) }));
+  const statsAll       = COURSES.map(c => ({ c, s: calcStats(c) }));
   const totalHPresente = statsAll.reduce((sum, { s }) => sum + s.horasPresente, 0);
   const totalHTodos    = statsAll.reduce((sum, { s }) => sum + s.totalH, 0);
   const mediaPresenca  = statsAll.length
@@ -112,11 +132,11 @@ export function renderDaySummary() {
   // ── Monta HTML ─────────────────────────────────────────────────────────────
   let html = '';
 
-  // Cabeçalho
+  // Cabeçalho — greeting vem de getDynamicGreeting (inclui nome do usuário)
   html += `
     <div class="ds-header">
-      <div class="ds-greeting">${greeting}</div>
-      <div class="ds-date">${dateStr}</div>
+      <div class="ds-greeting">${escapeHtml(greeting)}</div>
+      <div class="ds-date">${escapeHtml(dateStr)}</div>
     </div>`;
 
   // Aulas de hoje
@@ -125,28 +145,25 @@ export function renderDaySummary() {
     html += `<div class="ds-empty">Nenhuma aula hoje.</div>`;
   } else {
     aulasHoje.forEach(({ aula, curso }) => {
-      const inicio = `${String(aula.ini).padStart(2,'0')}:00`;
-      const fim    = `${String(aula.fim).padStart(2,'0')}:00`;
-      const marcada  = att[aula.id];
-      const nowMins  = now.getHours() * 60 + now.getMinutes();
-      const aulaFim  = aula.fim * 60;
-      const aulaIni  = aula.ini * 60;
+      const inicio  = `${String(aula.ini).padStart(2,'0')}:00`;
+      const fim     = `${String(aula.fim).padStart(2,'0')}:00`;
+      const marcada = att[aula.id];
       let badge = '';
       if (marcada) {
         badge = `<span class="ds-att-badge ok">✔ presente</span>`;
-      } else if (nowMins >= aulaFim) {
+      } else if (nowMins >= aula.fim * 60) {
         badge = `<span class="ds-att-badge miss">✕ falta</span>`;
-      } else if (nowMins >= aulaIni) {
+      } else if (nowMins >= aula.ini * 60) {
         badge = `<span class="ds-att-badge now">● em andamento</span>`;
       } else {
         badge = `<span class="ds-att-badge soon">🔵 agendada</span>`;
       }
       html += `
         <div class="ds-row">
-          <span class="ds-dot" style="background:${curso.cor}"></span>
+          <span class="ds-dot" style="background:${escapeHtml(curso.cor)}"></span>
           <div class="ds-row-info">
-            <span class="ds-row-title">${curso.nome}</span>
-            <span class="ds-row-meta">${inicio}–${fim} · ${curso.local || '—'}</span>
+            <span class="ds-row-title">${escapeHtml(curso.nome)}</span>
+            <span class="ds-row-meta">${escapeHtml(inicio)}–${escapeHtml(fim)} · ${escapeHtml(curso.local || '—')}</span>
           </div>
           ${badge}
         </div>`;
@@ -154,24 +171,25 @@ export function renderDaySummary() {
   }
   html += `</div>`;
 
-  // Próxima aula (somente se não está dentro de aulas de hoje ou se hoje não tem mais aulas)
-  const aulaEmAndamento = aulasHoje.find(({ aula }) => {
-    const nowMins = now.getHours() * 60 + now.getMinutes();
-    return nowMins >= aula.ini * 60 && nowMins < aula.fim * 60;
-  });
+  // Próxima aula (somente quando não há aula em andamento agora)
+  const aulaEmAndamento = aulasHoje.find(({ aula }) =>
+    nowMins >= aula.ini * 60 && nowMins < aula.fim * 60
+  );
   if (!aulaEmAndamento && proximaAula) {
     const { aula, curso } = proximaAula;
-    const d = new Date(aula.date);
-    const isAmanha = (() => { const a = new Date(hoje); a.setDate(a.getDate()+1); return d.getTime() === a.getTime(); })();
-    const dLabel = isAmanha ? 'amanhã' : d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+    const d      = new Date(aula.date); d.setHours(0, 0, 0, 0);
+    const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1);
+    const dLabel = isSameDay(d, amanha)
+      ? 'amanhã'
+      : d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
     html += `
       <div class="ds-section">
         <div class="ds-section-title">⏭ próxima aula</div>
         <div class="ds-row">
-          <span class="ds-dot" style="background:${curso.cor}"></span>
+          <span class="ds-dot" style="background:${escapeHtml(curso.cor)}"></span>
           <div class="ds-row-info">
-            <span class="ds-row-title">${curso.nome}</span>
-            <span class="ds-row-meta">${dLabel} · ${String(aula.ini).padStart(2,'0')}:00–${String(aula.fim).padStart(2,'0')}:00 · ${curso.local || '—'}</span>
+            <span class="ds-row-title">${escapeHtml(curso.nome)}</span>
+            <span class="ds-row-meta">${escapeHtml(dLabel)} · ${String(aula.ini).padStart(2,'0')}:00–${String(aula.fim).padStart(2,'0')}:00 · ${escapeHtml(curso.local || '—')}</span>
           </div>
         </div>
       </div>`;
@@ -181,16 +199,16 @@ export function renderDaySummary() {
   if (COURSES.length > 0) {
     html += `<div class="ds-section"><div class="ds-section-title">📊 frequência por disciplina</div>`;
     COURSES.forEach(c => {
-      const s = calcStats(c);
-      const trend = calcTrend(c);
-      const statusCls = s.reprovado ? 'miss' : s.emRisco ? 'warn' : 'ok';
-      const pct = Math.round(s.pctPresenca);
-      const trendIcon = trend === 'bad' ? '⚠ crítico' : trend === 'down' ? '↓ caindo' : trend === 'up' ? '↑ subindo' : null;
+      const s          = calcStats(c);
+      const trend      = calcTrend(c);
+      const statusCls  = s.reprovado ? 'miss' : s.emRisco ? 'warn' : 'ok';
+      const pct        = Math.round(s.pctPresenca);
+      const trendIcon  = trend === 'bad' ? '⚠ crítico' : trend === 'down' ? '↓ caindo' : trend === 'up' ? '↑ subindo' : null;
       html += `
         <div class="ds-row">
-          <span class="ds-dot" style="background:${c.cor}"></span>
+          <span class="ds-dot" style="background:${escapeHtml(c.cor)}"></span>
           <div class="ds-row-info">
-            <span class="ds-row-title">${c.nome}</span>
+            <span class="ds-row-title">${escapeHtml(c.nome)}</span>
             <span class="ds-row-meta">${s.horasPresente}h presentes · ${s.horasFalta}h faltas · restam ${Math.max(0, s.hRestantes)}h</span>
           </div>
           <div class="ds-row-badges">
@@ -209,15 +227,15 @@ export function renderDaySummary() {
   } else {
     const typeIcon = { lembrete: '📌', prova: '📝', entrega: '📋', outro: '📎' };
     eventosProximos.forEach(ev => {
-      const d = new Date(ev.date);
+      const d      = new Date(ev.date);
       const dLabel = d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
-      const icon = typeIcon[ev.type] || '📎';
+      const icon   = typeIcon[ev.type] || '📎';
       html += `
         <div class="ds-row">
           <span class="ds-ev-icon">${icon}</span>
           <div class="ds-row-info">
-            <span class="ds-row-title">${ev.nome}</span>
-            <span class="ds-row-meta">${dLabel} · ${ev.ini}–${ev.fim}</span>
+            <span class="ds-row-title">${escapeHtml(ev.nome)}</span>
+            <span class="ds-row-meta">${escapeHtml(dLabel)} · ${escapeHtml(ev.ini)}–${escapeHtml(ev.fim)}</span>
           </div>
         </div>`;
     });
@@ -230,7 +248,7 @@ export function renderDaySummary() {
     html += `<div class="ds-empty">Nenhuma tarefa pendente. 🎉</div>`;
   } else {
     tarefasPendentes.slice(0, 5).forEach(t => {
-      html += `<div class="ds-task-row">· ${_escHtml(t.text)}</div>`;
+      html += `<div class="ds-task-row">· ${escapeHtml(t.text)}</div>`;
     });
     if (tarefasPendentes.length > 5) {
       html += `<div class="ds-empty">e mais ${tarefasPendentes.length - 5} tarefa${tarefasPendentes.length - 5 > 1 ? 's' : ''}…</div>`;
@@ -255,11 +273,11 @@ export function renderDaySummary() {
           ${melhor && melhor !== pior ? `
           <div class="ds-metric">
             <span class="ds-metric-val ok-text">${Math.round(melhor.s.pctPresenca)}%</span>
-            <span class="ds-metric-lbl">melhor: ${melhor.c.nome.split(' ')[0]}</span>
+            <span class="ds-metric-lbl">melhor: ${escapeHtml(melhor.c.nome.split(' ')[0])}</span>
           </div>
           <div class="ds-metric">
             <span class="ds-metric-val ${pior.s.reprovado ? 'miss-text' : pior.s.emRisco ? 'warn-text' : ''}">${Math.round(pior.s.pctPresenca)}%</span>
-            <span class="ds-metric-lbl">pior: ${pior.c.nome.split(' ')[0]}</span>
+            <span class="ds-metric-lbl">pior: ${escapeHtml(pior.c.nome.split(' ')[0])}</span>
           </div>` : ''}
         </div>
       </div>`;
@@ -268,11 +286,3 @@ export function renderDaySummary() {
   el.innerHTML = html;
 }
 
-// ── Utilitário: escapa HTML básico ───────────────────────────────────────────
-function _escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}

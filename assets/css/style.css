@@ -141,7 +141,7 @@ body.dark .hbtn:hover { background: var(--surface3); color: var(--text); }
 }
 .st-toggle:hover { color: var(--accent); }
 .st-toggle.collapsed { transform: rotate(-90deg); }
-.agenda-body { overflow: hidden; transition: max-height .35s ease, opacity .25s; max-height: 2000px; opacity: 1; }
+.agenda-body { overflow: hidden; transition: max-height .35s ease, opacity .25s; max-height: 9999px; opacity: 1; }
 .agenda-body.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
 
 /* ─ STAGGER FADE-IN ─ */
