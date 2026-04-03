@@ -53,7 +53,7 @@ export let tasks           = [];
 export let topics          = [];
 export let userCourses     = [];
 export let archivedCourses = [];
-export let COURSES         = [...BASE_COURSES];
+export let COURSES         = [];
 export let AULA_MAP        = {};
 export let semConfig       = null; // { nome, ini, fim } strings ISO
 
@@ -75,7 +75,7 @@ export function rebuildAulaMap() {
 
 export function rebuildCourses() {
   const archivedIds = new Set(archivedCourses.map(a => a.courseId));
-  COURSES = [...BASE_COURSES, ...userCourses].filter(c => !archivedIds.has(c.id));
+  COURSES = [...userCourses].filter(c => !archivedIds.has(c.id));
   rebuildAulaMap();
 }
 

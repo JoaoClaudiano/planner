@@ -5,7 +5,7 @@ import { COURSE_COLORS, LS }             from './config.js';
 import { esc, sanitizeCor, uid }         from './utils.js';
 import {
   COURSES, att, cancelled, userCourses, archivedCourses,
-  BASE_COURSES, gerarAulas, rebuildCourses,
+  gerarAulas, rebuildCourses,
   calcStats, calcTrend,
 } from './state.js';
 import { save, showToast }               from './storage.js';
@@ -322,7 +322,7 @@ document.getElementById('addCourseSave').addEventListener('click',()=>{
       c._aulas=gerarAulas(c); c._totalH=c._aulas.reduce((s,a)=>s+a.horas,0); c._maxFaltasH=Math.floor(c._totalH*0.25);
     }
   } else {
-    if([...BASE_COURSES,...userCourses].some(c=>c.id===cid)){showToast('código já existe');return;}
+    if(userCourses.some(c=>c.id===cid)){showToast('código já existe');return;}
     const nc={id:cid,nome,turma,local,horarios,cor,cls:'',ini:iniDate,fim:fimDate};
     nc._aulas=gerarAulas(nc); nc._totalH=nc._aulas.reduce((s,a)=>s+a.horas,0); nc._maxFaltasH=Math.floor(nc._totalH*0.25);
     userCourses.push(nc);
@@ -441,8 +441,7 @@ document.getElementById('archivedUnarchive').addEventListener('click',()=>{
   const archived=currentArchivedItem;
   const c={...archived.course}; c.ini=new Date(c.ini); c.fim=new Date(c.fim);
   c._aulas=gerarAulas(c); c._totalH=c._aulas.reduce((s,a)=>s+a.horas,0); c._maxFaltasH=Math.floor(c._totalH*0.25);
-  const isBase=BASE_COURSES.some(bc=>bc.id===c.id);
-  if(!isBase) userCourses.push(c);
+  userCourses.push(c);
   Object.assign(att,archived.attSnapshot);
   const idx=archivedCourses.findIndex(a=>a.courseId===archived.courseId);
   if(idx!==-1) archivedCourses.splice(idx,1);

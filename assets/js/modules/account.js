@@ -341,6 +341,75 @@ export function initAccountModal() {
     }).catch(() => showToast('erro ao exportar'));
   });
 
+  // ── Importar dados ──
+  document.getElementById('accBtnImport')?.addEventListener('click', () => {
+    _closeModal('accountModal');
+    document.getElementById('btnImport2')?.click();
+  });
+
+  // ── Importar feriados nacionais ──
+  document.getElementById('accBtnHolidays')?.addEventListener('click', async () => {
+    const btn = document.getElementById('accBtnHolidays');
+    if (btn) { btn.textContent = '⏳ buscando feriados…'; btn.disabled = true; }
+    try {
+      const year = new Date().getFullYear();
+      let res;
+      try {
+        res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+      } catch {
+        showToast('sem conexão — tente novamente');
+        return;
+      }
+      if (!res.ok) { showToast(`erro ${res.status} ao buscar feriados`); return; }
+      const holidays = await res.json();
+      if (!Array.isArray(holidays)) { showToast('resposta inesperada da API'); return; }
+
+      const { customEvents, setCustomEvents } = await import('./state.js');
+      const { save }                          = await import('./storage.js');
+      const { uid }                           = await import('./utils.js');
+      const { sbSaveEvent }                   = await import('./supabase.js');
+
+      let added = 0;
+      const existing = new Set(customEvents.map(e => {
+        const d = e.date instanceof Date ? e.date : new Date(e.date);
+        return d.toISOString().slice(0, 10);
+      }));
+
+      const updated = [...customEvents];
+      holidays.forEach(h => {
+        if (!h.date || !h.name) return;
+        if (existing.has(h.date)) return;
+        const ev = {
+          id:   uid(),
+          nome: h.name,
+          date: new Date(h.date + 'T12:00:00'),
+          ini:  '0',
+          fim:  '0',
+          type: 'lembrete',
+          cor:  '#ef4444',
+          note: 'feriado nacional',
+        };
+        updated.push(ev);
+        sbSaveEvent(ev);
+        added++;
+      });
+
+      if (added === 0) {
+        showToast('feriados já importados');
+      } else {
+        setCustomEvents(updated);
+        save(true);
+        const { renderCalendar } = await import('./calendar.js');
+        renderCalendar();
+        showToast(`${added} feriado${added !== 1 ? 's' : ''} importado${added !== 1 ? 's' : ''}`);
+      }
+    } catch {
+      showToast('erro ao importar feriados');
+    } finally {
+      if (btn) { btn.textContent = '🗓 importar feriados nacionais'; btn.disabled = false; }
+    }
+  });
+
   // ── Limpar dados locais ──
   document.getElementById('accBtnClearLocal')?.addEventListener('click', () => {
     if (!confirm('Limpar todos os dados locais?\n\nDados salvos na nuvem não são afetados e serão recarregados no próximo acesso.')) return;

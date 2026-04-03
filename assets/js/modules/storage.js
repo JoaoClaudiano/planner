@@ -113,17 +113,8 @@ export function load() {
       return p;
     } catch { return defs.map(t => ({ id: uid(), text: t, checked: false })); }
   }
-  setTasks(mig(localStorage.getItem(LS.tasks), [
-    'Revisar Materiais Betuminosos cap.2',
-    'Exercícios Resistência dos Materiais',
-    'Resumo Instalações Hidrossanitárias',
-  ]));
-  setTopics(mig(localStorage.getItem(LS.topics), [
-    'TC0610 – ligantes betuminosos',
-    'TC0610 – ensaio de penetração',
-    'TB0793 – lei de Hooke',
-    'TD0022 – ramais e colunas',
-  ]));
+  setTasks(mig(localStorage.getItem(LS.tasks), []));
+  setTopics(mig(localStorage.getItem(LS.topics), []));
 
   const sd     = localStorage.getItem(LS.dark);
   const isDark = sd !== null ? sd === 'true' : true;
