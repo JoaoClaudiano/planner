@@ -312,7 +312,9 @@
       params.set('migrate', '1');
     }
     const qs = params.toString();
-    const redirectTo = APP_BASE + 'index.html' + (qs ? '?' + qs : '');
+    // Use APP_BASE (without 'index.html') so redirectTo matches the Supabase
+    // Site URL exactly — avoids the need for a separate Redirect URLs entry.
+    const redirectTo = APP_BASE + (qs ? '?' + qs : '');
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options:  { redirectTo },

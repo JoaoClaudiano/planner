@@ -44,7 +44,7 @@ flow.planner/
 ├── privacidade.html    # Política de privacidade
 ├── style.css           # Estilos globais (tema, componentes, login)
 ├── app.js              # Lógica principal do app
-├── db.js               # Camada de persistência (localStorage + Supabase)
+├── db.js               # Camada de persistência (localStorage + Supabase) — ver assets/js/modules/supabase.js
 ├── sw.js               # Service Worker (cache offline)
 └── manifest.json       # Manifesto PWA
 ```
@@ -99,7 +99,20 @@ const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';
 const SUPABASE_KEY = 'sua_chave_anon_publica';
 ```
 
-As mesmas constantes precisam ser atualizadas em `db.js`.
+As mesmas constantes precisam ser atualizadas em `assets/js/modules/config.js`.
+
+### ⚠️ Configuração do Supabase para autenticação Google (OAuth)
+
+Se o usuário for redirecionado para `localhost` após fazer login com Google em produção, o problema é a configuração da **URL do site** no painel do Supabase.
+
+Acesse **Supabase Dashboard → Authentication → URL Configuration** e configure:
+
+| Campo | Valor |
+|-------|-------|
+| **Site URL** | `https://SEU_USUARIO.github.io/planner/` |
+| **Redirect URLs** | `https://SEU_USUARIO.github.io/planner/**` |
+
+> O `redirectTo` passado no código usa a URL base do app (ex.: `https://joaoclaudiano.github.io/planner/`). Ela precisa corresponder exatamente ao **Site URL** configurado no Supabase — caso contrário, o Supabase ignora o redirecionamento e usa o valor padrão (geralmente `localhost:3000` do ambiente de desenvolvimento).
 
 ---
 
