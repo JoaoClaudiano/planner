@@ -22,6 +22,7 @@ import { initTour }                                      from './modules/tour.js
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
 import { initAccountModal }                              from './modules/account.js';
 import { getDynamicGreeting, typewriterGreeting }        from './modules/greeting.js';
+import { showSplash, hideSplash, cacheAvatarFromUser }   from './modules/splash.js';
 
 // ── Registra hooks inter-módulo ──
 registerSaveHook(updateFooter);
@@ -67,6 +68,7 @@ export function init() {
 // ─────────────────────────────────────────────────────
 async function startApp() {
   load();
+  showSplash();
 
   if (sb) {
     sb.auth.onAuthStateChange((event, session) => {
@@ -75,7 +77,6 @@ async function startApp() {
     });
   }
 
-  showLoadOverlay();
   const isGuest    = sessionStorage.getItem('fs-guest') === '1';
   const hasSession = !isGuest && await checkSession();
 
@@ -88,10 +89,11 @@ async function startApp() {
       const loaded = await sbLoad();
       if (!loaded) console.warn('Falha ao carregar Supabase, usando localStorage');
     }
+    cacheAvatarFromUser(supaUser);
     document.getElementById('btnAccount').style.display = '';
     initAccountModal();
     init();
-    hideLoadOverlay();
+    await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
@@ -102,7 +104,7 @@ async function startApp() {
   } else if (isGuest) {
     document.getElementById('btnLogout').style.display = '';
     init();
-    hideLoadOverlay();
+    await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
@@ -113,7 +115,7 @@ async function startApp() {
     // Exibe banner de upgrade de conta após delay se houver dados
     setTimeout(showGuestUpgradeBanner, GUEST_UPGRADE_BANNER_DELAY_MS);
   } else {
-    hideLoadOverlay();
+    await hideSplash();
     window.location.href = 'login.html';
   }
 }
