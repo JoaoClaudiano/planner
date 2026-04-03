@@ -14,20 +14,22 @@ export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 
 // Chaves do localStorage
 export const LS = {
-  att:         'v3_att',
-  ev:          'v3_ev',
-  tasks:       'v3_tasks',
-  topics:      'v3_topics',
-  dark:        'v3_dark',
-  userCourses: 'v3_userCourses',
-  archived:    'v3_archived',
-  cancelled:   'v3_cancelled',
-  semConfig:   'v3_semConfig',
-  campusLat:   'fs-campus-lat',
-  campusLng:   'fs-campus-lng',
-  campusName:  'fs-campus-name',
-  tourDone:    'fs-tour-done',
-  lastSync:    'fs-last-sync',
+  att:          'v3_att',
+  ev:           'v3_ev',
+  tasks:        'v3_tasks',
+  topics:       'v3_topics',
+  dark:         'v3_dark',
+  userCourses:  'v3_userCourses',
+  archived:     'v3_archived',
+  cancelled:    'v3_cancelled',
+  semConfig:    'v3_semConfig',
+  campusLat:    'fs-campus-lat',
+  campusLng:    'fs-campus-lng',
+  campusName:   'fs-campus-name',
+  tourDone:     'fs-tour-done',
+  lastSync:     'fs-last-sync',
+  guestName:    'fs-guest-name',
+  guestAvatar:  'fs-guest-avatar',
 };
 
 // Cores para eventos custom

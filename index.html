@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var d=localStorage.getItem("v3_dark");if(d===null||d==="true")document.documentElement.classList.add("dark");}catch(e){}}());</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="https://js.sentry-cdn.com/d4fd822a23b289c483736a7b996e8d0f.min.js" crossorigin="anonymous"></script>
 <title>flow.planner</title>
 <script src="https://js.sentry-cdn.com/d4fd822a23b289c483736a7b996e8d0f.min.js"crossorigin="anonymous"></script>
@@ -72,7 +73,7 @@
 
   <!-- AGENDA -->
   <section>
-    <p class="st">agenda semanal<button class="st-toggle" id="agendaToggle" title="recolher/expandir agenda" aria-expanded="true">▾</button></p>
+    <p class="st" id="agendaHeader" style="cursor:pointer" aria-controls="agendaBody">agenda semanal<button class="st-toggle" id="agendaToggle" title="recolher/expandir agenda" aria-expanded="true" tabindex="-1" aria-hidden="true">▾</button></p>
     <div id="agendaBody" class="agenda-body">
       <div class="wknav">
         <button class="warr" id="wkPrev">‹</button>
@@ -517,7 +518,6 @@
       <div class="acc-sync-meta" id="accSyncMeta"></div>
       <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados</button>
       <button class="acc-action-btn" id="accBtnImport" type="button">↓ importar dados (.xlsx)</button>
-      <button class="acc-action-btn" id="accBtnHolidays" type="button">🗓 importar feriados nacionais</button>
       <button class="acc-action-btn" id="accBtnClearLocal" type="button">🗑 limpar dados locais</button>
     </div>
 
