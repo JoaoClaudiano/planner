@@ -4,6 +4,7 @@
 import { sb, supaUser, setSupaUser, doSignOut, sbFullSync } from './supabase.js';
 import { showToast }                            from './storage.js';
 import { LS, getCampusCoords }                 from './config.js';
+import { getSemDates }                         from './calendar.js';
 
 const AVATAR_COLORS = [
   '#7c3aed','#2563eb','#059669','#d97706',
@@ -146,7 +147,40 @@ function _populateAccountInfo() {
   if (syncMetaEl) {
     const lastSync = localStorage.getItem(LS.lastSync);
     const rel = _relativeTime(lastSync);
-    syncMetaEl.textContent = rel ? `Última sincronização: ${rel}` : '';
+    if (lastSync) {
+      syncMetaEl.textContent = `☁ ✔ sincronizado · ${rel}`;
+      syncMetaEl.classList.remove('warn');
+    } else {
+      syncMetaEl.textContent = '☁ ⚠ dados não sincronizados com a nuvem';
+      syncMetaEl.classList.add('warn');
+    }
+  }
+
+  // Semester status label + progress bar
+  const semStatusEl = document.getElementById('accSemStatus');
+  const semProgEl   = document.getElementById('accSemProg');
+  const semFillEl   = document.getElementById('accSemFill');
+  if (semStatusEl && semProgEl && semFillEl) {
+    try {
+      const { ini, fim } = getSemDates();
+      const now     = new Date();
+      const total   = fim - ini;
+      const elapsed = Math.min(Math.max(now - ini, 0), total);
+      const pct     = total > 0 ? elapsed / total * 100 : 0;
+      const semTot  = Math.ceil(total / (7 * 86400000));
+      const semAt   = Math.ceil((now - ini) / (7 * 86400000));
+      let label;
+      if (now < ini)      label = 'antes do início';
+      else if (now > fim) label = 'semestre encerrado';
+      else                label = `semana ${Math.max(1, semAt)} de ${semTot}`;
+      semStatusEl.textContent   = label;
+      semStatusEl.style.display = '';
+      semFillEl.style.width     = pct.toFixed(1) + '%';
+      semProgEl.style.display   = '';
+    } catch {
+      semStatusEl.style.display = 'none';
+      semProgEl.style.display   = 'none';
+    }
   }
 
   // Security section: only relevant for e-mail / password accounts
@@ -257,21 +291,24 @@ export function initAccountModal() {
     document.getElementById('btnSemConfig')?.click();
   });
 
-  // ── Forçar sincronização ──
+  // ── Sincronizar agora ──
   document.getElementById('accBtnSync')?.addEventListener('click', async () => {
     if (!sb || !supaUser) { showToast('sem sessão ativa'); return; }
     const btn = document.getElementById('accBtnSync');
-    if (btn) { btn.textContent = '⟳ sincronizando…'; btn.disabled = true; }
+    if (btn) { btn.textContent = '☁ sincronizando…'; btn.disabled = true; }
     try {
       await sbFullSync();
       localStorage.setItem(LS.lastSync, new Date().toISOString());
       const syncMetaEl = document.getElementById('accSyncMeta');
-      if (syncMetaEl) syncMetaEl.textContent = 'Última sincronização: há menos de 1 minuto';
+      if (syncMetaEl) {
+        syncMetaEl.textContent = '☁ ✔ sincronizado · há menos de 1 minuto';
+        syncMetaEl.classList.remove('warn');
+      }
       showToast('✓ sincronização concluída');
     } catch (e) {
       showToast('erro na sincronização');
     } finally {
-      if (btn) { btn.textContent = '⟳ forçar sincronização'; btn.disabled = false; }
+      if (btn) { btn.textContent = '☁ sincronizar agora'; btn.disabled = false; }
     }
   });
 

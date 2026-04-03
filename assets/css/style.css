@@ -1310,11 +1310,24 @@ body.login-page:not(.dark) .btn-google:hover {
 body.dark .acc-action-btn { border-color: var(--border2); }
 body.dark .acc-action-btn:hover { background: var(--surface3); }
 .acc-sync-meta { font-size: 11px; color: var(--text3); margin-top: -.2rem; margin-bottom: .4rem; padding-left: 2px; min-height: .8rem; }
+.acc-sync-meta.warn { color: var(--warn); }
 .acc-campus-sub { font-size: 10px; color: var(--text3); }
 .acc-campus-layout { display: flex; flex-direction: column; gap: .1rem; }
 .modal-export-prompt { font-size: 13px; color: var(--text2); margin-bottom: .85rem; }
 
+/* Semester progress bar inside account modal */
+.acc-sem-prog { padding: .2rem .5rem .5rem; margin-top: -.35rem; }
+.acc-sem-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.acc-sem-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s; }
+
 /* Danger zone */
+.acc-danger-zone {
+  background: color-mix(in srgb, var(--warn) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn) 18%, transparent);
+  border-radius: 8px;
+  padding: .85rem .75rem .6rem !important;
+  margin-top: .5rem;
+}
 .acc-danger-zone .acc-section-title { color: var(--warn); }
 
 /* ─ SPLASH SCREEN — PS5 style ─ */

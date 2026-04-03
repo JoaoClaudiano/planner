@@ -465,8 +465,15 @@
         <span class="acc-arr">›</span>
       </button>
       <button class="acc-row acc-row-btn" id="accBtnSemester" type="button">
-        <span>📅 Configurar semestre</span><span class="acc-arr">›</span>
+        <span class="acc-campus-layout">
+          <span>📅 Configurar semestre</span>
+          <span id="accSemStatus" class="acc-meta acc-campus-sub" style="display:none"></span>
+        </span>
+        <span class="acc-arr">›</span>
       </button>
+      <div class="acc-sem-prog" id="accSemProg" style="display:none">
+        <div class="acc-sem-bar"><div class="acc-sem-fill" id="accSemFill"></div></div>
+      </div>
     </div>
 
     <!-- Segurança (somente e-mail/senha) -->
@@ -496,7 +503,7 @@
     <!-- Dados -->
     <div class="acc-section" id="accDataSection">
       <div class="acc-section-title">💾 dados</div>
-      <button class="acc-action-btn" id="accBtnSync" type="button">⟳ forçar sincronização</button>
+      <button class="acc-action-btn" id="accBtnSync" type="button">☁ sincronizar agora</button>
       <div class="acc-sync-meta" id="accSyncMeta"></div>
       <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados</button>
       <button class="acc-action-btn" id="accBtnClearLocal" type="button">🗑 limpar dados locais</button>
