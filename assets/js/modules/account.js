@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════
 // ACCOUNT — Painel de conta do usuário
 // ═══════════════════════════════════════════════
-import { sb, supaUser, doSignOut, sbFullSync } from './supabase.js';
+import { sb, supaUser, setSupaUser, doSignOut, sbFullSync } from './supabase.js';
 import { showToast }                            from './storage.js';
 import { LS }                                   from './config.js';
 
@@ -22,6 +22,44 @@ function _avatarColor(seed) {
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
+/** Resize an image File to a square JPEG data URL (default 128 px). */
+function _resizeImage(file, size = 128) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const min = Math.min(img.width, img.height);
+      const sx  = (img.width  - min) / 2;
+      const sy  = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+      resolve(canvas.toDataURL('image/jpeg', 0.88));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+/** Render avatar element: photo if available, otherwise initials + color. */
+function _setAvatarEl(el, initials, color, avatarUrl) {
+  if (!el) return;
+  if (avatarUrl) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    img.src = avatarUrl;
+    el.textContent = '';
+    el.style.background = 'transparent';
+    el.appendChild(img);
+  } else {
+    el.textContent = initials;
+    el.style.background = color;
+  }
+}
+
 function _populateAccountInfo() {
   if (!supaUser) return;
 
@@ -29,6 +67,7 @@ function _populateAccountInfo() {
   const fullName  = meta.full_name || meta.name || '';
   const email     = supaUser.email || '';
   const provider  = supaUser.app_metadata?.provider || 'email';
+  const avatarUrl = meta.avatar_url || '';
   const seed      = fullName || email;
   const initials  = _getInitials(seed || '?');
   const color     = _avatarColor(seed || '?');
@@ -38,16 +77,34 @@ function _populateAccountInfo() {
 
   // Small avatar in header button
   const smallAvatar = document.getElementById('accountAvatar');
-  if (smallAvatar) { smallAvatar.textContent = initials; smallAvatar.style.background = color; }
+  if (smallAvatar) {
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      img.src = avatarUrl;
+      smallAvatar.textContent = '';
+      smallAvatar.style.background = 'transparent';
+      smallAvatar.appendChild(img);
+    } else {
+      smallAvatar.textContent = initials;
+      smallAvatar.style.background = color;
+    }
+  }
 
   // Large avatar inside modal
-  const lgAvatar = document.getElementById('accAvatarLg');
-  if (lgAvatar) { lgAvatar.textContent = initials; lgAvatar.style.background = color; }
+  _setAvatarEl(document.getElementById('accAvatarLg'), initials, color, avatarUrl);
 
   document.getElementById('accName').textContent      = fullName || email.split('@')[0];
   document.getElementById('accEmail').textContent     = email;
   document.getElementById('accProvider').textContent  = provider === 'google' ? '🔵 Entrou com Google' : '📧 e-mail e senha';
   document.getElementById('accSince').textContent     = `membro desde ${createdAt}`;
+
+  // Reset name-edit form when modal re-opens
+  const nameEditRow = document.getElementById('accNameEditRow');
+  if (nameEditRow) nameEditRow.hidden = true;
+  const nameErr = document.getElementById('accNameErr');
+  if (nameErr) nameErr.textContent = '';
 
   // Sync dark mode button label
   const dark = document.body.classList.contains('dark');
@@ -97,6 +154,57 @@ export function initAccountModal() {
     const dark = document.body.classList.contains('dark');
     const accBtnDark = document.getElementById('accBtnDark');
     if (accBtnDark) accBtnDark.textContent = dark ? '☀ claro' : '🌙 escuro';
+  });
+
+  // ── Foto de perfil ──
+  document.getElementById('accAvatarFile')?.addEventListener('change', async e => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('selecione uma imagem'); return; }
+    const dataUrl = await _resizeImage(file);
+    if (!dataUrl) { showToast('erro ao processar imagem'); return; }
+    if (!sb) { showToast('sem conexão com o servidor'); return; }
+    const { data, error } = await sb.auth.updateUser({ data: { avatar_url: dataUrl } });
+    if (error) { showToast('erro ao salvar foto'); return; }
+    if (data?.user) setSupaUser(data.user);
+    _populateAccountInfo();
+    showToast('✓ foto atualizada');
+  });
+
+  // ── Editar nome ──
+  document.getElementById('accBtnEditName')?.addEventListener('click', () => {
+    const meta     = supaUser?.user_metadata || {};
+    const current  = meta.full_name || meta.name || supaUser?.email?.split('@')[0] || '';
+    const input    = document.getElementById('accNameInput');
+    const editRow  = document.getElementById('accNameEditRow');
+    if (input)   { input.value = current; }
+    if (editRow) { editRow.hidden = false; input?.focus(); }
+    const nameErr = document.getElementById('accNameErr');
+    if (nameErr) nameErr.textContent = '';
+  });
+
+  document.getElementById('accBtnCancelName')?.addEventListener('click', () => {
+    const editRow = document.getElementById('accNameEditRow');
+    if (editRow) editRow.hidden = true;
+  });
+
+  document.getElementById('accBtnSaveName')?.addEventListener('click', async () => {
+    const input   = document.getElementById('accNameInput');
+    const errEl   = document.getElementById('accNameErr');
+    const newName = input?.value.trim();
+    if (!newName) { errEl.textContent = 'O nome não pode estar vazio.'; return; }
+    errEl.textContent = '';
+    const btn = document.getElementById('accBtnSaveName');
+    btn.disabled = true;
+    try {
+      if (!sb) { errEl.textContent = 'sem conexão com o servidor.'; return; }
+      const { data, error } = await sb.auth.updateUser({ data: { full_name: newName } });
+      if (error) { errEl.textContent = error.message; return; }
+      if (data?.user) setSupaUser(data.user);
+      _populateAccountInfo();
+      showToast('✓ nome atualizado');
+    } finally { btn.disabled = false; }
   });
 
   // ── Campus / localização ──

@@ -141,6 +141,7 @@
   <div class="modal" style="max-width:360px">
     <button class="modal-close" id="emailAuthModalClose" type="button" aria-label="Fechar">×</button>
     <h3 id="emailAuthTitle">entrar com e-mail</h3>
+    <form id="emailAuthForm" onsubmit="return false" autocomplete="on">
     <div class="form-group">
       <label>E-mail</label>
       <input class="form-input" type="email" id="authEmail" placeholder="seu@email.com" autocomplete="email">
@@ -155,9 +156,10 @@
     </div>
     <div class="login-err" id="authErr"></div>
     <div class="modal-footer" style="flex-direction:column;gap:.5rem">
-      <button class="btn-save" id="authSubmitBtn" type="button">Entrar</button>
+      <button class="btn-save" id="authSubmitBtn" type="submit">Entrar</button>
       <button class="magic-toggle" id="authModeToggle" type="button">criar conta</button>
     </div>
+    </form>
   </div>
 </div>
 

@@ -21,6 +21,8 @@ import { LS }                                            from './modules/config.
 import { initTour }                                      from './modules/tour.js';
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
 import { initAccountModal }                              from './modules/account.js';
+import { getDynamicGreeting, typewriterGreeting }        from './modules/greeting.js';
+import { showSplash, hideSplash, cacheAvatarFromUser }   from './modules/splash.js';
 
 // ── Registra hooks inter-módulo ──
 registerSaveHook(updateFooter);
@@ -35,16 +37,14 @@ const GUEST_UPGRADE_BANNER_DELAY_MS = 8000;
 function updateGreeting() {
   const el = document.getElementById('greeting');
   if (!el) return;
-  const h = new Date().getHours();
-  const period = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite';
-  const icon   = h >= 5 && h < 12 ? '☀️' : h >= 12 && h < 18 ? '🌤️' : '🌙';
   let name = '';
   if (supaUser) {
     const meta = supaUser.user_metadata;
     const full  = (meta && (meta.full_name || meta.name)) || '';
     name = full ? full.split(' ')[0] : supaUser.email.split('@')[0];
   }
-  el.textContent = name ? `${icon} ${period}, ${name}!` : `${icon} ${period}!`;
+  const text = getDynamicGreeting(name || undefined);
+  typewriterGreeting(el, text);
 }
 
 // ─────────────────────────────────────────────────────
@@ -68,6 +68,7 @@ export function init() {
 // ─────────────────────────────────────────────────────
 async function startApp() {
   load();
+  showSplash();
 
   if (sb) {
     sb.auth.onAuthStateChange((event, session) => {
@@ -76,7 +77,6 @@ async function startApp() {
     });
   }
 
-  showLoadOverlay();
   const isGuest    = sessionStorage.getItem('fs-guest') === '1';
   const hasSession = !isGuest && await checkSession();
 
@@ -89,10 +89,11 @@ async function startApp() {
       const loaded = await sbLoad();
       if (!loaded) console.warn('Falha ao carregar Supabase, usando localStorage');
     }
+    cacheAvatarFromUser(supaUser);
     document.getElementById('btnAccount').style.display = '';
     initAccountModal();
     init();
-    hideLoadOverlay();
+    await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
@@ -103,7 +104,7 @@ async function startApp() {
   } else if (isGuest) {
     document.getElementById('btnLogout').style.display = '';
     init();
-    hideLoadOverlay();
+    await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
     updateOfflineBadge();
@@ -114,7 +115,7 @@ async function startApp() {
     // Exibe banner de upgrade de conta após delay se houver dados
     setTimeout(showGuestUpgradeBanner, GUEST_UPGRADE_BANNER_DELAY_MS);
   } else {
-    hideLoadOverlay();
+    await hideSplash();
     window.location.href = 'login.html';
   }
 }
