@@ -54,6 +54,13 @@ create table if not exists topicos (
 alter table tarefas add column if not exists sort_order integer default 0;
 alter table topicos add column if not exists sort_order integer default 0;
 
+-- Garante que o índice único em presencas(user_id, aula_id) existe.
+-- Necessário para o upsert com on_conflict funcionar (PostgREST).
+-- Em bancos criados antes desta restrição ser adicionada ao CREATE TABLE,
+-- o CREATE TABLE IF NOT EXISTS não aplica a cláusula UNIQUE retroativamente.
+create unique index if not exists presencas_user_id_aula_id_key
+  on presencas (user_id, aula_id);
+
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
 -- Cada usuário só acessa seus próprios dados
