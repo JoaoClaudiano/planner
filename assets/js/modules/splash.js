@@ -30,6 +30,9 @@ const ACTIVE_SPEED_MUL   = 2.5;   // speed multiplier after avatar click
 const CONVERGENCE_LERP     = 0.025;  // fraction of distance closed per frame (~78% in 1 s at 60 fps)
 const CONVERGENCE_ARRIVE_R = 32;     // px from avatar centre — particle starts fading out
 
+// Depth-parallax constants
+const PARALLAX_STRENGTH = 0.032;  // max parallax shift as fraction of half-screen per depth unit
+
 let _showTs       = 0;
 let _clickResolve = null;
 let _clickPromise = null;
@@ -39,6 +42,10 @@ let _speedMul     = 1;
 let _converging   = false;
 let _avatarCX     = 0;
 let _avatarCY     = 0;
+let _mouseX       = 0;   // cursor position for parallax (centre = 0)
+let _mouseY       = 0;
+let _offMouseMove = null; // references for cleanup
+let _offTouchMove = null;
 
 // ── Avatar helpers (mirrors account.js logic) ──────────────
 
@@ -103,11 +110,17 @@ function _spawnParticles(container) {
   _particles = [];
   const frag = document.createDocumentFragment();
   for (let i = 0; i < PARTICLES; i++) {
-    const p    = document.createElement('span');
+    const p     = document.createElement('span');
     p.className = 'sp-particle';
-    // Wider size range: small specks to larger glowing orbs
-    const size  = 1.2 + Math.random() * 4.3;
-    const col   = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+
+    // depth: 0 = far background, 1 = close foreground
+    const depth      = Math.random();
+    const size       = 0.9  + depth * 4.6;                   // far=tiny speck, near=large orb
+    const maxOp      = 0.07 + depth * 0.73;                  // far=very dim, near=bright
+    const rate       = 0.005 + depth * 0.030;                // far=slow flicker, near=fast
+    const speedScale = 0.25  + depth * 1.1;                  // far=sluggish, near=lively
+
+    const col = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
     p.style.cssText = `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;` +
       `background:radial-gradient(circle,${col[0]} 0%,${col[1]} 100%);`;
     frag.appendChild(p);
@@ -118,41 +131,46 @@ function _spawnParticles(container) {
       vx:    (Math.random() - 0.5) * 0.8,
       vy:    (Math.random() - 0.5) * 0.8,
       phase: Math.random() * Math.PI * 2,
-      rate:  0.010 + Math.random() * 0.030,
-      maxOp: 0.18  + Math.random() * 0.72,
+      depth, rate, maxOp, speedScale,
     });
   }
   container.appendChild(frag);
 }
 
 function _tickParticles() {
-  const mul    = _speedMul;
-  const ww     = window.innerWidth;
-  const wh     = window.innerHeight;
-  const maxSpd = BASE_MAX_SPEED * mul;
+  const mul = _speedMul;
+  const ww  = window.innerWidth;
+  const wh  = window.innerHeight;
 
   for (const pt of _particles) {
+    const effMul = pt.speedScale * mul;
+
     if (_converging) {
-      // ── Convergence mode: lerp toward avatar centre with a touch of jitter ──
-      pt.x += (_avatarCX - pt.x) * CONVERGENCE_LERP + (Math.random() - 0.5) * 0.4;
-      pt.y += (_avatarCY - pt.y) * CONVERGENCE_LERP + (Math.random() - 0.5) * 0.4;
+      // ── Convergence mode: near particles close in faster ──
+      const lerpF = CONVERGENCE_LERP * (0.4 + 0.6 * pt.depth);
+      pt.x += (_avatarCX - pt.x) * lerpF + (Math.random() - 0.5) * 0.4;
+      pt.y += (_avatarCY - pt.y) * lerpF + (Math.random() - 0.5) * 0.4;
 
       pt.phase += pt.rate;
       const d    = Math.hypot(_avatarCX - pt.x, _avatarCY - pt.y);
       const fade = d < CONVERGENCE_ARRIVE_R ? d / CONVERGENCE_ARRIVE_R : 1;
       const op   = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase)) * fade;
 
-      pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
+      // parallax offset (near particles shift more)
+      const px = pt.x + _mouseX * pt.depth * PARALLAX_STRENGTH;
+      const py = pt.y + _mouseY * pt.depth * PARALLAX_STRENGTH;
+      pt.el.style.transform = `translate(${px.toFixed(1)}px,${py.toFixed(1)}px)`;
       pt.el.style.opacity   = op.toFixed(3);
     } else {
-      // ── Normal mode: Brownian firefly motion ──
-      pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
-      pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * mul;
+      // ── Normal mode: depth-scaled Brownian motion ──
+      pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * effMul;
+      pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * effMul;
 
       pt.vx *= DAMPING;
       pt.vy *= DAMPING;
 
-      const spd = Math.hypot(pt.vx, pt.vy);
+      const maxSpd = BASE_MAX_SPEED * effMul;
+      const spd    = Math.hypot(pt.vx, pt.vy);
       if (spd > maxSpd) { const s = maxSpd / spd; pt.vx *= s; pt.vy *= s; }
 
       pt.x += pt.vx;
@@ -163,10 +181,13 @@ function _tickParticles() {
       if (pt.y < 0)  pt.y += wh;
       if (pt.y > wh) pt.y -= wh;
 
-      pt.phase += pt.rate * mul;
+      pt.phase += pt.rate * effMul;
       const op = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase));
 
-      pt.el.style.transform = `translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
+      // parallax offset (near particles shift more with cursor)
+      const px = pt.x + _mouseX * pt.depth * PARALLAX_STRENGTH;
+      const py = pt.y + _mouseY * pt.depth * PARALLAX_STRENGTH;
+      pt.el.style.transform = `translate(${px.toFixed(1)}px,${py.toFixed(1)}px)`;
       pt.el.style.opacity   = op.toFixed(3);
     }
   }
@@ -183,6 +204,13 @@ function _stopParticles() {
   if (_rafId !== null) { cancelAnimationFrame(_rafId); _rafId = null; }
   _particles  = [];
   _converging = false;
+  _mouseX     = 0;
+  _mouseY     = 0;
+  const splash = document.getElementById('splashScreen');
+  if (splash && _offMouseMove) splash.removeEventListener('mousemove', _offMouseMove);
+  if (splash && _offTouchMove) splash.removeEventListener('touchmove', _offTouchMove);
+  _offMouseMove = null;
+  _offTouchMove = null;
 }
 
 // ── Public API ───────────────────────────────────────────────
@@ -191,6 +219,8 @@ export function showSplash() {
   _showTs     = Date.now();
   _speedMul   = 1;
   _converging = false;
+  _mouseX     = 0;
+  _mouseY     = 0;
 
   // Gate that resolves only after the user clicks the avatar
   _clickPromise = new Promise(res => { _clickResolve = res; });
@@ -221,6 +251,19 @@ export function showSplash() {
       _startParticles();
     });
   });
+
+  // Mouse/touch parallax — offset relative to screen centre
+  _offMouseMove = e => {
+    _mouseX = e.clientX - window.innerWidth  * 0.5;
+    _mouseY = e.clientY - window.innerHeight * 0.5;
+  };
+  _offTouchMove = e => {
+    const t = e.touches[0];
+    _mouseX = t.clientX - window.innerWidth  * 0.5;
+    _mouseY = t.clientY - window.innerHeight * 0.5;
+  };
+  splash.addEventListener('mousemove', _offMouseMove);
+  splash.addEventListener('touchmove', _offTouchMove, { passive: true });
 
   // Clicking the avatar triggers the immersive transition
   avatar.addEventListener('click', () => {
