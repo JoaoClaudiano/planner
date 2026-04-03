@@ -454,7 +454,11 @@
         <button class="hbtn" id="accBtnDark">☀ claro</button>
       </div>
       <button class="acc-row acc-row-btn" id="accBtnCampus" type="button">
-        <span>📍 Localização do campus</span><span class="acc-arr">›</span>
+        <span class="acc-campus-layout">
+          <span>📍 Localização do campus</span>
+          <span id="accCampusName" class="acc-meta acc-campus-sub" style="display:none"></span>
+        </span>
+        <span class="acc-arr">›</span>
       </button>
       <button class="acc-row acc-row-btn" id="accBtnSemester" type="button">
         <span>📅 Configurar semestre</span><span class="acc-arr">›</span>
@@ -489,7 +493,8 @@
     <div class="acc-section" id="accDataSection">
       <div class="acc-section-title">💾 dados</div>
       <button class="acc-action-btn" id="accBtnSync" type="button">⟳ forçar sincronização</button>
-      <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados (.xlsx)</button>
+      <div class="acc-sync-meta" id="accSyncMeta"></div>
+      <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados</button>
       <button class="acc-action-btn" id="accBtnClearLocal" type="button">🗑 limpar dados locais</button>
     </div>
 
@@ -502,6 +507,17 @@
     <div class="modal-footer" style="margin-top:1rem">
       <button class="btn-cancel" id="accBtnLogout" type="button">↩ sair da conta</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL formato de exportação -->
+<div class="modal-bg" id="exportFmtModal">
+  <div class="modal" style="max-width:300px">
+    <button class="modal-close" id="exportFmtClose">×</button>
+    <h3>Exportar dados</h3>
+    <p class="modal-export-prompt">Escolha o formato de exportação:</p>
+    <button class="acc-action-btn" id="exportFmtXlsx" type="button">📊 Planilha (.xlsx)</button>
+    <button class="acc-action-btn" id="exportFmtJson" type="button">{ } JSON (.json)</button>
   </div>
 </div>
 

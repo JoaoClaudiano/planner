@@ -3,12 +3,28 @@
 // ═══════════════════════════════════════════════
 import { sb, supaUser, setSupaUser, doSignOut, sbFullSync } from './supabase.js';
 import { showToast }                            from './storage.js';
-import { LS }                                   from './config.js';
+import { LS, getCampusCoords }                 from './config.js';
 
 const AVATAR_COLORS = [
   '#7c3aed','#2563eb','#059669','#d97706',
   '#dc2626','#db2777','#0891b2','#65a30d',
 ];
+
+function _relativeTime(isoString) {
+  if (!isoString) return null;
+  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (diff < 60)  return 'há menos de 1 minuto';
+  if (diff < 3600) {
+    const m = Math.floor(diff / 60);
+    return `há ${m} ${m === 1 ? 'minuto' : 'minutos'}`;
+  }
+  if (diff < 86400) {
+    const h = Math.floor(diff / 3600);
+    return `há ${h} ${h === 1 ? 'hora' : 'horas'}`;
+  }
+  const d = Math.floor(diff / 86400);
+  return `há ${d} ${d === 1 ? 'dia' : 'dias'}`;
+}
 
 function _getInitials(name) {
   const parts = name.trim().split(/\s+/);
@@ -112,6 +128,26 @@ function _populateAccountInfo() {
   const dark = document.body.classList.contains('dark');
   const accBtnDark = document.getElementById('accBtnDark');
   if (accBtnDark) accBtnDark.textContent = dark ? '☀ claro' : '🌙 escuro';
+
+  // Campus name subtitle
+  const campusSubEl = document.getElementById('accCampusName');
+  if (campusSubEl) {
+    const campus = getCampusCoords();
+    if (campus.name) {
+      campusSubEl.textContent = campus.name;
+      campusSubEl.style.display = '';
+    } else {
+      campusSubEl.style.display = 'none';
+    }
+  }
+
+  // Last sync meta text
+  const syncMetaEl = document.getElementById('accSyncMeta');
+  if (syncMetaEl) {
+    const lastSync = localStorage.getItem(LS.lastSync);
+    const rel = _relativeTime(lastSync);
+    syncMetaEl.textContent = rel ? `Última sincronização: ${rel}` : '';
+  }
 
   // Security section: only relevant for e-mail / password accounts
   const secSection = document.getElementById('accSecuritySection');
@@ -228,6 +264,9 @@ export function initAccountModal() {
     if (btn) { btn.textContent = '⟳ sincronizando…'; btn.disabled = true; }
     try {
       await sbFullSync();
+      localStorage.setItem(LS.lastSync, new Date().toISOString());
+      const syncMetaEl = document.getElementById('accSyncMeta');
+      if (syncMetaEl) syncMetaEl.textContent = 'Última sincronização: há menos de 1 minuto';
       showToast('✓ sincronização concluída');
     } catch (e) {
       showToast('erro na sincronização');
@@ -239,7 +278,30 @@ export function initAccountModal() {
   // ── Exportar dados ──
   document.getElementById('accBtnExport')?.addEventListener('click', () => {
     _closeModal('accountModal');
+    _openModal('exportFmtModal');
+  });
+
+  document.getElementById('exportFmtClose')?.addEventListener('click', () =>
+    _closeModal('exportFmtModal'));
+
+  document.getElementById('exportFmtModal')?.addEventListener('mousedown', e => {
+    if (e.target === document.getElementById('exportFmtModal')) _closeModal('exportFmtModal');
+  });
+
+  document.getElementById('exportFmtXlsx')?.addEventListener('click', () => {
+    _closeModal('exportFmtModal');
     document.getElementById('btnExport2')?.click();
+  });
+
+  document.getElementById('exportFmtJson')?.addEventListener('click', () => {
+    _closeModal('exportFmtModal');
+    import('./attendance.js').then(m => {
+      if (typeof m.doExportJson === 'function') {
+        m.doExportJson();
+      } else {
+        showToast('exportação JSON não disponível');
+      }
+    }).catch(() => showToast('erro ao exportar'));
   });
 
   // ── Limpar dados locais ──

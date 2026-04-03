@@ -27,6 +27,7 @@ export const LS = {
   campusLng:   'fs-campus-lng',
   campusName:  'fs-campus-name',
   tourDone:    'fs-tour-done',
+  lastSync:    'fs-last-sync',
 };
 
 // Cores para eventos custom

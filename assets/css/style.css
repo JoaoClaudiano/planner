@@ -1309,6 +1309,10 @@ body.login-page:not(.dark) .btn-google:hover {
 .acc-action-btn.danger:hover { background: var(--warnb); border-color: var(--warn); }
 body.dark .acc-action-btn { border-color: var(--border2); }
 body.dark .acc-action-btn:hover { background: var(--surface3); }
+.acc-sync-meta { font-size: 11px; color: var(--text3); margin-top: -.2rem; margin-bottom: .4rem; padding-left: 2px; min-height: .8rem; }
+.acc-campus-sub { font-size: 10px; color: var(--text3); }
+.acc-campus-layout { display: flex; flex-direction: column; gap: .1rem; }
+.modal-export-prompt { font-size: 13px; color: var(--text2); margin-bottom: .85rem; }
 
 /* Danger zone */
 .acc-danger-zone .acc-section-title { color: var(--warn); }

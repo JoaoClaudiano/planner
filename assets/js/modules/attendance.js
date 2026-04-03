@@ -488,6 +488,33 @@ function _doExportWithState() {
 }
 
 document.getElementById('btnExport2').onclick=_doExportWithState;
+
+export function doExportJson() {
+  import('./state.js').then(S => {
+    const data = {
+      versao: '5',
+      exportadoEm: new Date().toISOString(),
+      presenca: { ...S.att },
+      eventos: S.customEvents.map(e => ({
+        id: e.id, nome: e.nome,
+        data: e.date instanceof Date ? e.date.toISOString().slice(0, 10) : e.date,
+        inicio: e.ini, fim: e.fim, tipo: e.type, cor: e.cor, nota: e.note || '',
+      })),
+      tarefas: S.tasks.map(t => ({ id: t.id, texto: t.text, concluida: t.checked })),
+      topicos: S.topics.map(t => ({ id: t.id, texto: t.text, concluido: t.checked })),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'rotina-estudos.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('exportado como JSON');
+  });
+}
 document.getElementById('btnImport2').onclick=()=>document.getElementById('importFile').click();
 
 document.getElementById('importFile').addEventListener('change',e=>{
