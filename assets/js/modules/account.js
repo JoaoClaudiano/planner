@@ -97,6 +97,8 @@ function _populateAccountInfo() {
 
   document.getElementById('accName').textContent      = fullName || email.split('@')[0];
   document.getElementById('accEmail').textContent     = email;
+  const passUsernameEl = document.getElementById('accPassUsername');
+  if (passUsernameEl) passUsernameEl.value = email;
   document.getElementById('accProvider').textContent  = provider === 'google' ? '🔵 Entrou com Google' : '📧 e-mail e senha';
   document.getElementById('accSince').textContent     = `membro desde ${createdAt}`;
 
