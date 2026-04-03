@@ -23,6 +23,7 @@ import { initLocationModal, updateGeoBanner }            from './modules/locatio
 import { initAccountModal }                              from './modules/account.js';
 import { getDynamicGreeting, typewriterGreeting }        from './modules/greeting.js';
 import { showSplash, hideSplash, cacheAvatarFromUser }   from './modules/splash.js';
+import { initDaySummary, openDaySummaryModal }           from './modules/daySummary.js';
 
 // ── Registra hooks inter-módulo ──
 registerSaveHook(updateFooter);
@@ -45,6 +46,7 @@ function updateGreeting() {
   }
   const text = getDynamicGreeting(name || undefined);
   typewriterGreeting(el, text);
+  el.onclick = () => openDaySummaryModal();
 }
 
 // ─────────────────────────────────────────────────────
@@ -62,6 +64,33 @@ export function init() {
   updateGreeting();
   setTimeout(scrollToNow, 100);
 }
+
+// ─────────────────────────────────────────────────────
+// AGENDA ACCORDION
+// ─────────────────────────────────────────────────────
+const LS_AGENDA_COLLAPSED = 'v3_agendaCollapsed';
+
+function initAgendaToggle() {
+  const btn  = document.getElementById('agendaToggle');
+  const body = document.getElementById('agendaBody');
+  if (!btn || !body) return;
+
+  const collapsed = localStorage.getItem(LS_AGENDA_COLLAPSED) === '1';
+  if (collapsed) {
+    body.classList.add('collapsed');
+    btn.classList.add('collapsed');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  btn.addEventListener('click', () => {
+    const isNowCollapsed = body.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed', isNowCollapsed);
+    btn.setAttribute('aria-expanded', String(!isNowCollapsed));
+    localStorage.setItem(LS_AGENDA_COLLAPSED, isNowCollapsed ? '1' : '0');
+  });
+}
+
+initAgendaToggle();
 
 // ─────────────────────────────────────────────────────
 // STARTUP ASSÍNCRONO
@@ -92,6 +121,7 @@ async function startApp() {
     document.getElementById('btnAccount').style.display = '';
     initAccountModal();
     init();
+    initDaySummary();
     await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();
@@ -103,6 +133,7 @@ async function startApp() {
   } else if (isGuest) {
     document.getElementById('btnLogout').style.display = '';
     init();
+    initDaySummary();
     await hideSplash();
     showCriticalAttendanceAlerts();
     updateOnlineStatus();

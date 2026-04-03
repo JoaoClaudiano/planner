@@ -71,27 +71,29 @@
 
   <!-- AGENDA -->
   <section>
-    <p class="st">agenda semanal</p>
-    <div class="wknav">
-      <button class="warr" id="wkPrev">‹</button>
-      <button class="warr" id="wkNext">›</button>
-      <span class="wklabel" id="wkLabel">—</span>
-      <button class="btn-today" id="btnToday" title="voltar para hoje (tecla T)">hoje</button>
-      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 6px;" title="use ← → para navegar semanas">← →</span>
-      <div class="semprog">
-        <span id="semLabel">—</span>
-        <div class="sembar"><div class="semfill" id="semFill" style="width:0%"></div></div>
-        <span id="semPct">—</span>
-        <button class="warr" id="btnSemConfig" data-tooltip="Configurar período do semestre" style="width:20px;height:20px;font-size:11px;">⚙</button>
+    <p class="st">agenda semanal<button class="st-toggle" id="agendaToggle" title="recolher/expandir agenda" aria-expanded="true">▾</button></p>
+    <div id="agendaBody" class="agenda-body">
+      <div class="wknav">
+        <button class="warr" id="wkPrev">‹</button>
+        <button class="warr" id="wkNext">›</button>
+        <span class="wklabel" id="wkLabel">—</span>
+        <button class="btn-today" id="btnToday" title="voltar para hoje (tecla T)">hoje</button>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 6px;" title="use ← → para navegar semanas">← →</span>
+        <div class="semprog">
+          <span id="semLabel">—</span>
+          <div class="sembar"><div class="semfill" id="semFill" style="width:0%"></div></div>
+          <span id="semPct">—</span>
+          <button class="warr" id="btnSemConfig" data-tooltip="Configurar período do semestre" style="width:20px;height:20px;font-size:11px;">⚙</button>
+        </div>
       </div>
+      <div class="cal-wrap"><div class="cal-scroll"><div class="cal-inner" id="calInner"></div></div></div>
+      <p style="font-size:11px;color:var(--text3);margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+        <span id="hdrBadge"></span>
+        <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique na aula</span> marcar presença
+        <span style="margin:0 .25rem;color:var(--border2)">·</span>
+        <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique vazio</span> criar evento
+      </p>
     </div>
-    <div class="cal-wrap"><div class="cal-scroll"><div class="cal-inner" id="calInner"></div></div></div>
-    <p style="font-size:11px;color:var(--text3);margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-      <span id="hdrBadge"></span>
-      <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique na aula</span> marcar presença
-      <span style="margin:0 .25rem;color:var(--border2)">·</span>
-      <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique vazio</span> criar evento
-    </p>
   </section>
 
   <!-- PRESENÇA -->
@@ -168,6 +170,14 @@
   </div>
   <div class="ep-divider"></div>
   <div class="ev-popup-actions" id="evPopupActions"></div>
+</div>
+
+<!-- MODAL resumo do dia -->
+<div class="modal-bg" id="daySummaryModal">
+  <div class="modal modal-day-summary">
+    <button class="modal-close" id="daySummaryClose">×</button>
+    <div id="daySummaryContent"></div>
+  </div>
 </div>
 
 <!-- MODAL novo evento/lembrete -->
