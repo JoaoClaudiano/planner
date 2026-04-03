@@ -364,6 +364,10 @@
     <!-- Painel GPS -->
     <div class="loc-panel active">
       <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem">Use sua localização atual como referência — ideal se você estiver na escola agora ou próximo dela.</p>
+      <div class="form-group" style="margin-bottom:.6rem">
+        <label for="locGpsName">Nome da escola <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+        <input class="form-input" id="locGpsName" placeholder="ex: Minha Universidade" autocomplete="off" maxlength="100">
+      </div>
       <button class="btn-save" id="locGpsBtn" type="button" style="width:100%">Usar minha localização atual</button>
       <p class="loc-status" id="locGpsStatus"></p>
     </div>

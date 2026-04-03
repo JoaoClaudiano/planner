@@ -55,7 +55,8 @@ export function initLocationModal() {
       navigator.geolocation.getCurrentPosition(
         pos => {
           const { latitude: lat, longitude: lng } = pos.coords;
-          saveCampusCoords(lat, lng, 'Minha Escola');
+          const nameV = document.getElementById('locGpsName')?.value.trim();
+          saveCampusCoords(lat, lng, nameV || 'Minha Escola');
           if (gpsStatus) {
             gpsStatus.textContent = `✓ Localização salva: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
             gpsStatus.style.color = 'var(--ok)';
@@ -144,15 +145,17 @@ export function initLocationModal() {
 
   function openModal() {
     modal.classList.add('open');
-    // Pre-fill manual fields with current values if configured
+    // Pre-fill fields with current values if configured
     const cfg = getCampusCoords();
     if (cfg.custom) {
-      const latEl  = document.getElementById('locManualLat');
-      const lngEl  = document.getElementById('locManualLng');
-      const nameEl = document.getElementById('locManualName');
-      if (latEl)  latEl.value  = cfg.lat;
-      if (lngEl)  lngEl.value  = cfg.lng;
-      if (nameEl) nameEl.value = cfg.name || '';
+      const latEl   = document.getElementById('locManualLat');
+      const lngEl   = document.getElementById('locManualLng');
+      const nameEl  = document.getElementById('locManualName');
+      const gpsName = document.getElementById('locGpsName');
+      if (latEl)   latEl.value   = cfg.lat;
+      if (lngEl)   lngEl.value   = cfg.lng;
+      if (nameEl)  nameEl.value  = cfg.name || '';
+      if (gpsName) gpsName.value = cfg.name || '';
     }
   }
 

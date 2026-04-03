@@ -307,7 +307,9 @@ export function initAccountModal() {
   // ── Limpar dados locais ──
   document.getElementById('accBtnClearLocal')?.addEventListener('click', () => {
     if (!confirm('Limpar todos os dados locais?\n\nDados salvos na nuvem não são afetados e serão recarregados no próximo acesso.')) return;
-    Object.values(LS).forEach(k => localStorage.removeItem(k));
+    // Preserve campus location (a setting, not study data) so the setup banner doesn't reappear
+    const keepKeys = new Set([LS.campusLat, LS.campusLng, LS.campusName]);
+    Object.values(LS).forEach(k => { if (!keepKeys.has(k)) localStorage.removeItem(k); });
     showToast('dados locais limpos — recarregando…');
     setTimeout(() => window.location.reload(), 1200);
   });
