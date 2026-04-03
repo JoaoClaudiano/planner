@@ -18,13 +18,19 @@ const PARTICLE_COLORS = [
 const CACHE_KEY             = 'fs-avatar-cache';
 const EXIT_ANIMATION_MS     = 900;   // fallback safety timeout matching sp-zoom-out duration
 const MIN_SHOW_MS           = 1950;  // minimum splash visibility before exit starts (+1 s)
-const PARTICLES             = 65;
+const PARTICLES             = 80;
 
 // Brownian / firefly motion constants
-const BROWNIAN_FORCE     = 0.04;   // random nudge magnitude per frame
-const DAMPING            = 0.96;   // velocity decay per frame
-const BASE_MAX_SPEED     = 0.6;    // max px/frame at idle
+const BROWNIAN_FORCE     = 0.09;   // random nudge magnitude per frame
+const DAMPING            = 0.93;   // velocity decay per frame
+const BASE_MAX_SPEED     = 1.4;    // max px/frame at idle
 const ACTIVE_SPEED_MUL   = 2.5;   // speed multiplier after avatar click
+
+// Impulse burst constants (random dart motion like real fireflies)
+const IMPULSE_INTERVAL_MIN = 60;   // minimum frames between bursts (~1 s at 60 fps)
+const IMPULSE_INTERVAL_MAX = 300;  // maximum frames between bursts (~5 s at 60 fps)
+const IMPULSE_STRENGTH_MIN = 1.5;  // min velocity kick (px/frame)
+const IMPULSE_STRENGTH_MAX = 3.5;  // max velocity kick (px/frame)
 
 // Convergence constants
 const CONVERGENCE_LERP     = 0.025;  // fraction of distance closed per frame (~78% in 1 s at 60 fps)
@@ -116,21 +122,22 @@ function _spawnParticles(container) {
     // depth: 0 = far background, 1 = close foreground
     const depth      = Math.random();
     const size       = 0.9  + depth * 4.6;                   // far=tiny speck, near=large orb
-    const maxOp      = 0.07 + depth * 0.73;                  // far=very dim, near=bright
-    const rate       = 0.005 + depth * 0.030;                // far=slow flicker, near=fast
-    const speedScale = 0.25  + depth * 1.1;                  // far=sluggish, near=lively
+    const maxOp      = 0.18 + depth * 0.62;                  // far=visible, near=bright
+    const rate       = 0.008 + depth * 0.040;                // far=slow flicker, near=fast
+    const speedScale = 0.35  + depth * 1.1;                  // far=sluggish, near=lively
 
     const col = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
     p.style.cssText = `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;` +
       `background:radial-gradient(circle,${col[0]} 0%,${col[1]} 100%);`;
     frag.appendChild(p);
     _particles.push({
-      el:    p,
-      x:     Math.random() * window.innerWidth,
-      y:     Math.random() * window.innerHeight,
-      vx:    (Math.random() - 0.5) * 0.8,
-      vy:    (Math.random() - 0.5) * 0.8,
-      phase: Math.random() * Math.PI * 2,
+      el:           p,
+      x:            Math.random() * window.innerWidth,
+      y:            Math.random() * window.innerHeight,
+      vx:           (Math.random() - 0.5) * 1.2,
+      vy:           (Math.random() - 0.5) * 1.2,
+      phase:        Math.random() * Math.PI * 2,
+      impulseTimer: Math.floor(Math.random() * IMPULSE_INTERVAL_MAX),
       depth, rate, maxOp, speedScale,
     });
   }
@@ -166,6 +173,16 @@ function _tickParticles() {
       pt.vx += (Math.random() - 0.5) * BROWNIAN_FORCE * effMul;
       pt.vy += (Math.random() - 0.5) * BROWNIAN_FORCE * effMul;
 
+      // Random impulse burst — makes particles dart like real fireflies
+      pt.impulseTimer--;
+      if (pt.impulseTimer <= 0) {
+        const angle   = Math.random() * Math.PI * 2;
+        const strength = (IMPULSE_STRENGTH_MIN + Math.random() * (IMPULSE_STRENGTH_MAX - IMPULSE_STRENGTH_MIN)) * pt.speedScale;
+        pt.vx += Math.cos(angle) * strength;
+        pt.vy += Math.sin(angle) * strength;
+        pt.impulseTimer = IMPULSE_INTERVAL_MIN + Math.floor(Math.random() * (IMPULSE_INTERVAL_MAX - IMPULSE_INTERVAL_MIN));
+      }
+
       pt.vx *= DAMPING;
       pt.vy *= DAMPING;
 
@@ -182,7 +199,7 @@ function _tickParticles() {
       if (pt.y > wh) pt.y -= wh;
 
       pt.phase += pt.rate * effMul;
-      const op = pt.maxOp * (0.55 + 0.45 * Math.sin(pt.phase));
+      const op = pt.maxOp * (0.65 + 0.35 * Math.sin(pt.phase));
 
       // parallax offset (near particles shift more with cursor)
       const px = pt.x + _mouseX * pt.depth * PARALLAX_STRENGTH;
