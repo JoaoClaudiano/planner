@@ -20,6 +20,7 @@ import { COURSES, calcStats }                            from './modules/state.j
 import { LS }                                            from './modules/config.js';
 import { initTour }                                      from './modules/tour.js';
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
+import { initAccountModal }                              from './modules/account.js';
 
 // ── Registra hooks inter-módulo ──
 registerSaveHook(updateFooter);
@@ -88,7 +89,8 @@ async function startApp() {
       const loaded = await sbLoad();
       if (!loaded) console.warn('Falha ao carregar Supabase, usando localStorage');
     }
-    document.getElementById('btnLogout').style.display = '';
+    document.getElementById('btnAccount').style.display = '';
+    initAccountModal();
     init();
     hideLoadOverlay();
     showCriticalAttendanceAlerts();

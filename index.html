@@ -59,6 +59,7 @@
     <span id="offlineBadge" class="offline-badge" style="display:none">● offline</span>
     <span id="pendingBadge" class="pending-badge" style="display:none"></span>
     <span id="syncBadge" class="sync-badge" style="display:none"></span>
+    <button class="hbtn account-btn" id="btnAccount" style="display:none" data-tooltip="Minha conta"><span class="account-avatar" id="accountAvatar">?</span></button>
     <button class="hbtn" id="btnLogout" style="display:none">↩ sair</button>
   </div>
 </header>
@@ -406,6 +407,97 @@
   <div class="guest-upgrade-actions">
     <button class="guest-upgrade-create" id="guestUpgradeCreate" type="button">Criar conta</button>
     <button class="guest-upgrade-dismiss" id="guestUpgradeDismiss" type="button">Agora não</button>
+  </div>
+</div>
+
+<!-- MODAL conta do usuário -->
+<div class="modal-bg" id="accountModal">
+  <div class="modal modal-account">
+    <button class="modal-close" id="accountModalClose">×</button>
+    <h3>Minha conta</h3>
+
+    <!-- Informações do usuário -->
+    <div class="acc-user-row">
+      <div class="acc-avatar-lg" id="accAvatarLg">?</div>
+      <div class="acc-user-info">
+        <div class="acc-name" id="accName">—</div>
+        <div class="acc-email" id="accEmail">—</div>
+        <div class="acc-meta" id="accProvider">—</div>
+        <div class="acc-meta" id="accSince">—</div>
+      </div>
+    </div>
+
+    <!-- Configurações -->
+    <div class="acc-section">
+      <div class="acc-section-title">⚙ configurações</div>
+      <div class="acc-row acc-row-split">
+        <span>Tema claro/escuro</span>
+        <button class="hbtn" id="accBtnDark">☀ claro</button>
+      </div>
+      <button class="acc-row acc-row-btn" id="accBtnCampus" type="button">
+        <span>📍 Localização do campus</span><span class="acc-arr">›</span>
+      </button>
+      <button class="acc-row acc-row-btn" id="accBtnSemester" type="button">
+        <span>📅 Configurar semestre</span><span class="acc-arr">›</span>
+      </button>
+    </div>
+
+    <!-- Segurança (somente e-mail/senha) -->
+    <div class="acc-section" id="accSecuritySection">
+      <div class="acc-section-title">🔐 segurança</div>
+      <div class="acc-form-block">
+        <div class="form-group" style="margin-bottom:.5rem">
+          <label>Nova senha</label>
+          <input class="form-input" type="password" id="accNewPass" placeholder="mínimo 8 caracteres" autocomplete="new-password">
+        </div>
+        <p class="login-err" id="accPassErr"></p>
+        <button class="btn-save" id="accBtnChangePass" type="button" style="width:100%">Alterar senha</button>
+      </div>
+      <div class="acc-form-block" style="margin-top:.75rem">
+        <div class="form-group" style="margin-bottom:.5rem">
+          <label>Novo e-mail</label>
+          <input class="form-input" type="email" id="accNewEmail" placeholder="novo@email.com" autocomplete="email">
+        </div>
+        <p class="login-err" id="accEmailErr"></p>
+        <button class="btn-save" id="accBtnChangeEmail" type="button" style="width:100%">Alterar e-mail</button>
+      </div>
+    </div>
+
+    <!-- Dados -->
+    <div class="acc-section" id="accDataSection">
+      <div class="acc-section-title">💾 dados</div>
+      <button class="acc-action-btn" id="accBtnSync" type="button">⟳ forçar sincronização</button>
+      <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados (.xlsx)</button>
+      <button class="acc-action-btn" id="accBtnClearLocal" type="button">🗑 limpar dados locais</button>
+    </div>
+
+    <!-- Zona de perigo -->
+    <div class="acc-section acc-danger-zone">
+      <div class="acc-section-title danger">⚠ zona de perigo</div>
+      <button class="acc-action-btn danger" id="accBtnDelete" type="button">✕ excluir minha conta</button>
+    </div>
+
+    <div class="modal-footer" style="margin-top:1rem">
+      <button class="btn-cancel" id="accBtnLogout" type="button">↩ sair da conta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL confirmação de exclusão de conta -->
+<div class="modal-bg" id="deleteAccountModal">
+  <div class="modal" style="max-width:360px">
+    <button class="modal-close" id="deleteAccountClose">×</button>
+    <h3>Excluir conta</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem">Esta ação é <strong>irreversível</strong>. Todos os seus dados serão apagados permanentemente.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:.75rem">Para confirmar, digite seu e-mail:</p>
+    <div class="form-group">
+      <input class="form-input" type="email" id="deleteAccountEmail" placeholder="seu@email.com" autocomplete="off">
+    </div>
+    <p class="login-err" id="deleteAccountErr"></p>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="deleteAccountCancel" type="button">Cancelar</button>
+      <button class="btn-save danger" id="deleteAccountConfirm" type="button">Excluir permanentemente</button>
+    </div>
   </div>
 </div>
 

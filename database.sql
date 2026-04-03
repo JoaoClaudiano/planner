@@ -145,3 +145,20 @@ drop trigger if exists tg_topicos_updated on topicos;
 create trigger tg_topicos_updated
   before update on topicos
   for each row execute function update_updated_at();
+
+-- =============================================
+-- RPC: delete_my_account
+-- Permite que o usuário autenticado exclua sua própria conta.
+-- Deve ser criada com SECURITY DEFINER para ter permissão
+-- de deletar o registro em auth.users.
+-- =============================================
+create or replace function delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;
