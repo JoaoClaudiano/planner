@@ -111,8 +111,34 @@
   </form>
   <p class="login-hint">deixe em branco para entrar como convidado · preencha para sincronizar com a nuvem</p>
 
+  <div class="magic-divider">ou</div>
+
+  <!-- Google OAuth -->
+  <button class="btn-google" id="btnGoogle" type="button">
+    <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Entrar com Google
+  </button>
+
+  <!-- Seção de localização da escola -->
+  <div class="login-geo-section" id="loginGeoSection">
+    <div class="login-geo-inner">
+      <span class="login-geo-icon">📍</span>
+      <div class="login-geo-text">
+        <strong>Presença automática</strong>
+        <span>Quer que o app marque sua presença automaticamente quando você chegar na escola?</span>
+      </div>
+      <button class="login-geo-btn" id="loginGeoBtn" type="button">Configurar</button>
+    </div>
+    <p class="login-geo-status" id="loginGeoStatus"></p>
+  </div>
+
   <!-- Magic Link toggle -->
-  <button class="magic-toggle" id="magicToggle" type="button">criar conta</button>
+  <button class="magic-toggle" id="magicToggle" type="button">criar conta por e-mail</button>
 </div>
 
 <!-- Magic Link modal -->
@@ -258,6 +284,84 @@
       document.getElementById('magicEmail').value = '';
     }
   });
+
+  // ── Google OAuth ─────────────────────────────────────────────────────────
+  document.getElementById('btnGoogle').addEventListener('click', async () => {
+    if (!sb) {
+      document.getElementById('loginErr').textContent = 'Supabase não configurado.';
+      return;
+    }
+    const redirectTo = window.location.origin + '/index.html'
+      + (new URLSearchParams(window.location.search).get('migrate') === '1' ? '?migrate=1' : '');
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options:  { redirectTo },
+    });
+    if (error) document.getElementById('loginErr').textContent = error.message;
+  });
+
+  // ── Localização da escola (login page) ───────────────────────────────────
+  (function () {
+    const section   = document.getElementById('loginGeoSection');
+    const statusEl  = document.getElementById('loginGeoStatus');
+    const geoBtn    = document.getElementById('loginGeoBtn');
+    if (!section || !geoBtn) return;
+
+    function updateSection() {
+      const lat  = localStorage.getItem('fs-campus-lat');
+      const name = localStorage.getItem('fs-campus-name');
+      if (lat) {
+        section.classList.add('configured');
+        geoBtn.textContent = 'Reconfigurar';
+        if (name) statusEl.textContent = '✓ ' + name;
+      }
+    }
+    updateSection();
+
+    geoBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        statusEl.textContent = 'Geolocalização não suportada neste navegador.';
+        statusEl.style.color = 'var(--warn, #dc2626)';
+        return;
+      }
+      geoBtn.disabled = true;
+      geoBtn.textContent = 'Obtendo…';
+      statusEl.style.color = '';
+      statusEl.textContent = 'Detectando sua localização…';
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          localStorage.setItem('fs-campus-lat',  String(lat));
+          localStorage.setItem('fs-campus-lng',  String(lng));
+          localStorage.setItem('fs-campus-name', 'Minha Escola');
+          statusEl.textContent = '✓ Localização salva! O app detectará sua presença automaticamente.';
+          statusEl.style.color = 'rgba(34,197,94,0.9)';
+          geoBtn.disabled = false;
+          geoBtn.textContent = 'Reconfigurar';
+          section.classList.add('configured');
+        },
+        err => {
+          statusEl.textContent = 'Não foi possível obter a localização. Permita o acesso nas configurações do navegador.';
+          statusEl.style.color = 'rgba(248,113,113,0.9)';
+          geoBtn.disabled = false;
+          geoBtn.textContent = 'Tentar novamente';
+          console.warn('Geolocalização:', err.message);
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    });
+  })();
+
+  // ── Migração de conta convidada ──────────────────────────────────────────
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('migrate') !== '1') return;
+    const hint = document.querySelector('.login-hint');
+    if (hint) {
+      hint.innerHTML = '☁️ <strong>Crie sua conta</strong> para salvar seus dados na nuvem — eles serão migrados automaticamente!';
+      hint.style.color = 'rgba(167,139,250,0.95)';
+    }
+  })();
 
   // ── Particle network canvas ───────────────────────────────────────────────
   const canvas = document.getElementById('loginCanvas');

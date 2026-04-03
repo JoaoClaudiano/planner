@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════
 // UI — Listas, footer, dark mode, BTT, geolocalização
 // ═══════════════════════════════════════════════
-import { LS, CAMPUS_LAT, CAMPUS_LNG, CAMPUS_RADIUS_M, GEO_LEAD_H, GEO_TIMEOUT_MS, GEO_MAX_AGE_MS, GEO_CHECK_INTERVAL_MS } from './config.js';
+import { LS, CAMPUS_RADIUS_M, GEO_LEAD_H, GEO_TIMEOUT_MS, GEO_MAX_AGE_MS, GEO_CHECK_INTERVAL_MS, getCampusCoords } from './config.js';
 import { esc, uid }                    from './utils.js';
 import { COURSES, att, tasks, topics, customEvents } from './state.js';
 import { save, showToast, undoBuf, setUndoBuf, undoTm, setUndoTm, listTm } from './storage.js';
@@ -179,7 +179,8 @@ function getAulaAtual() {
 }
 
 async function tryAutoMarkPresenca(lat, lng) {
-  const dist = haversineDistM(lat, lng, CAMPUS_LAT, CAMPUS_LNG);
+  const campus = getCampusCoords();
+  const dist = haversineDistM(lat, lng, campus.lat, campus.lng);
   if (dist > CAMPUS_RADIUS_M) return;
   const resultado = getAulaAtual(); if (!resultado) return;
   const { aula, curso } = resultado;

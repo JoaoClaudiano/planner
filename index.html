@@ -93,6 +93,15 @@
   <!-- PRESENÇA -->
   <section>
     <p class="st">frequência por disciplina <button class="hbtn" id="btnAddCourse" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px;padding:2px 8px">+ disciplina</button></p>
+    <!-- Banner de configuração de localização -->
+    <div class="geo-setup-banner" id="geoSetupBanner">
+      <span class="geo-setup-icon">📍</span>
+      <div class="geo-setup-text">
+        <strong>Detectar presença automaticamente</strong>
+        <span>Configure a localização da sua escola e o app marcará presença quando você chegar!</span>
+      </div>
+      <button class="geo-setup-btn" id="geoSetupBtn">Configurar</button>
+    </div>
     <div class="att-grid" id="attGrid"></div>
   </section>
 
@@ -321,6 +330,83 @@
       <button class="btn-cancel" id="semConfigCancel">Cancelar</button>
       <button class="btn-save" id="semConfigSave">Salvar</button>
     </div>
+  </div>
+</div>
+
+<!-- TOUR DE BOAS-VINDAS -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-modal">
+    <button class="tour-skip" id="tourSkip" type="button">pular</button>
+    <div class="tour-slides" id="tourSlides"></div>
+    <div class="tour-dots" id="tourDots"></div>
+    <div class="tour-nav">
+      <button class="tour-btn tour-prev" id="tourPrev" type="button">‹ anterior</button>
+      <button class="tour-btn tour-next" id="tourNext" type="button">próximo ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL de configuração de localização da escola -->
+<div class="modal-bg" id="locationModal">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-close" id="locationModalClose" type="button">×</button>
+    <h3>📍 Localização da Escola</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Configure onde fica sua escola para que o app possa detectar sua presença automaticamente quando você chegar. Os dados ficam apenas no seu dispositivo.</p>
+    <div class="loc-tab-row">
+      <button class="loc-tab active" type="button">📡 GPS</button>
+      <button class="loc-tab" type="button">🔍 Buscar</button>
+      <button class="loc-tab" type="button">✏ Manual</button>
+    </div>
+    <!-- Painel GPS -->
+    <div class="loc-panel active">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem">Use sua localização atual como referência — ideal se você estiver na escola agora ou próximo dela.</p>
+      <button class="btn-save" id="locGpsBtn" type="button" style="width:100%">Usar minha localização atual</button>
+      <p class="loc-status" id="locGpsStatus"></p>
+    </div>
+    <!-- Painel busca -->
+    <div class="loc-panel">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem">Busque pelo nome da sua escola, universidade ou endereço.</p>
+      <div style="display:flex;gap:.4rem">
+        <input class="form-input" id="locSearchInp" placeholder="ex: UFC Campus Pici" autocomplete="off" style="flex:1">
+        <button class="btn-save" id="locSearchBtn" type="button" style="white-space:nowrap">Buscar</button>
+      </div>
+      <div class="loc-results" id="locSearchResults"></div>
+    </div>
+    <!-- Painel manual -->
+    <div class="loc-panel">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem">Informe as coordenadas GPS da sua escola (encontre no Google Maps clicando com o botão direito no local).</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Latitude</label>
+          <input class="form-input" type="number" id="locManualLat" placeholder="-3.7423" step="any">
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input class="form-input" type="number" id="locManualLng" placeholder="-38.5777" step="any">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nome da escola <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+        <input class="form-input" id="locManualName" placeholder="ex: Minha Universidade" autocomplete="off" maxlength="100">
+      </div>
+      <p class="login-err" id="locManualErr"></p>
+      <div class="modal-footer" style="padding:0;margin-top:.5rem">
+        <button class="btn-save" id="locManualSave" type="button">Salvar localização</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER de upgrade de conta para convidados -->
+<div class="guest-upgrade-banner" id="guestUpgradeBanner">
+  <span class="guest-upgrade-icon">☁️</span>
+  <div class="guest-upgrade-text">
+    <strong>Seus dados estão só neste dispositivo</strong>
+    <span>Crie uma conta gratuita para salvar na nuvem e acessar de qualquer lugar.</span>
+  </div>
+  <div class="guest-upgrade-actions">
+    <button class="guest-upgrade-create" id="guestUpgradeCreate" type="button">Criar conta</button>
+    <button class="guest-upgrade-dismiss" id="guestUpgradeDismiss" type="button">Agora não</button>
   </div>
 </div>
 

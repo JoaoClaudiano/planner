@@ -17,6 +17,10 @@ export const LS = {
   archived:    'v3_archived',
   cancelled:   'v3_cancelled',
   semConfig:   'v3_semConfig',
+  campusLat:   'fs-campus-lat',
+  campusLng:   'fs-campus-lng',
+  campusName:  'fs-campus-name',
+  tourDone:    'fs-tour-done',
 };
 
 // Cores para eventos custom
@@ -53,3 +57,21 @@ export const GEO_CHECK_INTERVAL_MS  = 2 * 60 * 1000;  // verificação a cada 2 
 // Fila offline
 export const OFFLINE_MAX_RETRIES     = 5;
 export const OFFLINE_BACKOFF_BASE_MS = 2000;
+
+// Coordenadas dinâmicas do campus (lê do localStorage, cai no padrão UFC Pici)
+export function getCampusCoords() {
+  const lat = parseFloat(localStorage.getItem('fs-campus-lat'));
+  const lng = parseFloat(localStorage.getItem('fs-campus-lng'));
+  return {
+    lat:    isFinite(lat) ? lat  : CAMPUS_LAT,
+    lng:    isFinite(lng) ? lng  : CAMPUS_LNG,
+    name:   localStorage.getItem('fs-campus-name') || null,
+    custom: isFinite(lat) && isFinite(lng),
+  };
+}
+
+export function saveCampusCoords(lat, lng, name) {
+  localStorage.setItem('fs-campus-lat',  String(lat));
+  localStorage.setItem('fs-campus-lng',  String(lng));
+  localStorage.setItem('fs-campus-name', name || '');
+}
