@@ -51,12 +51,21 @@ create table if not exists topicos (
 -- =============================================
 -- MIGRAÇÕES — adiciona colunas ausentes em tabelas já existentes
 -- =============================================
-alter table tarefas add column if not exists sort_order integer default 0;
-alter table topicos add column if not exists sort_order integer default 0;
+alter table tarefas  add column if not exists sort_order integer default 0;
+alter table topicos  add column if not exists sort_order integer default 0;
 
 -- Adiciona a coluna aula_id em bancos criados antes dela existir no schema.
 -- O CREATE TABLE IF NOT EXISTS não adiciona colunas retroativamente.
 alter table presencas add column if not exists aula_id text;
+
+-- Adiciona a coluna presente em bancos criados antes dela existir no schema.
+alter table presencas add column if not exists presente boolean default false;
+
+-- Adiciona updated_at em tabelas criadas antes desta coluna ser incluída no schema.
+alter table presencas add column if not exists updated_at timestamp with time zone default now();
+alter table eventos   add column if not exists updated_at timestamp with time zone default now();
+alter table tarefas   add column if not exists updated_at timestamp with time zone default now();
+alter table topicos   add column if not exists updated_at timestamp with time zone default now();
 
 -- Garante que o índice único em presencas(user_id, aula_id) existe.
 -- Necessário para o upsert com on_conflict funcionar (PostgREST).
@@ -75,24 +84,28 @@ alter table tarefas   enable row level security;
 alter table topicos   enable row level security;
 
 -- Políticas para presencas
+drop policy if exists "Usuário gerencia suas presenças" on presencas;
 create policy "Usuário gerencia suas presenças"
   on presencas for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- Políticas para eventos
+drop policy if exists "Usuário gerencia seus eventos" on eventos;
 create policy "Usuário gerencia seus eventos"
   on eventos for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- Políticas para tarefas
+drop policy if exists "Usuário gerencia suas tarefas" on tarefas;
 create policy "Usuário gerencia suas tarefas"
   on tarefas for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- Políticas para tópicos
+drop policy if exists "Usuário gerencia seus tópicos" on topicos;
 create policy "Usuário gerencia seus tópicos"
   on topicos for all
   using (auth.uid() = user_id)
@@ -109,18 +122,22 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists tg_presencas_updated on presencas;
 create trigger tg_presencas_updated
   before update on presencas
   for each row execute function update_updated_at();
 
+drop trigger if exists tg_eventos_updated on eventos;
 create trigger tg_eventos_updated
   before update on eventos
   for each row execute function update_updated_at();
 
+drop trigger if exists tg_tarefas_updated on tarefas;
 create trigger tg_tarefas_updated
   before update on tarefas
   for each row execute function update_updated_at();
 
+drop trigger if exists tg_topicos_updated on topicos;
 create trigger tg_topicos_updated
   before update on topicos
   for each row execute function update_updated_at();
