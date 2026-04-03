@@ -54,6 +54,10 @@ create table if not exists topicos (
 alter table tarefas add column if not exists sort_order integer default 0;
 alter table topicos add column if not exists sort_order integer default 0;
 
+-- Adiciona a coluna aula_id em bancos criados antes dela existir no schema.
+-- O CREATE TABLE IF NOT EXISTS não adiciona colunas retroativamente.
+alter table presencas add column if not exists aula_id text;
+
 -- Garante que o índice único em presencas(user_id, aula_id) existe.
 -- Necessário para o upsert com on_conflict funcionar (PostgREST).
 -- Em bancos criados antes desta restrição ser adicionada ao CREATE TABLE,
