@@ -74,6 +74,10 @@ alter table topicos   add column if not exists updated_at timestamp with time zo
 create unique index if not exists presencas_user_id_aula_id_key
   on presencas (user_id, aula_id);
 
+-- Remove a coluna evento_id caso tenha sido criada manualmente — ela não faz
+-- parte do schema e sua restrição NOT NULL causa erro 400 em todo upsert de presença.
+alter table presencas drop column if exists evento_id;
+
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
 -- Cada usuário só acessa seus próprios dados
