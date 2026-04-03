@@ -347,7 +347,7 @@ export function initAccountModal() {
       // Call RPC to delete the auth user record
       // Requires the delete_my_account() function in Supabase (see database.sql)
       const { error: rpcErr } = await sb.rpc('delete_my_account');
-      if (rpcErr) console.warn('delete_my_account RPC error:', rpcErr.message);
+      if (rpcErr) { /* ignora: conta auth pode já ter sido removida */ }
 
       // Wipe local data
       Object.values(LS).forEach(k => localStorage.removeItem(k));
@@ -355,8 +355,7 @@ export function initAccountModal() {
 
       await sb.auth.signOut();
       window.location.href = 'login.html';
-    } catch (e) {
-      console.error('delete account:', e);
+    } catch {
       errEl.textContent = 'Erro ao excluir conta. Tente novamente.';
       btn.textContent   = 'Excluir permanentemente';
       btn.disabled      = false;

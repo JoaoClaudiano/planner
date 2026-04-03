@@ -55,7 +55,6 @@
     </div>
     <span class="greeting" id="greeting"></span>
     <div class="hright">
-      <span id="hdrBadge"></span>
       <button class="hbtn" id="btnDark" data-tooltip="Alternar tema claro/escuro"><span class="hbtn-icon">☀</span><span class="hbtn-label"> claro</span></button>
       <button class="hbtn account-btn" id="btnAccount" style="display:none" data-tooltip="Minha conta"><span class="account-avatar" id="accountAvatar">?</span></button>
       <button class="hbtn" id="btnLogout" style="display:none">↩ sair</button>
@@ -87,7 +86,8 @@
       </div>
     </div>
     <div class="cal-wrap"><div class="cal-scroll"><div class="cal-inner" id="calInner"></div></div></div>
-    <p style="font-size:11px;color:var(--text3);margin-top:.5rem;display:flex;align-items:center;gap:.5rem;">
+    <p style="font-size:11px;color:var(--text3);margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+      <span id="hdrBadge"></span>
       <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique na aula</span> marcar presença
       <span style="margin:0 .25rem;color:var(--border2)">·</span>
       <span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-family:var(--mono);font-size:10px;color:var(--text2);">clique vazio</span> criar evento
@@ -176,16 +176,16 @@
     <button class="modal-close" id="newEvClose">×</button>
     <h3 id="newEvTitle">Novo lembrete</h3>
     <div class="form-group">
-      <label>Título</label>
+      <label for="evName">Título</label>
       <input class="form-input" id="evName" placeholder="ex: Prova de Resistência dos Materiais" autocomplete="off" maxlength="100">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Data</label>
+        <label for="evDate">Data</label>
         <input class="form-input" type="date" id="evDate">
       </div>
       <div class="form-group">
-        <label>Tipo</label>
+        <label for="evType">Tipo</label>
         <select class="form-select" id="evType">
           <option value="lembrete">📌 Lembrete</option>
           <option value="prova">📝 Prova / Avaliação</option>
@@ -196,20 +196,20 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Início</label>
+        <label for="evStart">Início</label>
         <input class="form-input" type="time" id="evStart" value="08:00">
       </div>
       <div class="form-group">
-        <label>Fim</label>
+        <label for="evEnd">Fim</label>
         <input class="form-input" type="time" id="evEnd" value="09:00">
       </div>
     </div>
     <div class="form-group">
-      <label>Nota (opcional)</label>
+      <label for="evNote">Nota (opcional)</label>
       <textarea class="form-textarea" id="evNote" placeholder="detalhes, capítulos, etc." maxlength="500"></textarea>
     </div>
     <div class="form-group">
-      <label>Cor</label>
+      <p class="form-label">Cor</p>
       <div class="form-color-row" id="evColorRow"></div>
     </div>
     <div class="modal-footer">
@@ -228,41 +228,41 @@
     <h3 id="addCourseTitle">Nova disciplina</h3>
     <div class="form-row">
       <div class="form-group">
-        <label>Nome</label>
+        <label for="cNome">Nome</label>
         <input class="form-input" id="cNome" placeholder="ex: Cálculo II" autocomplete="off" maxlength="100">
       </div>
       <div class="form-group">
-        <label>Código</label>
+        <label for="cId">Código</label>
         <input class="form-input" id="cId" placeholder="ex: MA0221" autocomplete="off" style="text-transform:uppercase" maxlength="20">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Turma</label>
+        <label for="cTurma">Turma</label>
         <input class="form-input" id="cTurma" placeholder="01" autocomplete="off" maxlength="20">
       </div>
       <div class="form-group">
-        <label>Local</label>
+        <label for="cLocal">Local</label>
         <input class="form-input" id="cLocal" placeholder="ex: Bloco A – Sala 10" autocomplete="off" maxlength="100">
       </div>
     </div>
     <div class="form-group">
-      <label>Horários</label>
+      <p class="form-label">Horários</p>
       <div id="cHorarios" class="horarios-list"></div>
       <button type="button" class="btn-add-horario" id="addHorario">+ horário</button>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Início do semestre</label>
+        <label for="cIni">Início do semestre</label>
         <input class="form-input" type="date" id="cIni">
       </div>
       <div class="form-group">
-        <label>Fim do semestre</label>
+        <label for="cFim">Fim do semestre</label>
         <input class="form-input" type="date" id="cFim">
       </div>
     </div>
     <div class="form-group">
-      <label>Cor</label>
+      <p class="form-label">Cor</p>
       <div class="form-color-row" id="cColorRow"></div>
     </div>
     <div class="modal-footer">
@@ -317,16 +317,16 @@
     <h3>Configurar Semestre</h3>
     <p style="font-size:12px;color:var(--text3);margin:.4rem 0 1rem">Configure o período letivo. Ao atingir a data de término, todas as disciplinas serão arquivadas automaticamente.</p>
     <div class="form-group">
-      <label>Nome do Semestre</label>
+      <label for="semNome">Nome do Semestre</label>
       <input class="form-input" id="semNome" placeholder="ex: 2026.1 — 1º Semestre" autocomplete="off" maxlength="50">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Início</label>
+        <label for="semIni">Início</label>
         <input class="form-input" type="date" id="semIni">
       </div>
       <div class="form-group">
-        <label>Término</label>
+        <label for="semFim">Término</label>
         <input class="form-input" type="date" id="semFim">
       </div>
     </div>
@@ -381,16 +381,16 @@
       <p style="font-size:12px;color:var(--text2);margin-bottom:.8rem">Informe as coordenadas GPS da sua escola (encontre no Google Maps clicando com o botão direito no local).</p>
       <div class="form-row">
         <div class="form-group">
-          <label>Latitude</label>
+          <label for="locManualLat">Latitude</label>
           <input class="form-input" type="number" id="locManualLat" placeholder="-3.7423" step="any">
         </div>
         <div class="form-group">
-          <label>Longitude</label>
+          <label for="locManualLng">Longitude</label>
           <input class="form-input" type="number" id="locManualLng" placeholder="-38.5777" step="any">
         </div>
       </div>
       <div class="form-group">
-        <label>Nome da escola <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
+        <label for="locManualName">Nome da escola <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>
         <input class="form-input" id="locManualName" placeholder="ex: Minha Universidade" autocomplete="off" maxlength="100">
       </div>
       <p class="login-err" id="locManualErr"></p>
@@ -467,7 +467,7 @@
       <div class="acc-form-block">
         <form onsubmit="return false" autocomplete="on">
         <div class="form-group" style="margin-bottom:.5rem">
-          <label>Nova senha</label>
+          <label for="accNewPass">Nova senha</label>
           <input class="form-input" type="password" id="accNewPass" placeholder="mínimo 8 caracteres" autocomplete="new-password">
         </div>
         <p class="login-err" id="accPassErr"></p>
@@ -476,7 +476,7 @@
       </div>
       <div class="acc-form-block" style="margin-top:.75rem">
         <div class="form-group" style="margin-bottom:.5rem">
-          <label>Novo e-mail</label>
+          <label for="accNewEmail">Novo e-mail</label>
           <input class="form-input" type="email" id="accNewEmail" placeholder="novo@email.com" autocomplete="email">
         </div>
         <p class="login-err" id="accEmailErr"></p>

@@ -89,8 +89,8 @@ export function hideLoadOverlay() {
 export function _sbExec(label, promise) {
   _onSaveStart();
   promise
-    .then(({ error }) => { if (error) console.error(label, error); _onSaveEnd(error); })
-    .catch(e => { console.error(label, e); _onSaveEnd(e); });
+    .then(({ error }) => { _onSaveEnd(error); })
+    .catch(e => { _onSaveEnd(e); });
 }
 
 // ── Autenticação ──
@@ -113,7 +113,7 @@ export async function doSignOut() {
   if (sb && supaUser) {
     showLoadOverlay();
     try   { await sbFullSync(); }
-    catch (e) { console.error('Erro ao sincronizar antes de sair:', e); }
+    catch { /* ignora erros de sync ao sair */ }
     finally { hideLoadOverlay(); }
   }
   if (sb) await sb.auth.signOut();
@@ -141,7 +141,7 @@ export async function sbLoad() {
     let loaded = false;
 
     if (pRes.error) {
-      console.error('presencas:', pRes.error);
+      // falha silenciosa; dados locais permanecem
     } else if (pRes.data) {
       const newAtt = {};
       pRes.data.forEach(p => { newAtt[p.aula_id] = p.presente; });
@@ -150,7 +150,7 @@ export async function sbLoad() {
     }
 
     if (eRes.error) {
-      console.error('eventos:', eRes.error);
+      // falha silenciosa; dados locais permanecem
     } else if (eRes.data) {
       setCustomEvents(eRes.data.map(e => ({
         id: e.id, nome: e.nome,
@@ -162,14 +162,14 @@ export async function sbLoad() {
     }
 
     if (tRes.error) {
-      console.error('tarefas:', tRes.error);
+      // falha silenciosa; dados locais permanecem
     } else if (tRes.data) {
       if (tRes.data.length > 0) setTasks(tRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
       loaded = true;
     }
 
     if (toRes.error) {
-      console.error('topicos:', toRes.error);
+      // falha silenciosa; dados locais permanecem
     } else if (toRes.data) {
       if (toRes.data.length > 0) setTopics(toRes.data.map(t => ({ id: t.id, text: t.text, checked: t.checked })));
       loaded = true;
@@ -177,8 +177,8 @@ export async function sbLoad() {
 
     if (loaded) save(true);
     return loaded;
-  } catch (err) {
-    console.error('sbLoad:', err);
+  } catch {
+    showToast('Erro ao carregar dados da nuvem');
     return false;
   }
 }
@@ -189,7 +189,7 @@ export function sbSaveAtt(aulaId, presente) {
   if (!navigator.onLine) {
     offlineUpsertOp({ type: 'sbSaveAtt', aulaId, presente })
       .then(() => updateOfflineBadge())
-      .catch(e => console.error('Erro ao enfileirar sbSaveAtt:', e));
+      .catch(() => {});
     return;
   }
   _sbExec('sbSaveAtt', sb.from('presencas')
@@ -202,7 +202,7 @@ export function sbSaveEvent(ev) {
   if (!navigator.onLine) {
     offlineUpsertOp({ type: 'sbSaveEvent', entityId: ev.id, ev })
       .then(() => updateOfflineBadge())
-      .catch(e => console.error('Erro ao enfileirar sbSaveEvent:', e));
+      .catch(() => {});
     return;
   }
   _sbExec('sbSaveEvent', sb.from('eventos')
@@ -216,7 +216,7 @@ export function sbDeleteEvent(id) {
   if (!navigator.onLine) {
     offlineUpsertOp({ type: 'sbDeleteEvent', entityId: id, eventId: id })
       .then(() => updateOfflineBadge())
-      .catch(e => console.error('Erro ao enfileirar sbDeleteEvent:', e));
+      .catch(() => {});
     return;
   }
   _sbExec('sbDeleteEvent', sb.from('eventos').delete()
@@ -228,7 +228,7 @@ export function sbSaveItem(type, item, order) {
   if (!navigator.onLine) {
     offlineUpsertOp({ type: 'sbSaveItem', entityId: item.id, itemType: type, item, order: order || 0 })
       .then(() => updateOfflineBadge())
-      .catch(e => console.error('Erro ao enfileirar sbSaveItem:', e));
+      .catch(() => {});
     return;
   }
   const table = type === 'task' ? 'tarefas' : 'topicos';
@@ -243,7 +243,7 @@ export function sbDeleteItem(type, id) {
   if (!navigator.onLine) {
     offlineUpsertOp({ type: 'sbDeleteItem', entityId: id, itemType: type, itemId: id })
       .then(() => updateOfflineBadge())
-      .catch(e => console.error('Erro ao enfileirar sbDeleteItem:', e));
+      .catch(() => {});
     return;
   }
   const table = type === 'task' ? 'tarefas' : 'topicos';
@@ -283,7 +283,7 @@ export async function sbFullSync() {
         attEntries.map(([aula_id, presente]) => ({ user_id: uid, aula_id, presente }))
       );
     }
-  } catch (e) { console.error('sbFullSync:', e); }
+  } catch { /* ignora erros de sync completo */ }
 }
 
 // ── Fila offline ──
@@ -364,16 +364,14 @@ export async function processOfflineQueue() {
           status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
           lastAttempt: Date.now(),
         });
-        console.error('processOfflineQueue ' + op.type + ':', error);
       }
-    } catch (e) {
+    } catch {
       const newCount = (op.retryCount || 0) + 1;
       await offlineUpdateOp(op.id, {
         retryCount:  newCount,
         status:      newCount >= OFFLINE_MAX_RETRIES ? 'failed' : 'pending',
         lastAttempt: Date.now(),
       });
-      console.error('processOfflineQueue:', op, e);
     }
   }
 

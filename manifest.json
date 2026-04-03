@@ -63,5 +63,20 @@
     }
   ],
   "screenshots": [],
-  "shortcuts": []
+  "shortcuts": [
+    {
+      "name": "Agenda semanal",
+      "short_name": "Agenda",
+      "description": "Ver a agenda da semana atual",
+      "url": "./#agenda",
+      "icons": [{ "src": "assets/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Frequência",
+      "short_name": "Frequência",
+      "description": "Acompanhar presença por disciplina",
+      "url": "./#frequencia",
+      "icons": [{ "src": "assets/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
 }

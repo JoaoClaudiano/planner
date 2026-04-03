@@ -197,7 +197,7 @@ function geoCheckOnce() {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     pos => tryAutoMarkPresenca(pos.coords.latitude, pos.coords.longitude),
-    err => console.warn('Geolocalização:', err.message),
+    err => { /* geolocalização indisponível */ },
     { enableHighAccuracy: true, timeout: GEO_TIMEOUT_MS, maximumAge: GEO_MAX_AGE_MS }
   );
 }

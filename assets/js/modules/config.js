@@ -2,7 +2,13 @@
 // CONFIG — Constantes e configurações globais
 // ═══════════════════════════════════════════════
 
-// Supabase
+// ── Supabase ──────────────────────────────────────────────────────────────────
+// Para rodar sua própria instância:
+//   1. Crie um projeto em https://supabase.com
+//   2. Vá em Project Settings → API e copie "Project URL" e "anon public key"
+//   3. Substitua os valores abaixo (ou injete via variáveis de ambiente do
+//      Netlify / Vercel usando um step de build que gere este arquivo)
+// ─────────────────────────────────────────────────────────────────────────────
 export const SUPABASE_URL = 'https://wpxfhdlrygvucbmyfqaa.supabase.co';
 export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndweGZoZGxyeWd2dWNibXlmcWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTY2NjgsImV4cCI6MjA4OTg5MjY2OH0.Zvayhj5vnxJ09fMElZ_rCJF_2jKBM74g3VZuDxvxYME';
 

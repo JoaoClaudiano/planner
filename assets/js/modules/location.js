@@ -73,7 +73,6 @@ export function initLocationModal() {
           }
           gpsBtn.disabled = false;
           gpsBtn.textContent = 'Usar minha localização atual';
-          console.warn('Geolocalização:', err.message);
         },
         { enableHighAccuracy: true, timeout: 15000 }
       );

@@ -510,7 +510,7 @@ document.getElementById('importFile').addEventListener('change',e=>{
         if(_initCallback) _initCallback();
         import('./supabase.js').then(({sbFullSync})=>sbFullSync().then(()=>showToast('importado e sincronizado')).catch(()=>showToast('importado')));
       });
-    } catch(err){console.error('import error:',err);alert('arquivo inválido ou corrompido');}
+    } catch{showToast('arquivo inválido ou corrompido');}
   };
   r.readAsArrayBuffer(f); e.target.value='';
 });

@@ -84,10 +84,9 @@ async function startApp() {
     // Se chegou do fluxo de migração de conta convidada, sincroniza dados locais primeiro
     if (localStorage.getItem('fs-migrate-pending') === '1') {
       localStorage.removeItem('fs-migrate-pending');
-      try { await sbFullSync(); } catch (e) { console.warn('Migração:', e); }
+      try { await sbFullSync(); } catch { /* ignora erros de migração */ }
     } else {
       const loaded = await sbLoad();
-      if (!loaded) console.warn('Falha ao carregar Supabase, usando localStorage');
     }
     cacheAvatarFromUser(supaUser);
     document.getElementById('btnAccount').style.display = '';
