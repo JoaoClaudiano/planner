@@ -44,7 +44,7 @@ flow.planner/
 ├── privacidade.html    # Política de privacidade
 ├── style.css           # Estilos globais (tema, componentes, login)
 ├── app.js              # Lógica principal do app
-├── db.js               # Camada de persistência (localStorage + Supabase)
+├── db.js               # Camada de persistência (localStorage + Supabase) — ver assets/js/modules/supabase.js
 ├── sw.js               # Service Worker (cache offline)
 └── manifest.json       # Manifesto PWA
 ```
