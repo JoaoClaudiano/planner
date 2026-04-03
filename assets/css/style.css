@@ -1298,12 +1298,43 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
   background: radial-gradient(ellipse 80% 70% at 50% 50%, #0b1437 0%, #060b24 45%, #010409 100%);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
-  /* starts invisible; sp-in triggers entry */
+  /* starts invisible; sp-idle / sp-active trigger entry */
   opacity: 0;
   transform: scale(1);
 }
+/* Legacy sp-in kept for safety — no longer used */
 .sp-screen.sp-in  { animation: sp-fade-in .5s ease-out forwards; }
 .sp-screen.sp-out { animation: sp-zoom-out .7s cubic-bezier(.4,0,.6,1) forwards !important; }
+
+/* ── Idle state: only the pulsing avatar, no nebula, no particles ── */
+.sp-screen.sp-idle { animation: sp-fade-in .3s ease-out forwards; }
+
+.sp-screen.sp-idle .sp-nebula  { opacity: 0; animation: none; }
+
+.sp-screen.sp-idle .sp-particle { animation: none; opacity: 0; }
+
+.sp-screen.sp-idle .sp-avatar {
+  opacity: 1;
+  cursor: pointer;
+  animation: sp-breathe 3s ease-in-out infinite;
+  transition: transform .2s ease;
+}
+.sp-screen.sp-idle .sp-avatar:hover { transform: scale(1.06); }
+
+/* ── Active state: full immersion after avatar click ── */
+.sp-screen.sp-active { opacity: 1; } /* keep visible while particles/nebula appear */
+
+.sp-screen.sp-active .sp-avatar {
+  opacity: 1;
+  cursor: default;
+  animation: sp-avatar-click-pop .3s ease-out, sp-breathe 3s .3s ease-in-out infinite;
+}
+
+.sp-screen.sp-active .sp-nebula {
+  animation: sp-nebula-in .4s ease-out forwards, sp-nebula-drift 10s .4s ease-in-out infinite;
+}
+
+/* particles inherit base .sp-particle animation when sp-idle override is gone */
 
 /* Drifting nebula accent layer */
 .sp-nebula {
@@ -1361,9 +1392,20 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
+@keyframes sp-nebula-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes sp-avatar-in {
   from { opacity: 0; transform: scale(.75); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sp-avatar-click-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
 
 @keyframes sp-breathe {

@@ -12,7 +12,9 @@ const EXIT_ANIMATION_MS     = 900;  // fallback safety timeout matching sp-zoom-
 const MIN_SHOW_MS           = 950;  // minimum splash visibility before exit starts
 const PARTICLES             = 15;
 
-let _showTs = 0;
+let _showTs       = 0;
+let _clickResolve = null;
+let _clickPromise = null;
 
 // ── Avatar helpers (mirrors account.js logic) ──────────────
 
@@ -106,45 +108,61 @@ function _spawnParticles(container) {
 export function showSplash() {
   _showTs = Date.now();
 
+  // Gate that resolves only after the user clicks the avatar
+  _clickPromise = new Promise(res => { _clickResolve = res; });
+
   const cache  = _readCache();
   const splash = document.createElement('div');
   splash.id    = 'splashScreen';
   splash.className = 'sp-screen';
 
-  // Nebula accent layer
+  // Nebula accent layer (hidden until sp-active)
   const nebula = document.createElement('div');
   nebula.className = 'sp-nebula';
   splash.appendChild(nebula);
 
   // Avatar
-  splash.appendChild(_buildAvatar(cache));
+  const avatar = _buildAvatar(cache);
+  splash.appendChild(avatar);
 
-  // Particles (behind avatar via z-index in CSS)
+  // Particles (hidden until sp-active)
   _spawnParticles(splash);
 
   document.body.appendChild(splash);
 
   // Next frame so the browser registers initial state before animation
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => splash.classList.add('sp-in'));
+    requestAnimationFrame(() => splash.classList.add('sp-idle'));
   });
+
+  // Clicking the avatar triggers the immersive transition
+  avatar.addEventListener('click', () => {
+    splash.classList.remove('sp-idle');
+    splash.classList.add('sp-active');
+    _showTs = Date.now(); // MIN_SHOW_MS countdown begins from the click
+    if (_clickResolve) { _clickResolve(); _clickResolve = null; }
+  }, { once: true });
 }
 
 export function hideSplash() {
   return new Promise(resolve => {
-    const elapsed = Date.now() - _showTs;
-    const wait    = Math.max(0, MIN_SHOW_MS - elapsed);
+    // Wait for the user to click the avatar before starting the exit
+    const gate = _clickPromise || Promise.resolve();
+    gate.then(() => {
+      const elapsed = Date.now() - _showTs;
+      const wait    = Math.max(0, MIN_SHOW_MS - elapsed);
 
-    setTimeout(() => {
-      const splash = document.getElementById('splashScreen');
-      if (!splash) { resolve(); return; }
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        if (!splash) { resolve(); return; }
 
-      splash.classList.add('sp-out');
+        splash.classList.add('sp-out');
 
-      const done = () => { splash.remove(); resolve(); };
-      splash.addEventListener('animationend', done, { once: true });
-      // Safety fallback if animationend doesn't fire
-      setTimeout(done, EXIT_ANIMATION_MS);
-    }, wait);
+        const done = () => { splash.remove(); resolve(); };
+        splash.addEventListener('animationend', done, { once: true });
+        // Safety fallback if animationend doesn't fire
+        setTimeout(done, EXIT_ANIMATION_MS);
+      }, wait);
+    });
   });
 }
