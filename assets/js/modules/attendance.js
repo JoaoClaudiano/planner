@@ -165,7 +165,7 @@ function initSwipe(wrap, card, c, isUserCourse) {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     curX = 0; dragging = false; locked = false;
-  }, { passive: true });
+  }, { passive: false });
 
   card.addEventListener('touchmove', e => {
     if (locked) return;
@@ -202,6 +202,7 @@ function initSwipe(wrap, card, c, isUserCourse) {
       card.style.transform = '';
     }
   });
+}
 
 // ─────────────────────────────────────────────────────
 // CRUD DE DISCIPLINAS
