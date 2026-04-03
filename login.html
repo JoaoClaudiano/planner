@@ -138,7 +138,7 @@
   </div>
 
   <!-- Magic Link toggle -->
-  <button class="magic-toggle" id="magicToggle" type="button">criar conta por e-mail</button>
+  <button class="magic-toggle" id="magicToggle" type="button">entrar sem senha</button>
 </div>
 
 <!-- Magic Link modal -->
@@ -291,8 +291,12 @@
       document.getElementById('loginErr').textContent = 'Supabase não configurado.';
       return;
     }
-    const redirectTo = window.location.origin + '/index.html'
-      + (new URLSearchParams(window.location.search).get('migrate') === '1' ? '?migrate=1' : '');
+    const params = new URLSearchParams();
+    if (new URLSearchParams(window.location.search).get('migrate') === '1') {
+      params.set('migrate', '1');
+    }
+    const qs = params.toString();
+    const redirectTo = window.location.origin + '/index.html' + (qs ? '?' + qs : '');
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options:  { redirectTo },

@@ -17,6 +17,7 @@ import {
   renderList, updateFooter, doUndo, initGeoAtt,
 }                                                        from './modules/ui.js';
 import { COURSES, calcStats }                            from './modules/state.js';
+import { LS }                                            from './modules/config.js';
 import { initTour }                                      from './modules/tour.js';
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
 
@@ -24,6 +25,8 @@ import { initLocationModal, updateGeoBanner }            from './modules/locatio
 registerSaveHook(updateFooter);
 setUndoFn(doUndo);
 setInitCallback(init);
+
+const GUEST_UPGRADE_BANNER_DELAY_MS = 8000;
 
 // ─────────────────────────────────────────────────────
 // INIT — renderiza toda a UI
@@ -87,8 +90,8 @@ async function startApp() {
     initLocationModal();
     updateGeoBanner();
     setTimeout(initTour, 400);
-    // Exibe banner de upgrade de conta após 8 s se houver dados
-    setTimeout(showGuestUpgradeBanner, 8000);
+    // Exibe banner de upgrade de conta após delay se houver dados
+    setTimeout(showGuestUpgradeBanner, GUEST_UPGRADE_BANNER_DELAY_MS);
   } else {
     hideLoadOverlay();
     window.location.href = 'login.html';
@@ -107,9 +110,9 @@ function showCriticalAttendanceAlerts() {
 // ── Banner de upgrade de conta (convidados) ──────────
 function showGuestUpgradeBanner() {
   // Só exibe se houver ao menos uma disciplina ou tarefa
-  const hasTasks   = (JSON.parse(localStorage.getItem('v3_tasks')  || '[]')).length > 0;
-  const hasTopics  = (JSON.parse(localStorage.getItem('v3_topics') || '[]')).length > 0;
-  const hasAttData = Object.keys(JSON.parse(localStorage.getItem('v3_att') || '{}')).length > 0;
+  const hasTasks   = (JSON.parse(localStorage.getItem(LS.tasks)  || '[]')).length > 0;
+  const hasTopics  = (JSON.parse(localStorage.getItem(LS.topics) || '[]')).length > 0;
+  const hasAttData = Object.keys(JSON.parse(localStorage.getItem(LS.att) || '{}')).length > 0;
   if (!hasTasks && !hasTopics && !hasAttData) return;
 
   const banner = document.getElementById('guestUpgradeBanner');

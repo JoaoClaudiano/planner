@@ -4,6 +4,8 @@
 import { getCampusCoords, saveCampusCoords, LS } from './config.js';
 import { showToast } from './storage.js';
 
+const MAX_DISPLAY_NAME_PARTS = 3;
+
 export { getCampusCoords, saveCampusCoords };
 
 export function updateGeoBanner() {
@@ -104,7 +106,7 @@ export function initLocationModal() {
         data.forEach(item => {
           const btn = document.createElement('button');
           btn.className = 'loc-result-btn';
-          const shortName = item.display_name.split(',').slice(0, 3).join(', ');
+          const shortName = item.display_name.split(',').slice(0, MAX_DISPLAY_NAME_PARTS).join(', ');
           btn.textContent = shortName;
           btn.title = item.display_name;
           btn.addEventListener('click', () => {

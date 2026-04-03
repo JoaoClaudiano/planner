@@ -49,10 +49,22 @@ export function initTour() {
   SLIDES.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'tour-slide' + (i === 0 ? ' active' : '');
-    div.innerHTML = `
-      <div class="tour-icon">${s.icon}</div>
-      <h3 class="tour-title">${s.title}</h3>
-      <p class="tour-text">${s.text}</p>`;
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'tour-icon';
+    iconEl.textContent = s.icon;
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'tour-title';
+    titleEl.textContent = s.title;
+
+    const textEl = document.createElement('p');
+    textEl.className = 'tour-text';
+    textEl.textContent = s.text;
+
+    div.appendChild(iconEl);
+    div.appendChild(titleEl);
+    div.appendChild(textEl);
     slidesEl.appendChild(div);
 
     const dot = document.createElement('button');
