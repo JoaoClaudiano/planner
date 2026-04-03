@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-// SPLASH — PS5-style imersive loading screen
+// SPLASH — PS5-style immersive loading screen
 // ═══════════════════════════════════════════════
 
 const AVATAR_COLORS = [
@@ -7,9 +7,10 @@ const AVATAR_COLORS = [
   '#dc2626','#db2777','#0891b2','#65a30d',
 ];
 
-const CACHE_KEY   = 'fs-avatar-cache';
-const MIN_SHOW_MS = 950;    // minimum splash visibility before exit starts
-const PARTICLES   = 15;
+const CACHE_KEY             = 'fs-avatar-cache';
+const EXIT_ANIMATION_MS     = 900;  // fallback safety timeout matching sp-zoom-out duration
+const MIN_SHOW_MS           = 950;  // minimum splash visibility before exit starts
+const PARTICLES             = 15;
 
 let _showTs = 0;
 
@@ -39,7 +40,9 @@ export function cacheAvatarFromUser(user) {
   const fullName  = meta.full_name || meta.name || '';
   const email     = user.email || '';
   const seed      = fullName || email;
-  const avatarUrl = meta.avatar_url || '';
+  // avatar_url is a user-uploaded image data URL — not a credential or token.
+  const avatarUrl = String(meta.avatar_url || '');
+  // Build a non-sensitive display-only cache object (no auth tokens).
   const data = avatarUrl
     ? { type: 'photo', url: avatarUrl }
     : { type: 'initials', initials: _getInitials(seed || '?'), color: _avatarColor(seed || '?') };
@@ -141,7 +144,7 @@ export function hideSplash() {
       const done = () => { splash.remove(); resolve(); };
       splash.addEventListener('animationend', done, { once: true });
       // Safety fallback if animationend doesn't fire
-      setTimeout(done, 900);
+      setTimeout(done, EXIT_ANIMATION_MS);
     }, wait);
   });
 }
