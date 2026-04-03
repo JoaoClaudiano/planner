@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://js.sentry-cdn.com/d4fd822a23b289c483736a7b996e8d0f.min.js" crossorigin="anonymous"></script>
+<title>Novidades — flow.planner</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#4c1d95" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://joaoclaudiano.github.io/planner/novidades.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+/* ── Changelog styles ── */
+.changelog-entry { display: flex; gap: 1.5rem; }
+.changelog-entry + .changelog-entry { margin-top: 2rem; }
+.cl-timeline { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: .25rem; }
+.cl-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.cl-dot.latest { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+.cl-line { flex: 1; width: 2px; background: var(--border); margin-top: .35rem; }
+.cl-body { flex: 1; padding-bottom: 1.5rem; }
+.cl-header { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.cl-version {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--accent); background: var(--accent-bg);
+  padding: 2px 10px; border-radius: 20px;
+}
+.cl-version.latest { color: #16a34a; background: rgba(34,197,94,.13); }
+.cl-date { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.cl-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
+}
+.cl-badge.new  { background: rgba(124,58,237,.14); color: var(--accent); }
+.cl-badge.fix  { background: rgba(239,68,68,.12);  color: #ef4444; }
+.cl-badge.imp  { background: rgba(59,130,246,.12); color: #3b82f6; }
+.cl-badge.pwa  { background: rgba(16,185,129,.12); color: #10b981; }
+.cl-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: .6rem; }
+.cl-list { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .45rem; }
+.cl-list li { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.cl-list li strong { color: var(--text); }
+
+/* ── Latest version popup ── */
+.news-popup {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9990;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.22);
+  padding: 1rem 1.15rem 1rem 1.1rem;
+  max-width: 300px; width: calc(100vw - 3rem);
+  display: flex; flex-direction: column; gap: .5rem;
+  animation: slideUp .3s ease;
+}
+.news-popup.hidden { display: none; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.news-popup-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.news-popup-title { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+.news-popup-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; line-height: 1; padding: 0; }
+.news-popup-close:hover { color: var(--text); }
+.news-popup-ver { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text); }
+.news-popup-date { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: -.2rem; }
+.news-popup-items { display: flex; flex-direction: column; gap: .3rem; }
+.news-popup-item { font-size: 13px; color: var(--text2); display: flex; gap: .4rem; line-height: 1.45; }
+.news-popup-item::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+.news-popup-link { font-family: var(--mono); font-size: 11px; color: var(--accent); text-decoration: none; margin-top: .2rem; }
+.news-popup-link:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .changelog-entry { gap: .85rem; }
+  .cl-date { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div style="display:flex;align-items:center">
+      <a href="index.html" style="text-decoration:none"><span class="logo">flow<b>.</b>planner</span></a>
+    </div>
+    <div class="hright">
+      <button class="hbtn" id="btnDark" aria-label="Alternar tema">☀ claro</button>
+    </div>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="page-hero">
+    <h1>novidades</h1>
+    <p>Histórico de versões, melhorias e correções do flow.planner.</p>
+  </div>
+
+  <!-- ── v3.3 ── -->
+  <div class="page-section">
+    <h2>versão atual</h2>
+    <div class="page-card">
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot latest"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version latest">v3.3</span>
+            <span class="cl-date">Abril 2025</span>
+            <span class="cl-badge new">novo</span>
+          </div>
+          <div class="cl-title">Cartão de conta, feriados e importação/exportação</div>
+          <ul class="cl-list">
+            <li><strong>Importação e exportação</strong> movidas para o cartão de conta — acesso direto no cabeçalho sem precisar abrir configurações</li>
+            <li><strong>API de feriados nacionais</strong> integrada: feriados brasileiros destacados automaticamente na agenda semanal</li>
+            <li><strong>Isolamento de dados</strong> para novos usuários corrigido — cada conta parte de um estado limpo ao criar conta nova</li>
+            <li><strong>Monitoramento de erros</strong> com Sentry adicionado a todas as páginas para diagnóstico proativo de bugs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── v3.2 ── -->
+  <div class="page-section">
+    <h2>anteriores</h2>
+    <div class="page-card">
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v3.2</span>
+            <span class="cl-date">Março 2025</span>
+            <span class="cl-badge imp">melhoria</span>
+          </div>
+          <div class="cl-title">Login glassmorphism e modo anônimo aprimorado</div>
+          <ul class="cl-list">
+            <li><strong>Tela de login redesenhada</strong> com botões glassmorphism para e-mail, Google OAuth e modo anônimo</li>
+            <li><strong>Banner de upgrade</strong> exibido para usuários convidados incentivando criação de conta com sincronização na nuvem</li>
+            <li><strong>Fundo animado</strong> com canvas no login para visual mais moderno</li>
+            <li><strong>Fluxo de cadastro</strong> consolidado em modal único (entrar / criar conta) sem navegar para outra página</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v3.1</span>
+            <span class="cl-date">Fevereiro 2025</span>
+            <span class="cl-badge fix">correção</span>
+            <span class="cl-badge imp">melhoria</span>
+          </div>
+          <div class="cl-title">Tour guiado e acessibilidade</div>
+          <ul class="cl-list">
+            <li><strong>Tour interativo</strong> de onboarding para novos usuários com highlights passo a passo</li>
+            <li><strong>Suporte completo a teclado</strong>: navegação ← → nas semanas, atalhos para nova tarefa e novo evento</li>
+            <li><strong>ARIA labels</strong> revisados em todos os botões e modais para compatibilidade com leitores de tela</li>
+            <li>Correção de scroll travado em iOS ao abrir modais</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v3.0</span>
+            <span class="cl-date">Janeiro 2025</span>
+            <span class="cl-badge new">novo</span>
+          </div>
+          <div class="cl-title">Sincronização com Supabase e módulos ES</div>
+          <ul class="cl-list">
+            <li><strong>Sincronização em nuvem</strong> via Supabase — dados acessíveis em qualquer dispositivo com a mesma conta</li>
+            <li><strong>Refatoração completa</strong> para módulos ES nativos (sem bundler) — carregamento mais rápido e manutenção simplificada</li>
+            <li><strong>Chaves de armazenamento</strong> migradas para prefixo <code>v3_</code> para evitar conflito com versões anteriores</li>
+            <li><strong>Modo escuro</strong> sincronizado entre sessões e persistido por conta</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v2.1</span>
+            <span class="cl-date">Novembro 2024</span>
+            <span class="cl-badge pwa">PWA</span>
+            <span class="cl-badge imp">melhoria</span>
+          </div>
+          <div class="cl-title">PWA, offline e drag-and-drop mobile</div>
+          <ul class="cl-list">
+            <li><strong>Service Worker</strong> com cache completo — app funciona 100% offline após o primeiro acesso</li>
+            <li><strong>Instalável como PWA</strong> em Android e iOS (adicionar à tela inicial)</li>
+            <li><strong>Drag-and-drop de eventos</strong> funcionando em dispositivos touch (celular e tablet)</li>
+            <li>Ícones de 72px a 512px adicionados para todas as densidades de tela</li>
+            <li>Página de <a href="status.html" style="color:var(--accent)">status do sistema</a> adicionada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v2.0</span>
+            <span class="cl-date">Outubro 2024</span>
+            <span class="cl-badge new">novo</span>
+          </div>
+          <div class="cl-title">Semestre configurável e disciplinas arquivadas</div>
+          <ul class="cl-list">
+            <li><strong>Configuração de semestre</strong>: data de início, data de fim e número de semanas configuráveis por usuário</li>
+            <li><strong>Arquivar disciplinas</strong> ao fim do semestre sem apagar o histórico de frequência</li>
+            <li><strong>Barra de progresso do semestre</strong> no cabeçalho indicando semanas cursadas vs. totais</li>
+            <li><strong>Exportação XLSX</strong> do relatório de frequência com planilha formatada por disciplina</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v1.2</span>
+            <span class="cl-date">Agosto 2024</span>
+            <span class="cl-badge imp">melhoria</span>
+            <span class="cl-badge fix">correção</span>
+          </div>
+          <div class="cl-title">Tópicos de estudo e temas refinados</div>
+          <ul class="cl-list">
+            <li><strong>Lista de tópicos de estudo</strong> com marcação de concluído por disciplina</li>
+            <li><strong>Tema claro/escuro</strong> refinado com variáveis CSS para transição suave</li>
+            <li>Correção do cálculo de percentual de presença quando aulas eram editadas retroativamente</li>
+            <li>Responsividade melhorada em tablets (viewport 600–900px)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div><div class="cl-line"></div></div>
+        <div class="cl-body">
+          <div class="cl-header">
+            <span class="cl-version">v1.1</span>
+            <span class="cl-date">Julho 2024</span>
+            <span class="cl-badge new">novo</span>
+          </div>
+          <div class="cl-title">Eventos personalizados e lembretes</div>
+          <ul class="cl-list">
+            <li><strong>Tipos de evento</strong>: aula, prova, entrega, lembrete e outros — cada um com cor e ícone distintos</li>
+            <li><strong>Popup de evento</strong> ao clicar no card da agenda com detalhes e opções de edição/exclusão</li>
+            <li><strong>Alertas de faltas</strong>: notificação visual quando a frequência cai abaixo do limite configurado</li>
+            <li>Suporte a eventos recorrentes semanais</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="cl-timeline"><div class="cl-dot"></div></div>
+        <div class="cl-body" style="padding-bottom:0">
+          <div class="cl-header">
+            <span class="cl-version">v1.0</span>
+            <span class="cl-date">Junho 2024</span>
+            <span class="cl-badge new">lançamento</span>
+          </div>
+          <div class="cl-title">Lançamento inicial</div>
+          <ul class="cl-list">
+            <li>Agenda semanal com visualização por semana e navegação por datas</li>
+            <li>Controle de frequência por disciplina com cálculo automático de presença e falta</li>
+            <li>Tarefas e anotações organizadas por disciplina</li>
+            <li>Armazenamento 100% local (localStorage) sem necessidade de cadastro</li>
+            <li>Design responsivo para desktop e smartphone</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>próximos passos</h2>
+    <div class="page-card">
+      <ul>
+        <li>Notificações push para lembretes e prazos de entregas</li>
+        <li>Compartilhamento de agenda entre usuários (modo colaborativo)</li>
+        <li>Integração com calendário do Google para importar eventos</li>
+        <li>Widget de resumo semanal na tela inicial (PWA)</li>
+        <li>Suporte a múltiplos semestres com comparativo histórico de frequência</li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Latest version popup ── -->
+<div class="news-popup" id="newsPopup">
+  <div class="news-popup-top">
+    <span class="news-popup-title">🚀 última versão</span>
+    <button class="news-popup-close" id="newsPopupClose" aria-label="Fechar">×</button>
+  </div>
+  <div class="news-popup-ver">v3.3</div>
+  <div class="news-popup-date">Abril 2025</div>
+  <div class="news-popup-items">
+    <div class="news-popup-item">Cartão de conta com import/export</div>
+    <div class="news-popup-item">Feriados nacionais na agenda</div>
+    <div class="news-popup-item">Monitoramento Sentry em todas as páginas</div>
+  </div>
+  <a class="news-popup-link" href="#" onclick="document.getElementById('newsPopup').classList.add('hidden');return false;">ver histórico completo ↓</a>
+</div>
+
+<button class="btt" id="btt">↑</button>
+
+<footer>
+  <span class="finfo">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
+  <nav class="fnav">
+    <a href="como-funciona.html">como funciona</a>
+    <a href="sobre.html">sobre</a>
+    <a href="novidades.html" aria-current="page">novidades</a>
+    <a href="status.html">status</a>
+    <a href="contato.html">contato</a>
+    <a href="termos.html">termos de uso</a>
+    <a href="privacidade.html">privacidade</a>
+  </nav>
+</footer>
+
+<script>
+(function () {
+  const KEY = 'fs-dark';
+  const btn = document.getElementById('btnDark');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☾ escuro' : '☀ claro';
+  }
+  applyTheme(localStorage.getItem(KEY) === '1');
+  btn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    localStorage.setItem(KEY, dark ? '1' : '0');
+    applyTheme(dark);
+  });
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => btt.classList.toggle('show', scrollY > 300));
+  btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+  // Show popup only if not dismissed before
+  const popup = document.getElementById('newsPopup');
+  const closeBtn = document.getElementById('newsPopupClose');
+  if (localStorage.getItem('news-popup-v33-dismissed')) {
+    popup.classList.add('hidden');
+  }
+  closeBtn.addEventListener('click', () => {
+    popup.classList.add('hidden');
+    localStorage.setItem('news-popup-v33-dismissed', '1');
+  });
+})();
+</script>
+<script>document.getElementById('fYear').textContent = new Date().getFullYear();</script>
+</body>
+</html>

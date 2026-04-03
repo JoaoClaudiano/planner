@@ -417,6 +417,11 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 .fnav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
 .fnav a { font-family: var(--mono); font-size: 12px; color: var(--text3); text-decoration: none; transition: color .15s; }
 .fnav a:hover { color: var(--accent); }
+.fnav a[aria-current="page"] { color: var(--accent); }
+/* Login card news link */
+.login-news-link { text-align: center; margin-top: .65rem; }
+.login-news-link a { font-family: var(--mono); font-size: 12px; color: rgba(200,190,230,.65); text-decoration: none; transition: color .15s; }
+.login-news-link a:hover { color: rgba(200,190,230,.95); }
 
 /* ─ PÁGINAS INTERNAS ─ */
 .page-wrap { flex: 1; max-width: 800px; width: 100%; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
@@ -1103,11 +1108,17 @@ body.page-ready { animation: pageFadeIn .4s ease-out both; }
   .guest-upgrade-actions { width: 100%; }
   .guest-upgrade-create, .guest-upgrade-dismiss { flex: 1; text-align: center; }
   /* Login page footer — compact on small phones */
-  body.login-page footer { padding: .45rem 1rem; }
-  body.login-page footer .fnav { display: none; }
+  body.login-page footer { padding: .45rem 1rem; flex-wrap: wrap; gap: .4rem; }
+  body.login-page footer .finfo { font-size: 10px; }
+  body.login-page footer .fnav { gap: .6rem; }
+  body.login-page footer .fnav a { font-size: 11px; }
   body.login-page { padding-bottom: 3.5rem; }
   /* Index footer — hide secondary nav links to reduce height */
   footer .fnav-secondary { display: none; }
+  /* General footer — stack on very small screens */
+  footer { padding: .6rem 1rem; gap: .35rem; }
+  .fnav { gap: .65rem; }
+  .fnav a { font-size: 11px; }
 }
 
 /* ─ GLASSMORPHISM BUTTONS (login.html) ─ */
@@ -1514,4 +1525,13 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
   main {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
+}
+
+/* ─ FOOTER MOBILE EXTRA SMALL (≤360px) ─ */
+@media (max-width: 360px) {
+  footer { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .finfo { order: 2; }
+  .fnav  { order: 1; gap: .5rem; }
+  .fnav a { font-size: 11px; }
+  body.login-page footer { flex-direction: row; align-items: center; }
 }

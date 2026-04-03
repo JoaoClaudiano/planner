@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://js.sentry-cdn.com/d4fd822a23b289c483736a7b996e8d0f.min.js" crossorigin="anonymous"></script>
 <title>flow.planner</title>
 <script src="https://js.sentry-cdn.com/d4fd822a23b289c483736a7b996e8d0f.min.js"crossorigin="anonymous"></script>
 <!-- PWA manifest -->
@@ -141,15 +142,14 @@
   <nav class="fnav">
     <a href="como-funciona.html">como funciona</a>
     <a href="sobre.html">sobre</a>
+    <a href="novidades.html">novidades</a>
     <a href="status.html" class="fnav-secondary">status</a>
     <a href="contato.html" class="fnav-secondary">contato</a>
     <a href="termos.html">termos de uso</a>
     <a href="privacidade.html">privacidade</a>
   </nav>
-  <div class="factions">
-    <button class="hbtn" id="btnExport2">↑ exportar</button>
-    <button class="hbtn" id="btnImport2">↓ importar</button>
-  </div>
+  <button id="btnExport2" style="display:none" aria-hidden="true"></button>
+  <button id="btnImport2" style="display:none" aria-hidden="true"></button>
   <span class="fcopy">© <span id="fYear"></span> flow.planner · todos os direitos reservados</span>
 </footer>
 
@@ -516,6 +516,8 @@
       <button class="acc-action-btn" id="accBtnSync" type="button">☁ sincronizar agora</button>
       <div class="acc-sync-meta" id="accSyncMeta"></div>
       <button class="acc-action-btn" id="accBtnExport" type="button">↑ exportar dados</button>
+      <button class="acc-action-btn" id="accBtnImport" type="button">↓ importar dados (.xlsx)</button>
+      <button class="acc-action-btn" id="accBtnHolidays" type="button">🗓 importar feriados nacionais</button>
       <button class="acc-action-btn" id="accBtnClearLocal" type="button">🗑 limpar dados locais</button>
     </div>
 
