@@ -6,10 +6,85 @@ import { showToast }                            from './storage.js';
 import { LS, getCampusCoords }                 from './config.js';
 import { getSemDates }                         from './calendar.js';
 
+// ── Auto-import de feriados nacionais ──────────────────────────────────────────
+const LS_HOLIDAYS_YEAR = 'fs-holidays-year'; // ano do último import de feriados
+
+export async function autoImportHolidays({ silent = true } = {}) {
+  const year = new Date().getFullYear();
+  // Só executa uma vez por ano
+  if (localStorage.getItem(LS_HOLIDAYS_YEAR) === String(year)) return;
+  try {
+    const res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+    if (!res.ok) return;
+    const holidays = await res.json();
+    if (!Array.isArray(holidays)) return;
+
+    const { customEvents, setCustomEvents, cancelled, COURSES } = await import('./state.js');
+    const { save }                                               = await import('./storage.js');
+    const { uid }                                                = await import('./utils.js');
+    const { sbSaveEvent }                                        = await import('./supabase.js');
+
+    const existing = new Set(customEvents.map(e => {
+      const d = e.date instanceof Date ? e.date : new Date(e.date);
+      return d.toISOString().slice(0, 10);
+    }));
+
+    const updated = [...customEvents];
+    let added = 0;
+
+    holidays.forEach(h => {
+      if (!h.date || !h.name) return;
+
+      // Criar evento de feriado se ainda não existe nessa data
+      if (!existing.has(h.date)) {
+        const ev = {
+          id:   uid(),
+          nome: h.name,
+          date: new Date(h.date + 'T12:00:00'),
+          ini:  '00:00',
+          fim:  '00:00',
+          type: 'lembrete',
+          cor:  '#ef4444',
+          note: 'feriado nacional',
+        };
+        updated.push(ev);
+        sbSaveEvent(ev);
+        added++;
+      }
+
+      // Cancelar automaticamente as aulas que caem nessa data de feriado
+      const holidayDateStr = h.date; // 'YYYY-MM-DD'
+      COURSES.forEach(c => {
+        c._aulas.forEach(a => {
+          const aulaDate = a.date instanceof Date
+            ? a.date.toISOString().slice(0, 10)
+            : String(a.date).slice(0, 10);
+          if (aulaDate === holidayDateStr && !cancelled.has(a.id)) {
+            cancelled.add(a.id);
+          }
+        });
+      });
+    });
+
+    if (added > 0) {
+      setCustomEvents(updated);
+    }
+    save(true);
+    localStorage.setItem(LS_HOLIDAYS_YEAR, String(year));
+    if (!silent && added > 0) {
+      showToast(`🗓 ${added} feriado${added !== 1 ? 's' : ''} importado${added !== 1 ? 's' : ''} automaticamente`);
+    }
+  } catch { /* silencioso — não perturbar o usuário se falhar */ }
+}
+
 const AVATAR_COLORS = [
   '#7c3aed','#2563eb','#059669','#d97706',
   '#dc2626','#db2777','#0891b2','#65a30d',
 ];
+
+// Hook called when profile (name/avatar) is updated, so the greeting can refresh
+let _onProfileUpdateHook = null;
+export function registerProfileUpdateHook(fn) { _onProfileUpdateHook = fn; }
 
 function _relativeTime(isoString) {
   if (!isoString) return null;
@@ -78,19 +153,31 @@ function _setAvatarEl(el, initials, color, avatarUrl) {
 }
 
 function _populateAccountInfo() {
-  if (!supaUser) return;
+  const isGuest = !supaUser;
 
-  const meta      = supaUser.user_metadata || {};
-  const fullName  = meta.full_name || meta.name || '';
-  const email     = supaUser.email || '';
-  const provider  = supaUser.app_metadata?.provider || 'email';
-  const avatarUrl = meta.avatar_url || '';
-  const seed      = fullName || email;
-  const initials  = _getInitials(seed || '?');
-  const color     = _avatarColor(seed || '?');
-  const createdAt = supaUser.created_at
-    ? new Date(supaUser.created_at).toLocaleDateString('pt-BR')
-    : '—';
+  // ── Avatar + nome ──
+  let fullName, email, provider, avatarUrl, createdAt;
+
+  if (isGuest) {
+    fullName  = localStorage.getItem(LS.guestName) || '';
+    email     = '';
+    provider  = 'guest';
+    avatarUrl = localStorage.getItem(LS.guestAvatar) || '';
+    createdAt = null;
+  } else {
+    const meta = supaUser.user_metadata || {};
+    fullName   = meta.full_name || meta.name || '';
+    email      = supaUser.email || '';
+    provider   = supaUser.app_metadata?.provider || 'email';
+    avatarUrl  = meta.avatar_url || '';
+    createdAt  = supaUser.created_at
+      ? new Date(supaUser.created_at).toLocaleDateString('pt-BR')
+      : null;
+  }
+
+  const seed     = fullName || email || 'visitante';
+  const initials = _getInitials(seed);
+  const color    = _avatarColor(seed);
 
   // Small avatar in header button
   const smallAvatar = document.getElementById('accountAvatar');
@@ -112,12 +199,23 @@ function _populateAccountInfo() {
   // Large avatar inside modal
   _setAvatarEl(document.getElementById('accAvatarLg'), initials, color, avatarUrl);
 
-  document.getElementById('accName').textContent      = fullName || email.split('@')[0];
-  document.getElementById('accEmail').textContent     = email;
+  document.getElementById('accName').textContent =
+    fullName || (isGuest ? 'visitante' : email.split('@')[0]);
+  document.getElementById('accEmail').textContent =
+    isGuest ? '— modo visitante —' : email;
+
   const passUsernameEl = document.getElementById('accPassUsername');
   if (passUsernameEl) passUsernameEl.value = email;
-  document.getElementById('accProvider').textContent  = provider === 'google' ? '🔵 Entrou com Google' : '📧 e-mail e senha';
-  document.getElementById('accSince').textContent     = `membro desde ${createdAt}`;
+
+  if (isGuest) {
+    document.getElementById('accProvider').textContent = '👤 conta local (sem login)';
+    document.getElementById('accSince').textContent    = 'dados salvos localmente';
+  } else {
+    document.getElementById('accProvider').textContent =
+      provider === 'google' ? '🔵 Entrou com Google' : '📧 e-mail e senha';
+    document.getElementById('accSince').textContent =
+      createdAt ? `membro desde ${createdAt}` : '';
+  }
 
   // Reset name-edit form when modal re-opens
   const nameEditRow = document.getElementById('accNameEditRow');
@@ -126,7 +224,7 @@ function _populateAccountInfo() {
   if (nameErr) nameErr.textContent = '';
 
   // Sync dark mode button label
-  const dark = document.body.classList.contains('dark');
+  const dark = document.documentElement.classList.contains('dark');
   const accBtnDark = document.getElementById('accBtnDark');
   if (accBtnDark) accBtnDark.textContent = dark ? '☀ claro' : '🌙 escuro';
 
@@ -142,17 +240,22 @@ function _populateAccountInfo() {
     }
   }
 
-  // Last sync meta text
+  // Last sync meta text (only for authenticated)
   const syncMetaEl = document.getElementById('accSyncMeta');
   if (syncMetaEl) {
-    const lastSync = localStorage.getItem(LS.lastSync);
-    const rel = _relativeTime(lastSync);
-    if (lastSync) {
-      syncMetaEl.textContent = `☁ ✔ sincronizado · ${rel}`;
-      syncMetaEl.classList.remove('warn');
+    if (isGuest) {
+      syncMetaEl.style.display = 'none';
     } else {
-      syncMetaEl.textContent = '☁ ⚠ dados não sincronizados com a nuvem';
-      syncMetaEl.classList.add('warn');
+      syncMetaEl.style.display = '';
+      const lastSync = localStorage.getItem(LS.lastSync);
+      const rel = _relativeTime(lastSync);
+      if (lastSync) {
+        syncMetaEl.textContent = `☁ ✔ sincronizado · ${rel}`;
+        syncMetaEl.classList.remove('warn');
+      } else {
+        syncMetaEl.textContent = '☁ ⚠ dados não sincronizados com a nuvem';
+        syncMetaEl.classList.add('warn');
+      }
     }
   }
 
@@ -183,16 +286,21 @@ function _populateAccountInfo() {
     }
   }
 
-  // Security section: only relevant for e-mail / password accounts
+  // Security section: only for email/password authenticated accounts
   const secSection = document.getElementById('accSecuritySection');
-  if (secSection) secSection.style.display = provider === 'google' ? 'none' : '';
+  if (secSection) secSection.style.display = (!isGuest && provider !== 'google') ? '' : 'none';
 
-  // Sync section: only for authenticated users (not guests)
-  const dataSection = document.getElementById('accDataSection');
-  if (dataSection) {
-    const syncBtn = document.getElementById('accBtnSync');
-    if (syncBtn) syncBtn.style.display = (sb && supaUser) ? '' : 'none';
-  }
+  // Danger zone: only for authenticated accounts
+  const dangerSection = document.querySelector('.acc-danger-zone');
+  if (dangerSection) dangerSection.style.display = isGuest ? 'none' : '';
+
+  // Sync section: cloud buttons only for authenticated users
+  const syncBtn = document.getElementById('accBtnSync');
+  if (syncBtn) syncBtn.style.display = (!isGuest && sb && supaUser) ? '' : 'none';
+
+  // Sync meta and logout label
+  const logoutBtn = document.getElementById('accBtnLogout');
+  if (logoutBtn) logoutBtn.textContent = isGuest ? '↩ sair do modo visitante' : '↩ sair da conta';
 }
 
 function _openModal(id) {
@@ -223,7 +331,7 @@ export function initAccountModal() {
   // ── Dark mode (delegates to the existing header button) ──
   document.getElementById('accBtnDark')?.addEventListener('click', () => {
     document.getElementById('btnDark')?.click();
-    const dark = document.body.classList.contains('dark');
+    const dark = document.documentElement.classList.contains('dark');
     const accBtnDark = document.getElementById('accBtnDark');
     if (accBtnDark) accBtnDark.textContent = dark ? '☀ claro' : '🌙 escuro';
   });
@@ -236,6 +344,13 @@ export function initAccountModal() {
     if (!file.type.startsWith('image/')) { showToast('selecione uma imagem'); return; }
     const dataUrl = await _resizeImage(file);
     if (!dataUrl) { showToast('erro ao processar imagem'); return; }
+    if (!supaUser) {
+      // Guest: save avatar to localStorage
+      localStorage.setItem(LS.guestAvatar, dataUrl);
+      _populateAccountInfo();
+      showToast('✓ foto atualizada');
+      return;
+    }
     if (!sb) { showToast('sem conexão com o servidor'); return; }
     const { data, error } = await sb.auth.updateUser({ data: { avatar_url: dataUrl } });
     if (error) { showToast('erro ao salvar foto'); return; }
@@ -246,10 +361,11 @@ export function initAccountModal() {
 
   // ── Editar nome ──
   document.getElementById('accBtnEditName')?.addEventListener('click', () => {
-    const meta     = supaUser?.user_metadata || {};
-    const current  = meta.full_name || meta.name || supaUser?.email?.split('@')[0] || '';
-    const input    = document.getElementById('accNameInput');
-    const editRow  = document.getElementById('accNameEditRow');
+    const current = supaUser
+      ? (supaUser.user_metadata?.full_name || supaUser.user_metadata?.name || supaUser.email?.split('@')[0] || '')
+      : (localStorage.getItem(LS.guestName) || '');
+    const input   = document.getElementById('accNameInput');
+    const editRow = document.getElementById('accNameEditRow');
     if (input)   { input.value = current; }
     if (editRow) { editRow.hidden = false; input?.focus(); }
     const nameErr = document.getElementById('accNameErr');
@@ -270,6 +386,14 @@ export function initAccountModal() {
     const btn = document.getElementById('accBtnSaveName');
     btn.disabled = true;
     try {
+      if (!supaUser) {
+        // Guest: save name to localStorage
+        localStorage.setItem(LS.guestName, newName);
+        _populateAccountInfo();
+        if (_onProfileUpdateHook) _onProfileUpdateHook();
+        showToast('✓ nome atualizado');
+        return;
+      }
       if (!sb) { errEl.textContent = 'sem conexão com o servidor.'; return; }
       const { data, error } = await sb.auth.updateUser({ data: { full_name: newName } });
       if (error) { errEl.textContent = error.message; return; }
@@ -347,69 +471,6 @@ export function initAccountModal() {
     document.getElementById('btnImport2')?.click();
   });
 
-  // ── Importar feriados nacionais ──
-  document.getElementById('accBtnHolidays')?.addEventListener('click', async () => {
-    const btn = document.getElementById('accBtnHolidays');
-    if (btn) { btn.textContent = '⏳ buscando feriados…'; btn.disabled = true; }
-    try {
-      const year = new Date().getFullYear();
-      let res;
-      try {
-        res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
-      } catch {
-        showToast('sem conexão — tente novamente');
-        return;
-      }
-      if (!res.ok) { showToast(`erro ${res.status} ao buscar feriados`); return; }
-      const holidays = await res.json();
-      if (!Array.isArray(holidays)) { showToast('resposta inesperada da API'); return; }
-
-      const { customEvents, setCustomEvents } = await import('./state.js');
-      const { save }                          = await import('./storage.js');
-      const { uid }                           = await import('./utils.js');
-      const { sbSaveEvent }                   = await import('./supabase.js');
-
-      let added = 0;
-      const existing = new Set(customEvents.map(e => {
-        const d = e.date instanceof Date ? e.date : new Date(e.date);
-        return d.toISOString().slice(0, 10);
-      }));
-
-      const updated = [...customEvents];
-      holidays.forEach(h => {
-        if (!h.date || !h.name) return;
-        if (existing.has(h.date)) return;
-        const ev = {
-          id:   uid(),
-          nome: h.name,
-          date: new Date(h.date + 'T12:00:00'),
-          ini:  '0',
-          fim:  '0',
-          type: 'lembrete',
-          cor:  '#ef4444',
-          note: 'feriado nacional',
-        };
-        updated.push(ev);
-        sbSaveEvent(ev);
-        added++;
-      });
-
-      if (added === 0) {
-        showToast('feriados já importados');
-      } else {
-        setCustomEvents(updated);
-        save(true);
-        const { renderCalendar } = await import('./calendar.js');
-        renderCalendar();
-        showToast(`${added} feriado${added !== 1 ? 's' : ''} importado${added !== 1 ? 's' : ''}`);
-      }
-    } catch {
-      showToast('erro ao importar feriados');
-    } finally {
-      if (btn) { btn.textContent = '🗓 importar feriados nacionais'; btn.disabled = false; }
-    }
-  });
-
   // ── Limpar dados locais ──
   document.getElementById('accBtnClearLocal')?.addEventListener('click', () => {
     if (!confirm('Limpar todos os dados locais?\n\nDados salvos na nuvem não são afetados e serão recarregados no próximo acesso.')) return;
@@ -421,7 +482,15 @@ export function initAccountModal() {
   });
 
   // ── Sair (logout) ──
-  document.getElementById('accBtnLogout')?.addEventListener('click', () => doSignOut());
+  document.getElementById('accBtnLogout')?.addEventListener('click', () => {
+    if (!supaUser) {
+      // Guest logout: just go back to login
+      sessionStorage.removeItem('fs-guest');
+      window.location.href = 'login.html';
+    } else {
+      doSignOut();
+    }
+  });
 
   // ── Alterar senha ──
   document.getElementById('accBtnChangePass')?.addEventListener('click', async () => {

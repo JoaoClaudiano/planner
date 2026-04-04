@@ -20,7 +20,7 @@ import { COURSES, calcStats }                            from './modules/state.j
 import { LS }                                            from './modules/config.js';
 import { initTour }                                      from './modules/tour.js';
 import { initLocationModal, updateGeoBanner }            from './modules/location.js';
-import { initAccountModal }                              from './modules/account.js';
+import { initAccountModal, autoImportHolidays, registerProfileUpdateHook } from './modules/account.js';
 import { getDynamicGreeting, typewriterGreeting }        from './modules/greeting.js';
 import { showSplash, hideSplash, cacheAvatarFromUser }   from './modules/splash.js';
 import { initDaySummary, openDaySummaryModal }           from './modules/daySummary.js';
@@ -29,6 +29,7 @@ import { initDaySummary, openDaySummaryModal }           from './modules/daySumm
 registerSaveHook(updateFooter);
 setUndoFn(doUndo);
 setInitCallback(init);
+registerProfileUpdateHook(updateGreeting);
 
 const GUEST_UPGRADE_BANNER_DELAY_MS = 8000;
 
@@ -43,6 +44,10 @@ function updateGreeting() {
     const meta = supaUser.user_metadata;
     const full  = (meta && (meta.full_name || meta.name)) || '';
     name = full ? full.split(' ')[0] : supaUser.email.split('@')[0];
+  } else {
+    // Guest: read name from localStorage if set
+    const guestName = localStorage.getItem(LS.guestName);
+    if (guestName) name = guestName.split(' ')[0];
   }
   const text = getDynamicGreeting(name || undefined);
   typewriterGreeting(el, text);
@@ -72,8 +77,9 @@ export function init() {
 const LS_AGENDA_COLLAPSED = 'v3_agendaCollapsed';
 
 function initAgendaToggle() {
-  const btn  = document.getElementById('agendaToggle');
-  const body = document.getElementById('agendaBody');
+  const header = document.getElementById('agendaHeader');
+  const btn    = document.getElementById('agendaToggle');
+  const body   = document.getElementById('agendaBody');
   if (!btn || !body) return;
 
   const collapsed = localStorage.getItem(LS_AGENDA_COLLAPSED) === '1';
@@ -83,12 +89,23 @@ function initAgendaToggle() {
     btn.setAttribute('aria-expanded', 'false');
   }
 
-  btn.addEventListener('click', () => {
+  function toggle() {
     const isNowCollapsed = body.classList.toggle('collapsed');
     btn.classList.toggle('collapsed', isNowCollapsed);
     btn.setAttribute('aria-expanded', String(!isNowCollapsed));
     localStorage.setItem(LS_AGENDA_COLLAPSED, isNowCollapsed ? '1' : '0');
-  });
+  }
+
+  if (header) {
+    header.addEventListener('click', toggle);
+    header.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+    header.setAttribute('tabindex', '0');
+    header.setAttribute('role', 'button');
+  } else {
+    btn.addEventListener('click', toggle);
+  }
 }
 
 initAgendaToggle();
@@ -131,8 +148,14 @@ async function startApp() {
     initLocationModal();
     updateGeoBanner();
     setTimeout(initTour, 400);
+    // Auto-import national holidays and cancel classes on those dates (once per year)
+    setTimeout(() => autoImportHolidays({ silent: true }).then(() => {
+      renderCalendar(); renderAttendance();
+    }), 2000);
   } else if (isGuest) {
+    document.getElementById('btnAccount').style.display = '';
     document.getElementById('btnLogout').style.display = '';
+    initAccountModal();
     init();
     initDaySummary();
     await hideSplash();
@@ -145,6 +168,10 @@ async function startApp() {
     setTimeout(initTour, 400);
     // Exibe banner de upgrade de conta após delay se houver dados
     setTimeout(showGuestUpgradeBanner, GUEST_UPGRADE_BANNER_DELAY_MS);
+    // Auto-import national holidays (once per year) — available also for guests
+    setTimeout(() => autoImportHolidays({ silent: true }).then(() => {
+      renderCalendar(); renderAttendance();
+    }), 2000);
   } else {
     await hideSplash();
     window.location.href = 'login.html';

@@ -12,7 +12,7 @@
   --ev:#6366f1; --evb:#e0e7ff;
   --warn:#dc2626; --warnb:#fee2e2; --ok:#059669; --okb:#d1fae5;
 }
-body.dark {
+html.dark {
   /* Superfícies mais contrastantes entre si */
   --bg:#0d0d0c;
   --surface:#181816;
@@ -72,7 +72,7 @@ body.dark {
 }
 /* Coluna do dia atual tem fundo levemente destacado */
 .cal-dcol.is-today-col { background: color-mix(in srgb, var(--accent) 4%, transparent); }
-body.dark .cal-dcol.is-today-col { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+html.dark .cal-dcol.is-today-col { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -117,8 +117,8 @@ header.has-chips .header-chips { display: flex; }
   display: flex; align-items: center; gap: 4px;
 }
 .hbtn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
-body.dark .hbtn { border-color: var(--border2); color: var(--text2); }
-body.dark .hbtn:hover { background: var(--surface3); color: var(--text); }
+html.dark .hbtn { border-color: var(--border2); color: var(--text2); }
+html.dark .hbtn:hover { background: var(--surface3); color: var(--text); }
 
 /* ─ GREETING ─ */
 .greeting {
@@ -258,10 +258,10 @@ main { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 1.25rem
 .cal-ev.c2 { background: var(--c2b); border-color: var(--c2); color: var(--text); }
 .cal-ev.c3 { background: var(--c3b); border-color: var(--c3); color: var(--text); }
 .cal-ev.c4 { background: var(--c4b); border-color: var(--c4); color: var(--text); }
-body.dark .cal-ev.c1 .ev-name { color: var(--c1); }
-body.dark .cal-ev.c2 .ev-name { color: var(--c2); }
-body.dark .cal-ev.c3 .ev-name { color: var(--c3); }
-body.dark .cal-ev.c4 .ev-name { color: var(--c4); }
+html.dark .cal-ev.c1 .ev-name { color: var(--c1); }
+html.dark .cal-ev.c2 .ev-name { color: var(--c2); }
+html.dark .cal-ev.c3 .ev-name { color: var(--c3); }
+html.dark .cal-ev.c4 .ev-name { color: var(--c4); }
 /* Reminder/custom event */
 .cal-ev.ev-custom { background: var(--evb); border-color: var(--ev); color: var(--text); }
 .cal-ev.ev-custom .ev-name { color: var(--ev); }
@@ -605,7 +605,7 @@ footer { border-top: 1px solid var(--border); padding: .75rem 1.25rem; display: 
 /* Children must sit above pseudo-elements */
 .login-card > * { position: relative; z-index: 1; }
 /* Dark mode overrides */
-body.dark .login-card {
+html.dark .login-card {
   background: rgba(15,10,30,0.38);
   border-color: rgba(167,139,250,0.28);
   box-shadow:
@@ -613,7 +613,7 @@ body.dark .login-card {
     inset 0 1.5px 0 rgba(200,180,255,0.28),
     inset 0 -1px 0 rgba(0,0,0,0.30);
 }
-body.dark .login-card::before {
+html.dark .login-card::before {
   background: linear-gradient(135deg,
     rgba(167,139,250,0.15) 0%,
     rgba(139,92,246,0.04) 38%,
@@ -714,7 +714,7 @@ body.login-page {
   /* deep purple-blue gradient — provides rich backdrop for glass card effect */
   background: linear-gradient(135deg, #0d0921 0%, #1a1040 40%, #0a1628 70%, #0d0f1e 100%);
 }
-body.dark.login-page {
+html.dark body.login-page {
   background: linear-gradient(135deg, #07040f 0%, #120a2a 40%, #060e1a 70%, #080a12 100%);
 }
 body.login-page #loginCanvas {
@@ -792,7 +792,7 @@ body.login-page footer .fnav a:hover { color: rgba(200,190,230,0.90); }
   border-color: var(--ok);
   color: var(--ok);
 }
-body.dark .hbtn.geo-active {
+html.dark .hbtn.geo-active {
   border-color: var(--ok);
   color: var(--ok);
   background: var(--okb);
@@ -855,7 +855,7 @@ body.dark .hbtn.geo-active {
 .btn-save.danger:hover { opacity: .88; }
 
 /* ─ DARK MODE — relógio mais visível ─ */
-body.dark .clock { color: var(--text2); border-color: var(--border2); background: var(--surface3); }
+html.dark .clock { color: var(--text2); border-color: var(--border2); background: var(--surface3); }
 
 /* ─ TOOLTIPS (Shadcn/UI style) ─ */
 [data-tooltip] { position: relative; }
@@ -1159,11 +1159,11 @@ body.page-ready { animation: pageFadeIn .4s ease-out both; }
 }
 
 /* Dark mode overrides */
-body.dark .btn-glass-email {
+html.dark .btn-glass-email {
   background: rgba(109,40,217,0.32);
   border-color: rgba(167,139,250,0.25);
 }
-body.dark .btn-glass-google {
+html.dark .btn-glass-google {
   background: rgba(255,255,255,0.07);
   border-color: rgba(255,255,255,0.14);
 }
@@ -1181,7 +1181,7 @@ body.dark .btn-glass-google {
   box-shadow: 0 5px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,.10);
   transform: translateY(-1px);
 }
-body.dark .btn-glass-anon {
+html.dark .btn-glass-anon {
   background: rgba(80,80,110,0.18);
   border-color: rgba(160,150,200,0.15);
 }
@@ -1366,8 +1366,8 @@ body.login-page:not(.dark) .btn-google:hover {
 .acc-action-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
 .acc-action-btn.danger { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
 .acc-action-btn.danger:hover { background: var(--warnb); border-color: var(--warn); }
-body.dark .acc-action-btn { border-color: var(--border2); }
-body.dark .acc-action-btn:hover { background: var(--surface3); }
+html.dark .acc-action-btn { border-color: var(--border2); }
+html.dark .acc-action-btn:hover { background: var(--surface3); }
 .acc-sync-meta { font-size: 11px; color: var(--text3); margin-top: -.2rem; margin-bottom: .4rem; padding-left: 2px; min-height: .8rem; }
 .acc-sync-meta.warn { color: var(--warn); }
 .acc-campus-sub { font-size: 10px; color: var(--text3); }
@@ -1524,6 +1524,17 @@ body.dark .acc-action-btn:hover { background: var(--surface3); }
   }
   main {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* ─ SAFE AREA TOP (iOS notch / Dynamic Island) ─ */
+@supports (padding-top: env(safe-area-inset-top)) {
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+  header .header-top {
+    /* height already 50px; top padding is above it */
+    margin-top: 0;
   }
 }
 

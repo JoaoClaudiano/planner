@@ -119,7 +119,8 @@ export function load() {
   const sd     = localStorage.getItem(LS.dark);
   const isDark = sd !== null ? sd === 'true' : true;
   if (isDark) {
-    document.body.classList.add('dark');
+  document.documentElement.classList.add('dark');
+  document.body.classList.add('dark');
     const iconEl  = document.querySelector('#btnDark .hbtn-icon');
     const labelEl = document.querySelector('#btnDark .hbtn-label');
     if (iconEl)  iconEl.textContent  = '☀';

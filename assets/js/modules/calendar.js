@@ -340,7 +340,8 @@ export function renderCalendar() {
     const evsDia = customEvents.filter(e => {
       const ed = new Date(e.date); ed.setHours(0,0,0,0); return ed.getTime() === d.getTime();
     }).map(e => {
-      const [sh,sm] = e.ini.split(':').map(Number), [eh,em] = e.fim.split(':').map(Number);
+      const [sh,sm] = e.ini.includes(':') ? e.ini.split(':').map(Number) : [Number(e.ini)||0, 0];
+      const [eh,em] = e.fim.includes(':') ? e.fim.split(':').map(Number) : [Number(e.fim)||0, 0];
       return {...e, _ini: sh+sm/60, _fim: eh+em/60};
     });
 
@@ -488,7 +489,8 @@ function initCalendarDrag() {
         const relY=(e2.clientY-colRect.top)+calScroll.scrollTop-offsetY;
         const rawHour=CAL_INI+relY/SLOT, totalMins=Math.round((rawHour*60)/15)*15;
         const newIniH=Math.max(CAL_INI,Math.min(CAL_FIM-1,Math.floor(totalMins/60))), newIniM=totalMins%60;
-        const [oih,oim]=ev.ini.split(':').map(Number), [ofh,ofm]=ev.fim.split(':').map(Number);
+        const [oih,oim]=ev.ini.includes(':') ? ev.ini.split(':').map(Number) : [Number(ev.ini)||0, 0];
+        const [ofh,ofm]=ev.fim.includes(':') ? ev.fim.split(':').map(Number) : [Number(ev.fim)||0, 0];
         const dur=(ofh*60+ofm)-(oih*60+oim);
         let ftm=newIniH*60+newIniM+dur; if(ftm>CAL_FIM*60) ftm=CAL_FIM*60;
         const nfh=Math.floor(ftm/60), nfm=ftm%60, p=n=>(n<10?'0':'')+n;

@@ -139,7 +139,8 @@ export function updateFooter() {
 // DARK MODE
 // ─────────────────────────────────────────────────────
 document.getElementById('btnDark').addEventListener('click', () => {
-  const dark = document.body.classList.toggle('dark');
+  document.body.classList.toggle('dark');
+  const dark = document.documentElement.classList.toggle('dark');
   document.querySelector('#btnDark .hbtn-icon').textContent = dark ? '☀' : '🌙';
   document.querySelector('#btnDark .hbtn-label').textContent = dark ? ' claro' : ' escuro';
   localStorage.setItem(LS.dark, dark);

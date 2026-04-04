@@ -66,7 +66,7 @@ export function _onSaveStart() {
 
 export function _onSaveEnd(err) {
   _pendingSaves = Math.max(0, _pendingSaves - 1);
-  if (err)               { _setSyncBadge('error'); }
+  if (err)               { console.error('[supabase] save error:', err); _setSyncBadge('error'); }
   else if (_pendingSaves === 0) { _setSyncBadge('saved'); }
 }
 
@@ -208,7 +208,8 @@ export function sbSaveEvent(ev) {
   _sbExec('sbSaveEvent', sb.from('eventos')
     .upsert({ id: ev.id, user_id: supaUser.id, nome: ev.nome,
               date: fmtDateLocal(ev.date), ini: ev.ini, fim: ev.fim,
-              type: ev.type, cor: ev.cor, note: ev.note || '' }));
+              type: ev.type, cor: ev.cor, note: ev.note || '' },
+            { onConflict: 'id' }));
 }
 
 export function sbDeleteEvent(id) {
