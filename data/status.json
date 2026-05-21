@@ -1,5 +1,5 @@
 {
-  "last_check": "2026-05-20T20:20:48Z",
+  "last_check": "2026-05-21T03:58:51Z",
   "overall": "up",
   "components": {
     "web": {
@@ -16,13 +16,6 @@
     }
   },
   "history": [
-    {
-      "ts": "2026-04-28T08:28:57Z",
-      "web": "up",
-      "supabase": "up",
-      "pwa": "up",
-      "overall": "up"
-    },
     {
       "ts": "2026-04-28T14:15:05Z",
       "web": "up",
@@ -641,6 +634,13 @@
     },
     {
       "ts": "2026-05-20T20:20:48Z",
+      "web": "up",
+      "supabase": "up",
+      "pwa": "up",
+      "overall": "up"
+    },
+    {
+      "ts": "2026-05-21T03:58:51Z",
       "web": "up",
       "supabase": "up",
       "pwa": "up",
